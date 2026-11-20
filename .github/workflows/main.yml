@@ -1,0 +1,32 @@
+name: Create KOKI PARTY Flutter Project
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Create Flutter Android project
+        run: |
+          flutter create . --platforms=android --org com.kokiparty
+
+      - name: Save project files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Create KOKI PARTY Flutter project" || echo "No changes"
+          git push
