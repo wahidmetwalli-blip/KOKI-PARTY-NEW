@@ -21,7 +21,7 @@ jobs:
 
       - name: Create Flutter Android project
         run: |
-          flutter create . --platforms=android --org com.kokiparty
+          flutter create . --project-name koki_party --platforms=android --org com.kokiparty
 
       - name: Save project files
         run: |
