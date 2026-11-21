@@ -109,3 +109,203 @@ class _RoomScreenState extends State<RoomScreen> {
     );
   }
   
+
+  Widget _seatItem(int index) {
+    final bool occupied = index == 0;
+
+    return Column(
+      children: [
+        Container(
+          width: 62,
+          height: 62,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: occupied ? purple : panel,
+            border: Border.all(
+              color: occupied ? gold : Colors.white24,
+              width: 2,
+            ),
+          ),
+          child: Icon(
+            occupied ? Icons.person : Icons.add,
+            color: occupied ? gold : Colors.white70,
+            size: 30,
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          occupied ? 'صاحب الروم' : 'مقعد ${index + 1}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Icon(
+          occupied ? Icons.mic : Icons.mic_off,
+          color: occupied ? gold : Colors.white38,
+          size: 17,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChat() {
+    return Container(
+      height: 125,
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      color: panel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'دردشة الغرفة',
+            style: TextStyle(
+              color: gold,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Text(
+                    messages[index],
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildControls() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 22),
+      color: const Color(0xFF120F20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _controlButton(
+            isMuted ? Icons.mic_off : Icons.mic,
+            isMuted ? 'فتح المايك' : 'كتم المايك',
+            () {
+              setState(() {
+                isMuted = !isMuted;
+              });
+            },
+          ),
+          _controlButton(
+            Icons.card_giftcard,
+            'الهدايا',
+            () {
+              _showMessage('الهدايا هتتربط بنظام المحفظة لاحقاً');
+            },
+          ),
+          _controlButton(
+            Icons.chat,
+            'الدردشة',
+            () {
+              _showMessage('الدردشة ظاهرة داخل الغرفة');
+            },
+          ),
+          _controlButton(
+            Icons.settings,
+            'الإدارة',
+            _roomMenu,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _controlButton(
+    IconData icon,
+    String label,
+    VoidCallback action,
+  ) {
+    return InkWell(
+      onTap: action,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: gold, size: 25),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _roomMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: panel,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.people, color: gold),
+                title: const Text(
+                  'إدارة المقاعد',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showMessage('إدارة المقاعد قيد الربط');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.shield, color: gold),
+                title: const Text(
+                  'إدارة المشرفين',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showMessage('إدارة المشرفين قيد الربط');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.exit_to_app, color: gold),
+                title: const Text(
+                  'مغادرة الغرفة',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+}
