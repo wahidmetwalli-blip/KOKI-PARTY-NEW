@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   BadRequestException,
@@ -28,9 +29,12 @@ export class WithdrawalsService {
     amount: string,
     method: WithdrawalMethod,
   ) {
-    if (!/^[1-9]\d*$/.test(amount)) {
+    if (
+      typeof amount !== 'string' ||
+      !/^[1-9]\d*$/.test(amount)
+    ) {
       throw new BadRequestException(
-        'Amount must be a positive whole number',
+        'Amount must be a positive integer in USD cents',
       );
     }
 
@@ -39,6 +43,8 @@ export class WithdrawalsService {
         'Invalid withdrawal method',
       );
     }
+
+    const requestedAmount = BigInt(amount);
 
     return this.dataSource.transaction(
       async (manager) => {
@@ -67,10 +73,14 @@ export class WithdrawalsService {
 
         const selectedEarnings: HostEarning[] = [];
 
-        const requestedAmount = BigInt(amount);
-
         for (const earning of earnings) {
           const earningAmount = BigInt(earning.amount);
+
+          if (earningAmount <= 0n) {
+            throw new BadRequestException(
+              'Invalid earning record amount',
+            );
+          }
 
           if (
             total + earningAmount <= requestedAmount
@@ -93,7 +103,7 @@ export class WithdrawalsService {
         const withdrawal = withdrawalRepository.create({
           hostUserId,
           amount,
-          currency: 'EUR',
+          currency: 'USD',
           method,
           status: WithdrawalStatus.PENDING,
           assignedAgentId: null,
