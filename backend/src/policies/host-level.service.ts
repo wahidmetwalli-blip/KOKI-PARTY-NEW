@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   NotFoundException,
@@ -52,17 +53,29 @@ export class HostLevelService {
     }
 
     if (
-      !data.requiredDiamonds ||
+      data.requiredDiamonds === undefined ||
       !/^\d+$/.test(String(data.requiredDiamonds))
     ) {
       throw new BadRequestException('Invalid required diamonds value');
     }
 
     if (
-      !data.hostSalaryEurCents ||
-      !/^\d+$/.test(String(data.hostSalaryEurCents))
+      data.hostSalaryUsdCents === undefined ||
+      !/^\d+$/.test(String(data.hostSalaryUsdCents))
     ) {
-      throw new BadRequestException('Invalid salary cents value');
+      throw new BadRequestException('Invalid USD salary cents value');
+    }
+
+    const diamondRate = Number(data.diamondRate ?? '100');
+
+    if (
+      !Number.isFinite(diamondRate) ||
+      diamondRate < 0 ||
+      diamondRate > 100
+    ) {
+      throw new BadRequestException(
+        'Diamond rate must be between 0 and 100',
+      );
     }
 
     const existing = await this.hostLevelRepository.findOne({
@@ -76,7 +89,8 @@ export class HostLevelService {
     const hostLevel = this.hostLevelRepository.create({
       ...data,
       level,
-      diamondRate: data.diamondRate ?? '100.00',
+      diamondRate: diamondRate.toFixed(2),
+      salaryCurrency: 'USD',
       vipLevel: data.vipLevel ?? 0,
       systemDisplay: data.systemDisplay ?? true,
       isActive: data.isActive ?? true,
@@ -97,31 +111,71 @@ export class HostLevelService {
       }
     }
 
-    if (data.hostSalaryEurCents !== undefined) {
-      if (!/^\d+$/.test(String(data.hostSalaryEurCents))) {
-        throw new BadRequestException('Invalid salary cents value');
+    if (data.hostSalaryUsdCents !== undefined) {
+      if (!/^\d+$/.test(String(data.hostSalaryUsdCents))) {
+        throw new BadRequestException('Invalid USD salary cents value');
       }
     }
 
-    if (
-      data.diamondRate !== undefined &&
-      (!Number.isFinite(Number(data.diamondRate)) ||
-        Number(data.diamondRate) < 0 ||
-        Number(data.diamondRate) > 100)
-    ) {
-      throw new BadRequestException('Diamond rate must be between 0 and 100');
+    if (data.diamondRate !== undefined) {
+      const rate = Number(data.diamondRate);
+
+      if (
+        !Number.isFinite(rate) ||
+        rate < 0 ||
+        rate > 100
+      ) {
+        throw new BadRequestException(
+          'Diamond rate must be between 0 and 100',
+        );
+      }
+
+      hostLevel.diamondRate = rate.toFixed(2);
     }
 
-    if (
-      data.level !== undefined &&
-      (!Number.isInteger(data.level) ||
+    if (data.level !== undefined) {
+      if (
+        !Number.isInteger(data.level) ||
         data.level < 1 ||
-        data.level > 12)
-    ) {
-      throw new BadRequestException('Level must be between 1 and 12');
+        data.level > 12
+      ) {
+        throw new BadRequestException('Level must be between 1 and 12');
+      }
+
+      if (data.level !== level) {
+        const existing = await this.hostLevelRepository.findOne({
+          where: { level: data.level },
+        });
+
+        if (existing) {
+          throw new BadRequestException('This host level already exists');
+        }
+      }
+
+      hostLevel.level = data.level;
     }
 
-    Object.assign(hostLevel, data);
+    if (data.requiredDiamonds !== undefined) {
+      hostLevel.requiredDiamonds = data.requiredDiamonds;
+    }
+
+    if (data.hostSalaryUsdCents !== undefined) {
+      hostLevel.hostSalaryUsdCents = data.hostSalaryUsdCents;
+    }
+
+    if (data.vipLevel !== undefined) {
+      hostLevel.vipLevel = data.vipLevel;
+    }
+
+    if (data.systemDisplay !== undefined) {
+      hostLevel.systemDisplay = data.systemDisplay;
+    }
+
+    if (data.isActive !== undefined) {
+      hostLevel.isActive = data.isActive;
+    }
+
+    hostLevel.salaryCurrency = 'USD';
 
     return this.hostLevelRepository.save(hostLevel);
   }
@@ -133,4 +187,4 @@ export class HostLevelService {
 
     return this.hostLevelRepository.save(hostLevel);
   }
-}
+      }
