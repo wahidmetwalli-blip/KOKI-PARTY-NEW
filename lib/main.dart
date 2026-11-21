@@ -13,6 +13,24 @@ const Color blue = Color(0xFF397FE8);
 const Color pink = Color(0xFFCE58C9);
 const Color muted = Color(0xFFAAA5BC);
 
+// بيانات الغرف
+class RoomInfo {
+  final String name;
+  final String host;
+  final int members;
+  final Color color;
+  final IconData icon;
+
+  const RoomInfo({
+    required this.name,
+    required this.host,
+    required this.members,
+    required this.color,
+    required this.icon,
+  });
+}
+
+// التطبيق
 class KokiPartyApp extends StatelessWidget {
   const KokiPartyApp({super.key});
 
@@ -24,7 +42,6 @@ class KokiPartyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: bg,
-        fontFamily: 'Arial',
         colorScheme: ColorScheme.fromSeed(
           seedColor: purple,
           brightness: Brightness.dark,
@@ -47,42 +64,42 @@ class _HomePageState extends State<HomePage> {
   int selectedTab = 0;
   int coins = 10000;
 
-  final List<Map<String, dynamic>> rooms = [
-    {
-      'name': 'غرفة الملوك',
-      'host': 'المضيف الرئيسي',
-      'members': '24',
-      'color': purple,
-      'icon': Icons.diamond,
-    },
-    {
-      'name': 'مملكة KOKI',
-      'host': 'KOKI HOST',
-      'members': '126',
-      'color': blue,
-      'icon': Icons.mic,
-    },
-    {
-      'name': 'عالم الأصدقاء',
-      'host': 'Friend Group',
-      'members': '84',
-      'color': pink,
-      'icon': Icons.people,
-    },
-    {
-      'name': 'سهرة الملوك',
-      'host': 'Royal Host',
-      'members': '52',
-      'color': purple,
-      'icon': Icons.nightlife,
-    },
-    {
-      'name': 'نجوم الليل',
-      'host': 'Night Stars',
-      'members': '39',
-      'color': blue,
-      'icon': Icons.star,
-    },
+  final List<RoomInfo> rooms = const [
+    RoomInfo(
+      name: 'غرفة الملوك',
+      host: 'المضيف الرئيسي',
+      members: 24,
+      color: purple,
+      icon: Icons.diamond,
+    ),
+    RoomInfo(
+      name: 'مملكة KOKI',
+      host: 'KOKI HOST',
+      members: 126,
+      color: blue,
+      icon: Icons.mic,
+    ),
+    RoomInfo(
+      name: 'عالم الأصدقاء',
+      host: 'Friend Group',
+      members: 84,
+      color: pink,
+      icon: Icons.people,
+    ),
+    RoomInfo(
+      name: 'سهرة الملوك',
+      host: 'Royal Host',
+      members: 52,
+      color: purple,
+      icon: Icons.nightlife,
+    ),
+    RoomInfo(
+      name: 'نجوم الليل',
+      host: 'Night Stars',
+      members: 39,
+      color: blue,
+      icon: Icons.star,
+    ),
   ];
 
   void showMessage(String message) {
@@ -97,6 +114,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // تحديث رصيد العملات
+  void updateCoins(int newBalance) {
+    setState(() {
+      coins = newBalance;
+    });
+  }
+
+  // فتح المحفظة
   void showWallet() {
     showModalBottomSheet(
       context: context,
@@ -106,70 +131,81 @@ class _HomePageState extends State<HomePage> {
           top: Radius.circular(25),
         ),
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'محفظتي',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Icon(
-                Icons.account_balance_wallet,
-                color: purple,
-                size: 55,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'رصيد العملات',
-                style: TextStyle(color: muted),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '$coins',
-                style: const TextStyle(
-                  color: Colors.amber,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    showMessage('الشحن التجريبي غير متصل بالدفع الحقيقي');
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('شحن العملات'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: purple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(14),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, updateSheet) {
+            return Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'محفظتي',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  const Icon(
+                    Icons.account_balance_wallet,
+                    color: purple,
+                    size: 55,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'رصيد العملات',
+                    style: TextStyle(color: muted),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$coins',
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        showMessage(
+                          'الشحن الحقيقي لسه محتاج ربط بوابة دفع',
+                        );
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('شحن العملات'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: purple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.all(14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
-              const SizedBox(height: 12),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  void openRoom(String roomName) {
+  // فتح غرفة مع تمرير رصيد المحفظة
+  void openRoom(RoomInfo room) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RoomPage(roomName: roomName),
+        builder: (context) => RoomPage(
+          roomName: room.name,
+          coins: coins,
+          onCoinsChanged: updateCoins,
+        ),
       ),
     );
   }
@@ -195,7 +231,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // واجهة الرئيسية
+  // الصفحة الرئيسية
   Widget buildHome() {
     return CustomScrollView(
       slivers: [
@@ -206,8 +242,7 @@ class _HomePageState extends State<HomePage> {
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              final room = rooms[index];
-              return roomCard(room);
+              return roomCard(rooms[index]);
             },
             childCount: rooms.length,
           ),
@@ -278,7 +313,9 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 color: panel2,
                 borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: purple.withOpacity(0.5)),
+                border: Border.all(
+                  color: purple.withOpacity(0.5),
+                ),
               ),
               child: Row(
                 children: [
@@ -299,7 +336,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          const SizedBox(width: 10),
           IconButton(
             onPressed: () {
               showMessage('مفيش إشعارات جديدة');
@@ -375,7 +411,7 @@ class _HomePageState extends State<HomePage> {
                     });
                   },
                   child: const Text(
-                    'اكتشف دلوقتي  ←',
+                    'اكتشف دلوقتي ←',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -395,7 +431,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // الخدمات السريعة
+  // الخدمات
   Widget servicesSection() {
     final services = [
       {
@@ -427,27 +463,18 @@ class _HomePageState extends State<HomePage> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'الخدمات',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 18),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              'الخدمات',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-              Text(
-                'KOKI PARTY',
-                style: TextStyle(
-                  color: muted,
-                  fontSize: 11,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -459,36 +486,35 @@ class _HomePageState extends State<HomePage> {
             itemCount: services.length,
             itemBuilder: (context, index) {
               final item = services[index];
+              final Color itemColor = item['color'] as Color;
+
               return GestureDetector(
                 onTap: () {
                   if (index == 3) {
                     showWallet();
                   } else {
                     showMessage(
-                      'قسم ${item['name']} - نسخة تجريبية',
+                      'قسم ${item['name']} تجريبي',
                     );
                   }
                 },
-                child: Container(
+                child: SizedBox(
                   width: 72,
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
                   child: Column(
                     children: [
                       Container(
                         width: 55,
                         height: 55,
                         decoration: BoxDecoration(
-                          color: (item['color'] as Color)
-                              .withOpacity(0.15),
+                          color: itemColor.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(17),
                           border: Border.all(
-                            color: (item['color'] as Color)
-                                .withOpacity(0.5),
+                            color: itemColor.withOpacity(0.5),
                           ),
                         ),
                         child: Icon(
                           item['icon'] as IconData,
-                          color: item['color'] as Color,
+                          color: itemColor,
                           size: 26,
                         ),
                       ),
@@ -510,8 +536,7 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
-
-  // عنوان الغرف
+    // عنوان الغرف
   Widget roomsTitle() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 12),
@@ -546,11 +571,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   // بطاقة الغرفة
-  Widget roomCard(Map<String, dynamic> room) {
-    final Color roomColor = room['color'] as Color;
-
+  Widget roomCard(RoomInfo room) {
     return GestureDetector(
-      onTap: () => openRoom(room['name'] as String),
+      onTap: () => openRoom(room),
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 5, 16, 10),
         padding: const EdgeInsets.all(14),
@@ -558,7 +581,7 @@ class _HomePageState extends State<HomePage> {
           color: panel,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: roomColor.withOpacity(0.35),
+            color: room.color.withOpacity(0.35),
           ),
         ),
         child: Row(
@@ -569,14 +592,14 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    roomColor,
-                    roomColor.withOpacity(0.4),
+                    room.color,
+                    room.color.withOpacity(0.4),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
-                room['icon'] as IconData,
+                room.icon,
                 color: Colors.white,
                 size: 29,
               ),
@@ -587,7 +610,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    room['name'] as String,
+                    room.name,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -596,7 +619,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    room['host'] as String,
+                    room.host,
                     style: const TextStyle(
                       color: muted,
                       fontSize: 11,
@@ -612,7 +635,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        room['members'] as String,
+                        '${room.members}',
                         style: const TextStyle(
                           color: muted,
                           fontSize: 11,
@@ -651,22 +674,28 @@ class _HomePageState extends State<HomePage> {
   // صفحة الاكتشاف
   Widget buildDiscover() {
     return ListView(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.only(top: 20),
       children: [
-        const Text(
-          'اكتشف KOKI PARTY',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 18),
+          child: Text(
+            'اكتشف KOKI PARTY',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'اختار غرفة وابدأ سهرتك',
-          style: TextStyle(color: muted),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 18),
+          child: Text(
+            'اختار غرفة وابدأ سهرتك',
+            style: TextStyle(color: muted),
+          ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
         ...rooms.map((room) => roomCard(room)),
       ],
     );
@@ -730,19 +759,6 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 5),
         const Center(
-     const SizedBox(height: 15),
-        const Center(
-          child: Text(
-            'KOKI USER',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(height: 5),
-        const Center(
           child: Text(
             'ID: 1000001',
             style: TextStyle(color: muted),
@@ -773,6 +789,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // عناصر الحساب
   Widget profileOption(
     IconData icon,
     String title,
@@ -819,7 +836,7 @@ class _HomePageState extends State<HomePage> {
       child: SafeArea(
         child: Row(
           children: List.generate(items.length, (index) {
-            final active = selectedTab == index;
+            final bool active = selectedTab == index;
 
             return Expanded(
               child: InkWell(
@@ -856,17 +873,23 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-        }
-        // ==========================================
-// صفحة الغرفة الصوتية
+}
+
+// ==========================================
+// نهاية كلاس الصفحة الرئيسية
+// وبداية صفحة الغرفة الصوتية
 // ==========================================
 
 class RoomPage extends StatefulWidget {
   final String roomName;
+  final int coins;
+  final ValueChanged<int> onCoinsChanged;
 
   const RoomPage({
     super.key,
     required this.roomName,
+    required this.coins,
+    required this.onCoinsChanged,
   });
 
   @override
@@ -874,7 +897,8 @@ class RoomPage extends StatefulWidget {
 }
 
 class _RoomPageState extends State<RoomPage> {
-  bool muted = true;
+  late int coins;
+  bool isMicMuted = true;
 
   final List<String?> seats = List<String?>.filled(8, null);
 
@@ -882,6 +906,19 @@ class _RoomPageState extends State<RoomPage> {
     'أهلاً بيكم في KOKI PARTY ❤️',
     'نورتوا الغرفة يا أصدقاء',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    coins = widget.coins;
+  }
+
+  void changeCoins(int amount) {
+    setState(() {
+      coins = amount;
+    });
+    widget.onCoinsChanged(amount);
+  }
 
   void showRoomMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -915,13 +952,13 @@ class _RoomPageState extends State<RoomPage> {
           actions: [
             IconButton(
               onPressed: () {
-                showRoomMessage('تم فتح معلومات الغرفة');
+                showRoomMessage('معلومات الغرفة');
               },
               icon: const Icon(Icons.info_outline),
             ),
             IconButton(
               onPressed: () {
-                showRoomMessage('تم فتح قائمة الغرفة');
+                showRoomMessage('قائمة الغرفة');
               },
               icon: const Icon(Icons.more_vert),
             ),
@@ -930,9 +967,7 @@ class _RoomPageState extends State<RoomPage> {
         body: Column(
           children: [
             roomHeader(),
-
             const SizedBox(height: 12),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
               child: Row(
@@ -953,9 +988,7 @@ class _RoomPageState extends State<RoomPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 18),
-
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -972,7 +1005,6 @@ class _RoomPageState extends State<RoomPage> {
                 },
               ),
             ),
-
             roomControls(),
           ],
         ),
@@ -1017,22 +1049,14 @@ class _RoomPageState extends State<RoomPage> {
           const SizedBox(height: 15),
           Row(
             children: const [
-              Icon(
-                Icons.people,
-                color: Colors.white,
-                size: 18,
-              ),
+              Icon(Icons.people, color: Colors.white, size: 18),
               SizedBox(width: 6),
               Text(
                 'غرفة اجتماعية',
                 style: TextStyle(color: Colors.white),
               ),
               SizedBox(width: 18),
-              Icon(
-                Icons.mic,
-                color: Colors.white,
-                size: 18,
-              ),
+              Icon(Icons.mic, color: Colors.white, size: 18),
               SizedBox(width: 6),
               Text(
                 '8 مقاعد صوت',
@@ -1044,136 +1068,131 @@ class _RoomPageState extends State<RoomPage> {
       ),
     );
   }
-
-  // شكل المقعد
-  Widget seatWidget(int index) {
-    final String? seatName = seats[index];
-    final bool occupied = seatName != null;
+    Widget seatWidget(int index) {
+    final String? user = seats[index];
+    final bool isMySeat = user == 'أنت';
 
     return GestureDetector(
-      onTap: () {
-        seatAction(index);
-      },
-      child: Column(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: occupied
-                  ? purple.withOpacity(0.3)
-                  : panel2,
-              border: Border.all(
-                color: occupied ? purple : Colors.white24,
-                width: 2,
+      onTap: () => seatAction(index),
+      child: Container(
+        decoration: BoxDecoration(
+          color: panel2,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isMySeat ? purple : Colors.white12,
+            width: isMySeat ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 27,
+              backgroundColor: isMySeat
+                  ? purple.withOpacity(0.25)
+                  : Colors.white10,
+              child: Icon(
+                user == null ? Icons.add : Icons.person,
+                color: user == null ? muted : Colors.white,
+                size: 30,
               ),
             ),
-            child: Icon(
-              occupied ? Icons.person : Icons.add,
-              color: occupied ? Colors.white : muted,
-              size: 29,
+            const SizedBox(height: 8),
+            Text(
+              user ?? 'مقعد ${index + 1}',
+              style: TextStyle(
+                color: user == null ? muted : Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            seatName ?? 'مقعد ${index + 1}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-            ),
-          ),
-
-          const SizedBox(height: 5),
-
-          Icon(
-            occupied ? Icons.mic : Icons.mic_none,
-            color: occupied ? blue : muted,
-            size: 17,
-          ),
-        ],
+            if (isMySeat)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Icon(
+                  Icons.mic_off,
+                  color: Colors.orangeAccent,
+                  size: 15,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  // اختيار المقعد
   void seatAction(int index) {
-    if (seats[index] == 'أنت') {
-      setState(() {
-        seats[index] = null;
-        muted = true;
-      });
-
-      showRoomMessage('غادرت مقعد الصوت');
-      return;
-    }
-
-    if (seats[index] != null) {
-      showRoomMessage('المقعد محجوز بالفعل');
-      return;
-    }
-
-    if (seats.contains('أنت')) {
-      showRoomMessage('أنت بالفعل على مقعد صوت');
-      return;
-    }
-
     setState(() {
+      if (seats[index] == 'أنت') {
+        seats[index] = null;
+        isMicMuted = true;
+        showRoomMessage('غادرت مقعد الصوت');
+        return;
+      }
+
+      if (seats[index] != null) {
+        showRoomMessage('المقعد محجوز بالفعل');
+        return;
+      }
+
+      if (seats.contains('أنت')) {
+        showRoomMessage('أنت موجود بالفعل على مقعد');
+        return;
+      }
+
       seats[index] = 'أنت';
-      muted = true;
     });
 
-    showRoomMessage('تم حجز مقعدك التجريبي');
+    if (seats[index] == 'أنت') {
+      showRoomMessage('تم حجز المقعد بنجاح');
+    }
   }
 
-  // أزرار التحكم
   Widget roomControls() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 14, 10, 20),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 14,
+      ),
       decoration: const BoxDecoration(
         color: panel,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(22),
+        border: Border(
+          top: BorderSide(color: Colors.white12),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           controlButton(
-            icon: muted ? Icons.mic_off : Icons.mic,
-            label: muted ? 'فتح المايك' : 'كتم المايك',
+            icon: isMicMuted ? Icons.mic_off : Icons.mic,
+            label: isMicMuted ? 'فتح المايك' : 'كتم المايك',
             onTap: () {
               if (!seats.contains('أنت')) {
-                showRoomMessage('احجز مقعد الأول');
+                showRoomMessage('احجز مقعد الأول علشان تستخدم المايك');
                 return;
               }
 
               setState(() {
-                muted = !muted;
+                isMicMuted = !isMicMuted;
               });
 
               showRoomMessage(
-                muted ? 'تم كتم المايك' : 'تم فتح المايك التجريبي',
+                isMicMuted
+                    ? 'تم كتم المايك'
+                    : 'تم فتح المايك التجريبي',
               );
             },
           ),
-
           controlButton(
             icon: Icons.card_giftcard,
-            label: 'الهدايا',
+            label: 'هدايا',
             onTap: showGifts,
           ),
-
           controlButton(
             icon: Icons.chat_bubble_outline,
             label: 'الدردشة',
             onTap: showChat,
           ),
-
           controlButton(
             icon: Icons.exit_to_app,
             label: 'خروج',
@@ -1213,8 +1232,8 @@ class _RoomPageState extends State<RoomPage> {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 10,
+              color: Colors.white,
+              fontSize: 11,
             ),
           ),
         ],
@@ -1222,37 +1241,36 @@ class _RoomPageState extends State<RoomPage> {
     );
   }
 
-  // قائمة الهدايا
   void showGifts() {
     final gifts = [
       {
         'name': 'وردة',
-        'icon': '🌹',
-        'price': 10,
-      },
-      {
-        'name': 'قلب',
-        'icon': '❤️',
-        'price': 50,
-      },
-      {
-        'name': 'نجمة',
-        'icon': '⭐',
+        'icon': Icons.local_florist,
         'price': 100,
       },
       {
-        'name': 'تاج',
-        'icon': '👑',
+        'name': 'قلب',
+        'icon': Icons.favorite,
+        'price': 300,
+      },
+      {
+        'name': 'نجمة',
+        'icon': Icons.star,
         'price': 500,
       },
       {
-        'name': 'ألماسة',
-        'icon': '💎',
+        'name': 'تاج',
+        'icon': Icons.workspace_premium,
         'price': 1000,
       },
       {
-        'name': 'سيارة',
-        'icon': '🏎️',
+        'name': 'ألماسة',
+        'icon': Icons.diamond,
+        'price': 2000,
+      },
+      {
+        'name': 'صاروخ',
+        'icon': Icons.rocket_launch,
         'price': 5000,
       },
     ];
@@ -1260,7 +1278,6 @@ class _RoomPageState extends State<RoomPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: panel,
-      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(25),
@@ -1273,16 +1290,14 @@ class _RoomPageState extends State<RoomPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'هدايا KOKI PARTY',
+                'اختار هديتك 🎁',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 21,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
-              const SizedBox(height: 20),
-
+              const SizedBox(height: 18),
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1290,31 +1305,27 @@ class _RoomPageState extends State<RoomPage> {
                 gridDelegate:
                     const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
                   childAspectRatio: 1,
                 ),
                 itemBuilder: (context, index) {
                   final gift = gifts[index];
+                  final int price = gift['price'] as int;
 
                   return GestureDetector(
                     onTap: () {
-                      final int price = gift['price'] as int;
-
                       if (coins < price) {
                         Navigator.pop(sheetContext);
-                        showRoomMessage('رصيدك مش كفاية');
+                        showRoomMessage('رصيدك من العملات غير كافي');
                         return;
                       }
 
-                      setState(() {
-                        coins -= price;
-                      });
-
+                      changeCoins(coins - price);
                       Navigator.pop(sheetContext);
 
                       showRoomMessage(
-                        'تم إرسال ${gift['name']} ${gift['icon']} تجريبياً',
+                        'تم إرسال ${gift['name']} بنجاح 🎁',
                       );
                     },
                     child: Container(
@@ -1325,24 +1336,25 @@ class _RoomPageState extends State<RoomPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            gift['icon'] as String,
-                            style: const TextStyle(fontSize: 30),
+                          Icon(
+                            gift['icon'] as IconData,
+                            color: purple,
+                            size: 30,
                           ),
                           const SizedBox(height: 7),
                           Text(
                             gift['name'] as String,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           Text(
-                            '${gift['price']} عملة',
+                            '$price عملة',
                             style: const TextStyle(
                               color: Colors.amber,
-                              fontSize: 10,
+                              fontSize: 11,
                             ),
                           ),
                         ],
@@ -1351,8 +1363,15 @@ class _RoomPageState extends State<RoomPage> {
                   );
                 },
               ),
-
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
+              Text(
+                'رصيدك الحالي: $coins عملة',
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         );
@@ -1360,15 +1379,14 @@ class _RoomPageState extends State<RoomPage> {
     );
   }
 
-  // الدردشة
   void showChat() {
     final TextEditingController controller =
         TextEditingController();
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: panel,
       isScrollControlled: true,
+      backgroundColor: panel,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(25),
@@ -1376,39 +1394,43 @@ class _RoomPageState extends State<RoomPage> {
       ),
       builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, updateSheet) {
+          builder: (context, setSheetState) {
             return Padding(
               padding: EdgeInsets.only(
                 left: 16,
                 right: 16,
                 top: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 18,
+                bottom: MediaQuery.of(sheetContext)
+                        .viewInsets
+                        .bottom +
+                    16,
               ),
               child: SizedBox(
-                height: 390,
+                height: 400,
                 child: Column(
                   children: [
                     const Text(
-                      'دردشة الغرفة',
+                      'دردشة الغرفة 💬',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 15),
-
                     Expanded(
                       child: ListView.builder(
                         itemCount: chatMessages.length,
                         itemBuilder: (context, index) {
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 9),
-                            padding: const EdgeInsets.all(11),
+                            margin: const EdgeInsets.only(
+                              bottom: 9,
+                            ),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: panel2,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(12),
                             ),
                             child: Text(
                               chatMessages[index],
@@ -1420,7 +1442,6 @@ class _RoomPageState extends State<RoomPage> {
                         },
                       ),
                     ),
-
                     Row(
                       children: [
                         Expanded(
@@ -1437,28 +1458,27 @@ class _RoomPageState extends State<RoomPage> {
                               filled: true,
                               fillColor: panel2,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius:
+                                    BorderRadius.circular(14),
                                 borderSide: BorderSide.none,
                               ),
                             ),
                           ),
                         ),
-
                         const SizedBox(width: 8),
-
                         IconButton(
                           onPressed: () {
-                            final message = controller.text.trim();
+                            final message =
+                                controller.text.trim();
 
-                            if (message.isEmpty) {
-                              return;
-                            }
+                            if (message.isEmpty) return;
 
-                            updateSheet(() {
+                            setState(() {
                               chatMessages.add('أنت: $message');
                             });
 
                             controller.clear();
+                            setSheetState(() {});
                           },
                           icon: const Icon(
                             Icons.send,
