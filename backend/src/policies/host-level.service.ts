@@ -40,7 +40,14 @@ export class HostLevelService {
   }
 
   async createLevel(data: Partial<HostLevel>): Promise<HostLevel> {
-    if (!Number.isInteger(data.level) || data.level < 1 || data.level > 12) {
+    const level = data.level;
+
+    if (
+      level === undefined ||
+      !Number.isInteger(level) ||
+      level < 1 ||
+      level > 12
+    ) {
       throw new BadRequestException('Level must be between 1 and 12');
     }
 
@@ -59,7 +66,7 @@ export class HostLevelService {
     }
 
     const existing = await this.hostLevelRepository.findOne({
-      where: { level: data.level },
+      where: { level },
     });
 
     if (existing) {
@@ -68,6 +75,7 @@ export class HostLevelService {
 
     const hostLevel = this.hostLevelRepository.create({
       ...data,
+      level,
       diamondRate: data.diamondRate ?? '100.00',
       vipLevel: data.vipLevel ?? 0,
       systemDisplay: data.systemDisplay ?? true,
@@ -106,7 +114,9 @@ export class HostLevelService {
 
     if (
       data.level !== undefined &&
-      (!Number.isInteger(data.level) || data.level < 1 || data.level > 12)
+      (!Number.isInteger(data.level) ||
+        data.level < 1 ||
+        data.level > 12)
     ) {
       throw new BadRequestException('Level must be between 1 and 12');
     }
@@ -123,4 +133,4 @@ export class HostLevelService {
 
     return this.hostLevelRepository.save(hostLevel);
   }
-  }
+}
