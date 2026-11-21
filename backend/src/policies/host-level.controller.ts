@@ -1,3 +1,4 @@
+
 import {
   Controller,
   Get,
@@ -58,7 +59,7 @@ class CreateHostLevelDto {
 
   @IsString()
   @Matches(/^\d+$/)
-  hostSalaryEurCents: string;
+  hostSalaryUsdCents: string;
 
   @IsOptional()
   @IsInt()
@@ -94,7 +95,7 @@ class UpdateHostLevelDto {
   @IsOptional()
   @IsString()
   @Matches(/^\d+$/)
-  hostSalaryEurCents?: string;
+  hostSalaryUsdCents?: string;
 
   @IsOptional()
   @IsInt()
