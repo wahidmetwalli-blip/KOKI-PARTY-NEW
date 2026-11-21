@@ -6,6 +6,8 @@ import {
   WalletTransaction,
 } from './wallet.entity';
 
+import { WalletService } from './wallet.service';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -13,8 +15,7 @@ import {
       WalletTransaction,
     ]),
   ],
-  exports: [
-    TypeOrmModule,
-  ],
+  providers: [WalletService],
+  exports: [WalletService],
 })
 export class WalletModule {}
