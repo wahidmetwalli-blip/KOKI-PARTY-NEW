@@ -23,32 +23,69 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'name': 'غرفة الملوك',
       'owner': 'KOKI KING',
+      'description': 'أهلاً بيكم في غرفة الملوك',
       'members': 24,
       'speakers': 3,
       'icon': Icons.workspace_premium,
+      'isPrivate': false,
+      'hasPassword': false,
+      'allowRequests': true,
     },
     {
       'name': 'مملكة KOKI',
       'owner': 'Royal Star',
+      'description': 'المملكة الملكية',
       'members': 126,
       'speakers': 5,
       'icon': Icons.diamond,
+      'isPrivate': false,
+      'hasPassword': false,
+      'allowRequests': true,
     },
     {
       'name': 'عالم الأصدقاء',
       'owner': 'Friends',
+      'description': 'غرفة الأصدقاء',
       'members': 84,
       'speakers': 4,
       'icon': Icons.groups,
+      'isPrivate': false,
+      'hasPassword': false,
+      'allowRequests': true,
     },
     {
       'name': 'سهرة الملوك',
       'owner': 'Night King',
+      'description': 'سهرة ملكية',
       'members': 52,
       'speakers': 2,
       'icon': Icons.nightlight_round,
+      'isPrivate': false,
+      'hasPassword': false,
+      'allowRequests': true,
     },
   ];
+
+  Future<void> openCreateRoom() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CreateRoomScreen(),
+      ),
+    );
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      rooms.insert(0, result);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('تم إنشاء الغرفة بنجاح 👑'),
+      ),
+    );
+  }
 
   void openRoom(Map<String, dynamic> room) {
     Navigator.push(
@@ -57,15 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => RoomScreen(
           roomName: room['name'] as String,
         ),
-      ),
-    );
-  }
-
-  void openCreateRoom() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateRoomScreen(),
       ),
     );
   }
@@ -81,9 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
             index: selectedIndex,
             children: [
               homePage(),
-              simplePage('اكتشف', Icons.explore),
-              simplePage('الرسائل', Icons.message),
-              simplePage('حسابي', Icons.person),
+              discoverPage(),
+              messagesPage(),
+              accountPage(),
             ],
           ),
         ),
@@ -110,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 22),
         shortcuts(),
         const SizedBox(height: 25),
-        sectionTitle('الغرف الصوتية', 'كل الغرف'),
+        sectionTitle('الغرف الصوتية'),
         const SizedBox(height: 12),
         ...rooms.map((room) => roomCard(room)),
         const SizedBox(height: 80),
@@ -158,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: panel,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: gold.withOpacity(0.5)),
+            border: Border.all(color: gold),
           ),
           child: Row(
             children: [
@@ -228,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   Widget shortcuts() {
     final items = [
       {'name': 'الغرف', 'icon': Icons.mic},
@@ -249,7 +277,11 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, index) {
         return InkWell(
           onTap: () {
-            showInfo(items[index]['name'] as String);
+            if (index == 0) {
+              setState(() => selectedIndex = 0);
+            } else {
+              showInfo(items[index]['name'] as String);
+            }
           },
           child: Container(
             decoration: BoxDecoration(
@@ -281,30 +313,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget sectionTitle(String title, String action) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: gold,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            setState(() {
-              selectedIndex = 1;
-            });
-          },
-          child: Text(
-            action,
-            style: const TextStyle(color: Colors.white60),
-          ),
-        ),
-      ],
+  Widget sectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: gold,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 
@@ -330,7 +346,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
-                room['icon'] as IconData,
+                room['icon'] is IconData
+                    ? room['icon'] as IconData
+                    : Icons.meeting_room,
                 color: gold,
                 size: 29,
               ),
@@ -341,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    room['name'] as String,
+                    room['name']?.toString() ?? 'غرفة جديدة',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -350,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'المضيف: ${room['owner']}',
+                    'المضيف: ${room['owner'] ?? 'KOKI USER'}',
                     style: const TextStyle(
                       color: Colors.white60,
                       fontSize: 11,
@@ -358,12 +376,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    '${room['speakers']} متحدثين • ${room['members']} مستمع',
+                    '${room['speakers'] ?? 0} متحدثين • '
+                    '${room['members'] ?? 0} مستمع',
                     style: const TextStyle(
                       color: gold,
                       fontSize: 11,
                     ),
                   ),
+                  if (room['isPrivate'] == true)
+                    const Text(
+                      'غرفة خاصة 🔒',
+                      style: TextStyle(
+                        color: Colors.orangeAccent,
+                        fontSize: 10,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -378,25 +405,73 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget simplePage(String title, IconData icon) {
+  Widget discoverPage() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: gold, size: 65),
+          const Icon(Icons.explore, color: gold, size: 65),
           const SizedBox(height: 15),
+          const Text(
+            'اكتشف الغرف',
+            style: TextStyle(color: gold, fontSize: 23),
+          ),
+          const SizedBox(height: 15),
+          ElevatedButton(
+            onPressed: () {
+              setState(() => selectedIndex = 0);
+            },
+            child: const Text('عرض الغرف'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget messagesPage() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.message, color: gold, size: 65),
+          SizedBox(height: 15),
           Text(
-            title,
-            style: const TextStyle(
+            'الرسائل',
+            style: TextStyle(color: gold, fontSize: 23),
+          ),
+          SizedBox(height: 10),
+          Text(
+            'قريباً: المحادثات الخاصة والأصدقاء',
+            style: TextStyle(color: Colors.white60),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget accountPage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircleAvatar(
+            radius: 42,
+            backgroundColor: purple,
+            child: Icon(Icons.person, color: gold, size: 45),
+          ),
+          const SizedBox(height: 15),
+          const Text(
+            'KOKI USER',
+            style: TextStyle(
               color: gold,
-              fontSize: 23,
+              fontSize: 21,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'القسم جاهز لإضافة وظائفه وربطه',
-            style: TextStyle(color: Colors.white60),
+          const SizedBox(height: 8),
+          Text(
+            'رصيدك: $coins عملة',
+            style: const TextStyle(color: Colors.white70),
           ),
         ],
       ),
@@ -436,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void showInfo(String title) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$title: القسم قيد التجهيز والربط'),
+        content: Text('$title: القسم قيد التجهيز'),
       ),
     );
   }
