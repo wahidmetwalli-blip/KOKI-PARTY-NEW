@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'room_screen.dart';
-import 'profile_screen.dart';
+import 'create_room_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,7 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'id': '10001',
       'listeners': 148,
       'tag': 'ملكية 👑',
-      'colors': [const Color(0xFF4A148C), const Color(0xFF1A0933)],
+      'color1': const Color(0xFF4A148C),
+      'color2': const Color(0xFF1A0933),
     },
     {
       'title': 'سهرة طرب وموسيقى',
@@ -30,7 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'id': '10024',
       'listeners': 92,
       'tag': 'موسيقى 🎵',
-      'colors': [const Color(0xFF311B92), const Color(0xFF120826)],
+      'color1': const Color(0xFF311B92),
+      'color2': const Color(0xFF120826),
     },
     {
       'title': 'عالم الأصدقاء والضحك',
@@ -38,7 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'id': '10058',
       'listeners': 64,
       'tag': 'دردشة 💬',
-      'colors': [const Color(0xFF6A1B9A), const Color(0xFF1E0B36)],
+      'color1': const Color(0xFF6A1B9A),
+      'color2': const Color(0xFF1E0B36),
     },
     {
       'title': 'تحدي الهدايا الكبير',
@@ -46,101 +49,15 @@ class _HomeScreenState extends State<HomeScreen> {
       'id': '10099',
       'listeners': 215,
       'tag': 'ملكية 👑',
-      'colors': [const Color(0xFF880E4F), const Color(0xFF1F0722)],
+      'color1': const Color(0xFF880E4F),
+      'color2': const Color(0xFF1F0722),
     },
   ];
 
-  void _showCreateRoomSheet() {
-    final titleController = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF160D2B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-            top: 24,
-            left: 24,
-            right: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 45,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text(
-                'إنشاء غرفة صوتية جديدة 👑',
-                style: TextStyle(
-                  color: Color(0xFFFFD54F),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: titleController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'اكتب اسم الغرفة...',
-                  hintStyle: const TextStyle(color: Colors.white38),
-                  filled: true,
-                  fillColor: const Color(0xFF231642),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD54F),
-                    foregroundColor: const Color(0xFF120826),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: () {
-                    final name = titleController.text.trim().isEmpty
-                        ? 'غرفة KOKI الخاصة'
-                        : titleController.text.trim();
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RoomScreen(
-                          roomTitle: name,
-                          hostName: 'KOKI USER',
-                          roomId: '10888',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'بدء البث الصوتي الآن',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  void _openCreateRoom() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateRoomScreen()),
     );
   }
 
@@ -150,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _buildHomeBody(),
       _buildPlaceholderPage('استكشاف الفعاليات والتحديات ✨'),
       _buildPlaceholderPage('الرسائل الخاصة 💬'),
-      const ProfileScreen(),
+      _buildProfileTab(),
     ];
 
     return Directionality(
@@ -173,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         floatingActionButton: _currentIndex == 0
             ? FloatingActionButton(
-                onPressed: _showCreateRoomSheet,
+                onPressed: _openCreateRoom,
                 backgroundColor: const Color(0xFFFFD54F),
                 foregroundColor: const Color(0xFF120826),
                 shape: const CircleBorder(),
@@ -238,13 +155,94 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildProfileTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Color(0xFFFFD54F), Color(0xFFE040FB), Color(0xFFFF6F00)],
+              ),
+            ),
+            child: const CircleAvatar(
+              radius: 44,
+              backgroundColor: Color(0xFF1D0D3B),
+              child: Icon(Icons.person, color: Color(0xFFFFD54F), size: 46),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'KOKI USER',
+            style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Text(
+              'ID: 10134700  •  SVIP 3 👑',
+              style: TextStyle(color: Color(0xFFFFD54F), fontSize: 12),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6A1B9A), Color(0xFF311B92)],
+              ),
+              border: Border.all(color: const Color(0xFFFFD54F).withValues(alpha: 0.4)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFFFD54F), size: 30),
+                SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('الرصيد الحالي', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    Text(
+                      '10,000 عملة',
+                      style: TextStyle(color: Color(0xFFFFD54F), fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            children: const [
+              _ProfileTile(icon: Icons.diamond_rounded, label: 'نادي VIP'),
+              _ProfileTile(icon: Icons.storefront_rounded, label: 'الإطارات'),
+              _ProfileTile(icon: Icons.card_giftcard_rounded, label: 'الهدايا'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHomeBody() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // الشريط العلوي
           Row(
             children: [
               Container(
@@ -258,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const CircleAvatar(
                   radius: 20,
                   backgroundColor: Color(0xFF231642),
-                  child: Icon(Icons.crown, color: Color(0xFFFFD54F)),
+                  child: Icon(Icons.workspace_premium, color: Color(0xFFFFD54F)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -305,8 +303,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 18),
-
-          // بانر ملكي علوي
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(18),
@@ -361,8 +357,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 18),
-
-          // بطاقات سريعة ملونة (مثل Events / Party / VIP)
           Row(
             children: [
               _quickCard('الفعاليات', 'جوائز يومية', Icons.celebration, const [Color(0xFFFF6F00), Color(0xFFD84315)]),
@@ -373,8 +367,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 20),
-
-          // شريط التصنيفات
           SizedBox(
             height: 36,
             child: ListView.separated(
@@ -409,8 +401,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // شبكة الغرف الصوتية (2 في كل صف بشكل عصري)
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -423,15 +413,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             itemBuilder: (context, index) {
               final room = _rooms[index];
+              final String title = room['title'] as String;
+              final String host = room['host'] as String;
+              final String id = room['id'] as String;
+              final String tag = room['tag'] as String;
+              final int listeners = room['listeners'] as int;
+              final Color color1 = room['color1'] as Color;
+              final Color color2 = room['color2'] as Color;
+
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => RoomScreen(
-                        roomTitle: room['title'],
-                        hostName: room['host'],
-                        roomId: room['id'],
+                        roomTitle: title,
+                        hostName: host,
+                        roomId: id,
                       ),
                     ),
                   );
@@ -441,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(22),
                     gradient: LinearGradient(
-                      colors: List<Color>.from(room['colors']),
+                      colors: [color1, color2],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -460,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              room['tag'],
+                              tag,
                               style: const TextStyle(color: Color(0xFFFFD54F), fontSize: 10),
                             ),
                           ),
@@ -469,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               const Icon(Icons.graphic_eq, color: Color(0xFFFFD54F), size: 15),
                               const SizedBox(width: 3),
                               Text(
-                                '${room['listeners']}',
+                                '$listeners',
                                 style: const TextStyle(color: Colors.white, fontSize: 11),
                               ),
                             ],
@@ -495,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        room['title'],
+                        title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -506,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        'المضيف: ${room['host']}',
+                        'المضيف: $host',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(color: Colors.white60, fontSize: 11),
@@ -549,3 +547,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+class _ProfileTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _ProfileTile({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: const Color(0xFFFFD54F), size: 28),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+        ],
+      ),
+                     
