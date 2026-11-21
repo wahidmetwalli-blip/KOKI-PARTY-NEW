@@ -1,3 +1,4 @@
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -35,10 +36,18 @@ export class HostLevel {
   diamondRate: string;
 
   @Column({
-    name: 'host_salary_eur_cents',
+    name: 'host_salary_usd_cents',
     type: 'bigint',
   })
-  hostSalaryEurCents: string;
+  hostSalaryUsdCents: string;
+
+  @Column({
+    name: 'salary_currency',
+    type: 'varchar',
+    length: 3,
+    default: 'USD',
+  })
+  salaryCurrency: string;
 
   @Column({
     name: 'vip_level',
