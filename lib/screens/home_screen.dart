@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'create_room_screen.dart';
 import 'room_screen.dart';
@@ -21,25 +22,29 @@ class _HomeScreenState extends State<HomeScreen> {
       'name': 'غرفة الملوك',
       'owner': 'ملك الليل',
       'members': '124',
-      'image': 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=900',
+      'image':
+          'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=900',
     },
     {
       'name': 'مملكة KOKI',
       'owner': 'الأميرة',
       'members': '86',
-      'image': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=900',
+      'image':
+          'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=900',
     },
     {
       'name': 'عالم الأصدقاء',
       'owner': 'صاحب الغرفة',
       'members': '52',
-      'image': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900',
+      'image':
+          'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900',
     },
     {
       'name': 'سهرة الملوك',
       'owner': 'VIP KING',
       'members': '39',
-      'image': 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900',
+      'image':
+          'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900',
     },
   ];
 
@@ -61,6 +66,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void openRoom(Map<String, dynamic> room) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RoomScreen(
+          roomName: room['name'] as String,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -73,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               homePage(),
               simplePage('اكتشف'),
-              simplePage('الغرف'),
+              roomsPage(),
               simplePage('الرسائل'),
               simplePage('حسابي'),
             ],
@@ -87,7 +103,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text(
                   'إنشاء روم',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               )
             : null,
@@ -117,7 +135,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () => setState(() => selectedTab = 2),
+                  onPressed: () {
+                    setState(() => selectedTab = 2);
+                  },
                   child: const Text(
                     'عرض الكل',
                     style: TextStyle(color: gold),
@@ -179,7 +199,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           InkWell(
-            onTap: () => showMessage('المحفظة هتتربط بنظام الشحن'),
+            onTap: () {
+              showMessage('المحفظة هتتربط بنظام الشحن');
+            },
             child: Container(
               padding: const EdgeInsets.all(11),
               decoration: BoxDecoration(
@@ -218,7 +240,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Color(0xFF30203D),
           ],
         ),
-        border: Border.all(color: gold.withOpacity(0.5)),
+        border: Border.all(
+          color: gold.withOpacity(0.5),
+        ),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +285,9 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: items.map((item) {
           return InkWell(
-            onTap: () => showMessage('قسم ${item[0]} قيد التجهيز'),
+            onTap: () {
+              showMessage('قسم ${item[0]} قيد التجهيز');
+            },
             child: Column(
               children: [
                 Container(
@@ -270,7 +296,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     color: panel,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: gold.withOpacity(0.4)),
+                    border: Border.all(
+                      color: gold.withOpacity(0.4),
+                    ),
                   ),
                   child: Icon(
                     item[1] as IconData,
@@ -293,12 +321,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
+  
   Widget roomCard(Map<String, dynamic> room) {
     return InkWell(
-      onTap: () => showMessage(
-        'هنفتح غرفة ${room['name']} بعد تجهيز شاشة الغرفة',
-      ),
+      onTap: () => openRoom(room),
       child: Container(
         height: 190,
         margin: const EdgeInsets.symmetric(
@@ -308,14 +334,16 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: panel,
-          border: Border.all(color: gold.withOpacity(0.35)),
+          border: Border.all(
+            color: gold.withOpacity(0.35),
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           fit: StackFit.expand,
           children: [
             Image.network(
-              room['image'],
+              room['image'] as String,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stack) {
                 return Container(
@@ -354,7 +382,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.graphic_eq, color: gold, size: 16),
+                    Icon(
+                      Icons.graphic_eq,
+                      color: gold,
+                      size: 16,
+                    ),
                     SizedBox(width: 5),
                     Text(
                       'LIVE',
@@ -375,10 +407,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         Text(
-                          room['name'],
+                          room['name'] as String,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 19,
@@ -418,6 +451,32 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget roomsPage() {
+    return CustomScrollView(
+      slivers: [
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(18),
+            child: Text(
+              'كل الغرف الصوتية',
+              style: TextStyle(
+                color: gold,
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => roomCard(rooms[index]),
+            childCount: rooms.length,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget simplePage(String title) {
     return Center(
       child: Text(
@@ -448,10 +507,15 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(items.length, (index) {
             final active = selectedTab == index;
+
             return InkWell(
-              onTap: () => setState(() => selectedTab = index),
+              onTap: () {
+                setState(() => selectedTab = index);
+              },
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
