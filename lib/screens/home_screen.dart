@@ -15,7 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<String> _categories = ['الكل 🔥', 'ملكية 👑', 'موسيقى 🎵', 'دردشة 💬'];
 
-  final List> _rooms = [
+  final List<Map<String, dynamic>> _rooms = [
     {
       'title': 'غرفة الملوك VIP',
       'host': 'KOKI KING',
