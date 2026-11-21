@@ -3,6 +3,9 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Param,
+  ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
 
@@ -15,8 +18,14 @@ import {
   Min,
 } from 'class-validator';
 
-import { AgentsService } from './agents.service';
-import { AgentType } from './agent.entity';
+import {
+  AgentsService,
+} from './agents.service';
+
+import {
+  AgentType,
+  AgentStatus,
+} from './agent.entity';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
@@ -35,6 +44,18 @@ class CreateAgentDto {
   @Min(0)
   @Max(100)
   commissionRate?: number;
+}
+
+class UpdateStatusDto {
+  @IsEnum(AgentStatus)
+  status: AgentStatus;
+}
+
+class UpdateCommissionDto {
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  commissionRate: number;
 }
 
 @Controller('agents')
@@ -75,4 +96,28 @@ export class AgentsController {
       dto.commissionRate ?? 0,
     );
   }
-      }
+
+  @Patch(':id/status')
+  @RequirePermissions(Permission.STAFF_MANAGE)
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateStatusDto,
+  ) {
+    return this.agentsService.updateStatus(
+      id,
+      dto.status,
+    );
+  }
+
+  @Patch(':id/commission')
+  @RequirePermissions(Permission.STAFF_MANAGE)
+  updateCommission(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCommissionDto,
+  ) {
+    return this.agentsService.updateCommission(
+      id,
+      dto.commissionRate,
+    );
+  }
+  }
