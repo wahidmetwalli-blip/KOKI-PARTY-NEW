@@ -22,12 +22,16 @@ class _RoomScreenState extends State<RoomScreen> {
   String? activeGiftBanner;
 
   final TextEditingController _chatController = TextEditingController();
-  final List> _messages = [
+  
+final List<Map<String, String>> _messages = [
+  
     {'user': 'النظام', 'text': 'مرحباً بكم في عالم KOKI PARTY الملكي 👑'},
     {'user': 'Amira VIP', 'text': 'منورين الغرفة جميعاً ✨'},
   ];
 
-  final List> _gifts = [
+  
+final List<Map<String, dynamic>> _gifts = [
+  
     {'name': 'قلب ملكي', 'icon': '💖', 'price': 10},
     {'name': 'تاج الذهب', 'icon': '👑', 'price': 100},
     {'name': 'سيارة فاخرة', 'icon': '🏎️', 'price': 500},
