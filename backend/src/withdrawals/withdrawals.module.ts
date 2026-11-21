@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WithdrawalRequest } from './withdrawal.entity';
 import { HostEarning } from '../earnings/earning.entity';
 import { WithdrawalsService } from './withdrawals.service';
+import { WithdrawalsController } from './withdrawals.controller';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -11,7 +13,9 @@ import { WithdrawalsService } from './withdrawals.service';
       WithdrawalRequest,
       HostEarning,
     ]),
+    AuthModule,
   ],
+  controllers: [WithdrawalsController],
   providers: [WithdrawalsService],
   exports: [WithdrawalsService],
 })
