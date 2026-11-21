@@ -1,9 +1,7 @@
-
 import 'package:flutter/material.dart';
 
-import 'create_room_screen.dart' show CreateRoomScreen;
-
-import 'room_screen.dart' show RoomScreen;
+import 'create_room_screen.dart';
+import 'room_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -76,13 +74,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (_) => CreateRoomScreen(),
+        builder: (_) => const CreateRoomScreen(),
       ),
     );
 
     if (!mounted || result == null) return;
 
     setState(() {
+      result['members'] = 1;
+      result['speakers'] = 1;
+      result['icon'] = Icons.meeting_room;
       rooms.insert(0, result);
     });
 
@@ -156,7 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget header() {
     return Row(
       children: [
-        const Icon(Icons.workspace_premium, color: gold, size: 38),
+        const Icon(
+          Icons.workspace_premium,
+          color: gold,
+          size: 38,
+        ),
         const SizedBox(width: 9),
         const Expanded(
           child: Column(
@@ -225,7 +230,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Color(0xFF0D0A16),
           ],
         ),
-        border: Border.all(color: gold.withOpacity(0.4)),
+        border: Border.all(
+          color: gold.withOpacity(0.4),
+        ),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,26 +257,33 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 8),
           Text(
             'عالمك.. حفلتك.. مملكتك',
-            style: TextStyle(color: Colors.white, fontSize: 15),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+            ),
           ),
         ],
       ),
     );
   }
-  
+
   Widget shortcuts() {
     final items = [
       {'name': 'الغرف', 'icon': Icons.mic},
       {'name': 'الهدايا', 'icon': Icons.card_giftcard},
       {'name': 'VIP', 'icon': Icons.diamond},
-      {'name': 'المحفظة', 'icon': Icons.account_balance_wallet},
+      {
+        'name': 'المحفظة',
+        'icon': Icons.account_balance_wallet,
+      },
     ];
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate:
+          const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         crossAxisSpacing: 10,
         childAspectRatio: 0.85,
@@ -287,7 +301,9 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               color: panel,
               borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: gold.withOpacity(0.2)),
+              border: Border.all(
+                color: gold.withOpacity(0.2),
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -334,7 +350,9 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: panel,
           borderRadius: BorderRadius.circular(17),
-          border: Border.all(color: gold.withOpacity(0.2)),
+          border: Border.all(
+            color: gold.withOpacity(0.2),
+          ),
         ),
         child: Row(
           children: [
@@ -410,11 +428,18 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.explore, color: gold, size: 65),
+          const Icon(
+            Icons.explore,
+            color: gold,
+            size: 65,
+          ),
           const SizedBox(height: 15),
           const Text(
             'اكتشف الغرف',
-            style: TextStyle(color: gold, fontSize: 23),
+            style: TextStyle(
+              color: gold,
+              fontSize: 23,
+            ),
           ),
           const SizedBox(height: 15),
           ElevatedButton(
@@ -433,16 +458,25 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.message, color: gold, size: 65),
+          Icon(
+            Icons.message,
+            color: gold,
+            size: 65,
+          ),
           SizedBox(height: 15),
           Text(
             'الرسائل',
-            style: TextStyle(color: gold, fontSize: 23),
+            style: TextStyle(
+              color: gold,
+              fontSize: 23,
+            ),
           ),
           SizedBox(height: 10),
           Text(
             'قريباً: المحادثات الخاصة والأصدقاء',
-            style: TextStyle(color: Colors.white60),
+            style: TextStyle(
+              color: Colors.white60,
+            ),
           ),
         ],
       ),
@@ -457,7 +491,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const CircleAvatar(
             radius: 42,
             backgroundColor: purple,
-            child: Icon(Icons.person, color: gold, size: 45),
+            child: Icon(
+              Icons.person,
+              color: gold,
+              size: 45,
+            ),
           ),
           const SizedBox(height: 15),
           const Text(
@@ -471,7 +509,9 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             'رصيدك: $coins عملة',
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(
+              color: Colors.white70,
+            ),
           ),
         ],
       ),
@@ -479,7 +519,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget bottomBar() {
-    final labels = ['الرئيسية', 'اكتشف', 'الرسائل', 'حسابي'];
+    final labels = [
+      'الرئيسية',
+      'اكتشف',
+      'الرسائل',
+      'حسابي',
+    ];
+
     final icons = [
       Icons.home,
       Icons.explore,
