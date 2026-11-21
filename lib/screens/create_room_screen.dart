@@ -1,9 +1,6 @@
-
 import 'package:flutter/material.dart';
-
-class CreateRoomScreen extends StatefulWidget {
-  const CreateRoomScreen({super.key});
-
+import 'create_room_screen.dart' show CreateRoomScreen;
+import 'room_screen.dart' show RoomScreen;
   @override
   State<CreateRoomScreen> createState() =>
       _CreateRoomScreenState();
