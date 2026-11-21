@@ -135,4 +135,102 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ),
-                
+      
+                const SizedBox(height: 25),
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: gold,
+                      foregroundColor: bg,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'دخول إلى KOKI PARTY',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const Text(
+                  'أو تسجيل الدخول باستخدام',
+                  style: TextStyle(color: Colors.white60),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _socialButton(
+                      Icons.g_mobiledata,
+                      'Google',
+                    ),
+                    const SizedBox(width: 12),
+                    _socialButton(
+                      Icons.facebook,
+                      'Facebook',
+                    ),
+                    const SizedBox(width: 12),
+                    _socialButton(
+                      Icons.phone_android,
+                      'الهاتف',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  'THE ROYAL WORLD 👑',
+                  style: TextStyle(
+                    color: gold,
+                    fontSize: 12,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _socialButton(IconData icon, String label) {
+    return OutlinedButton(
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'تسجيل $label هيتم ربطه بخدمة الدخول لاحقاً',
+            ),
+          ),
+        );
+      },
+      style: OutlinedButton.styleFrom(
+        foregroundColor: gold,
+        side: const BorderSide(color: gold),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
