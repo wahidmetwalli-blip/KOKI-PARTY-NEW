@@ -29,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'icon': Icons.workspace_premium,
       'isPrivate': false,
       'hasPassword': false,
+      'password': '',
       'allowRequests': true,
     },
     {
@@ -40,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'icon': Icons.diamond,
       'isPrivate': false,
       'hasPassword': false,
+      'password': '',
       'allowRequests': true,
     },
     {
@@ -51,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'icon': Icons.groups,
       'isPrivate': false,
       'hasPassword': false,
+      'password': '',
       'allowRequests': true,
     },
     {
@@ -62,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'icon': Icons.nightlight_round,
       'isPrivate': false,
       'hasPassword': false,
+      'password': '',
       'allowRequests': true,
     },
   ];
@@ -92,7 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => RoomScreen(
-          roomName: room['name'] as String,
+          roomName: room['name']?.toString() ?? 'غرفة جديدة',
+          roomData: room,
         ),
       ),
     );
@@ -149,11 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget header() {
     return Row(
       children: [
-        const Icon(
-          Icons.workspace_premium,
-          color: gold,
-          size: 38,
-        ),
+        const Icon(Icons.workspace_premium, color: gold, size: 38),
         const SizedBox(width: 9),
         const Expanded(
           child: Column(
@@ -247,16 +248,13 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 8),
           Text(
             'عالمك.. حفلتك.. مملكتك',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 15),
           ),
         ],
       ),
     );
   }
-
+  
   Widget shortcuts() {
     final items = [
       {'name': 'الغرف', 'icon': Icons.mic},
