@@ -7,6 +7,8 @@ import {
 } from './wallet.entity';
 
 import { WalletService } from './wallet.service';
+import { WalletController } from './wallet.controller';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -14,7 +16,9 @@ import { WalletService } from './wallet.service';
       Wallet,
       WalletTransaction,
     ]),
+    AuthModule,
   ],
+  controllers: [WalletController],
   providers: [WalletService],
   exports: [WalletService],
 })
