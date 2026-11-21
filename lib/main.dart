@@ -1,6 +1,10 @@
-import 'package:flutter/material.dart';
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const KokiPartyApp());
 }
 
@@ -209,321 +213,341 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+  
+  // بناء التطبيق والتنقل بين الصفحات
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      buildHome(),
+      buildDiscover(),
+      buildMessages(),
+      buildProfile(),
+    ];
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         body: SafeArea(
-          child: IndexedStack(
-            index: selectedTab,
-            children: [
-              buildHome(),
-              buildDiscover(),
-              buildMessages(),
-              buildProfile(),
+          child: pages[selectedTab],
+        ),
+        bottomNavigationBar: Container(
+          decoration: const BoxDecoration(
+            color: panel,
+            border: Border(
+              top: BorderSide(color: panel2),
+            ),
+          ),
+          child: BottomNavigationBar(
+            currentIndex: selectedTab,
+            onTap: (index) {
+              setState(() {
+                selectedTab = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: panel,
+            selectedItemColor: const Color(0xFFFFD76A),
+            unselectedItemColor: muted,
+            selectedFontSize: 11,
+            unselectedFontSize: 10,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_rounded),
+                label: 'الرئيسية',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.explore_rounded),
+                label: 'اكتشف',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.chat_rounded),
+                label: 'الرسائل',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_rounded),
+                label: 'حسابي',
+              ),
             ],
           ),
         ),
-        bottomNavigationBar: bottomNavigation(),
       ),
     );
   }
 
   // الصفحة الرئيسية
   Widget buildHome() {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: topBar()),
-        SliverToBoxAdapter(child: welcomeBanner()),
-        SliverToBoxAdapter(child: servicesSection()),
-        SliverToBoxAdapter(child: roomsTitle()),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              return roomCard(rooms[index]);
-            },
-            childCount: rooms.length,
-          ),
-        ),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 20),
-        ),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        topBar(),
+        const SizedBox(height: 20),
+        welcomeBanner(),
+        const SizedBox(height: 22),
+        servicesSection(),
+        const SizedBox(height: 25),
+        roomsTitle(),
+        const SizedBox(height: 12),
+        ...rooms.map((room) => roomCard(room)),
+        const SizedBox(height: 25),
       ],
     );
   }
 
   // الشريط العلوي
   Widget topBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 14,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [purple, blue],
-              ),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.graphic_eq,
-              color: Colors.white,
-              size: 27,
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: panel2,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFFD4AF37),
             ),
           ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: const Icon(
+            Icons.workspace_premium,
+            color: Color(0xFFFFD76A),
+            size: 29,
+          ),
+        ),
+        const SizedBox(width: 10),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'KOKI PARTY',
+                style: TextStyle(
+                  color: Color(0xFFFFD76A),
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              Text(
+                'THE ROYAL WORLD',
+                style: TextStyle(
+                  color: muted,
+                  fontSize: 9,
+                  letterSpacing: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        InkWell(
+          onTap: showWallet,
+          borderRadius: BorderRadius.circular(25),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              color: panel2,
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(
+                color: const Color(0xFFD4AF37),
+              ),
+            ),
+            child: Row(
               children: [
+                const Icon(
+                  Icons.monetization_on,
+                  color: Color(0xFFFFD76A),
+                  size: 19,
+                ),
+                const SizedBox(width: 6),
                 Text(
-                  'KOKI PARTY',
-                  style: TextStyle(
+                  '$coins',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 17,
-                    letterSpacing: 1,
-                  ),
-                ),
-                Text(
-                  'THE ROYAL WORLD',
-                  style: TextStyle(
-                    color: muted,
-                    fontSize: 9,
-                    letterSpacing: 2,
                   ),
                 ),
               ],
             ),
           ),
-          GestureDetector(
-            onTap: showWallet,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 9,
-              ),
-              decoration: BoxDecoration(
-                color: panel2,
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: purple.withOpacity(0.5),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.monetization_on,
-                    color: Colors.amber,
-                    size: 19,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '$coins',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              showMessage('مفيش إشعارات جديدة');
-            },
-            icon: const Icon(
-              Icons.notifications_none,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   // بانر الترحيب
   Widget welcomeBanner() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-      padding: const EdgeInsets.all(20),
-      height: 155,
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
+          colors: [
+            Color(0xFF39235F),
+            Color(0xFF171126),
+            Color(0xFF302044),
+          ],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            Color(0xFF5132A0),
-            Color(0xFF25205B),
-            Color(0xFF17152D),
-          ],
         ),
-        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: purple.withOpacity(0.4),
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'WELCOME TO',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'KOKI PARTY',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 23,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                const Text(
-                  'عالمك.. حفلتك.. أصحابك',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedTab = 1;
-                    });
-                  },
-                  child: const Text(
-                    'اكتشف دلوقتي ←',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+          const Text(
+            'WELCOME TO',
+            style: TextStyle(
+              color: Color(0xFFFFD76A),
+              fontSize: 12,
+              letterSpacing: 2,
             ),
           ),
-          const Icon(
-            Icons.headphones,
-            color: Colors.white,
-            size: 75,
+          const SizedBox(height: 7),
+          const Text(
+            'KOKI PARTY',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 27,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 7),
+          const Text(
+            'عالمك.. حفلتك',
+            style: TextStyle(
+              color: Color(0xFFFFD76A),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 17),
+          const Text(
+            'استمتع بأجمل الغرف الصوتية والهدايا والأصدقاء',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 18),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                selectedTab = 1;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD4AF37),
+              foregroundColor: Colors.black,
+            ),
+            child: const Text(
+              'اكتشف الآن',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // الخدمات
+  // الخدمات الرئيسية
   Widget servicesSection() {
     final services = [
       {
-        'name': 'الغرف',
+        'title': 'الغرف',
         'icon': Icons.mic,
         'color': purple,
       },
       {
-        'name': 'الهدايا',
+        'title': 'الهدايا',
         'icon': Icons.card_giftcard,
         'color': pink,
       },
       {
-        'name': 'VIP',
+        'title': 'VIP',
         'icon': Icons.workspace_premium,
         'color': Colors.amber,
       },
       {
-        'name': 'المحفظة',
+        'title': 'المحفظة',
         'icon': Icons.account_balance_wallet,
         'color': blue,
       },
       {
-        'name': 'الترتيب',
-        'icon': Icons.leaderboard,
+        'title': 'الترتيب',
+        'icon': Icons.emoji_events,
         'color': Colors.orange,
       },
     ];
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 18),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'الخدمات',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+        const Text(
+          'الخدمات الملكية',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 14),
         SizedBox(
-          height: 90,
-          child: ListView.builder(
+          height: 105,
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: services.length,
+            separatorBuilder: (_, __) =>
+                const SizedBox(width: 12),
             itemBuilder: (context, index) {
-              final item = services[index];
-              final Color itemColor = item['color'] as Color;
+              final service = services[index];
 
-              return GestureDetector(
+              return InkWell(
                 onTap: () {
-                  if (index == 3) {
+                  final title = service['title'] as String;
+
+                  if (title == 'المحفظة') {
                     showWallet();
+                  } else if (title == 'الغرف') {
+                    setState(() {
+                      selectedTab = 1;
+                    });
                   } else {
                     showMessage(
-                      'قسم ${item['name']} تجريبي',
+                      'قسم $title هيتم تفعيله في المراحل القادمة',
                     );
                   }
                 },
-                child: SizedBox(
-                  width: 72,
+                borderRadius: BorderRadius.circular(17),
+                child: Container(
+                  width: 82,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: panel,
+                    borderRadius: BorderRadius.circular(17),
+                    border: Border.all(color: panel2),
+                  ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 55,
-                        height: 55,
-                        decoration: BoxDecoration(
-                          color: itemColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(17),
-                          border: Border.all(
-                            color: itemColor.withOpacity(0.5),
-                          ),
-                        ),
-                        child: Icon(
-                          item['icon'] as IconData,
-                          color: itemColor,
-                          size: 26,
-                        ),
+                      Icon(
+                        service['icon'] as IconData,
+                        color: service['color'] as Color,
+                        size: 29,
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 8),
                       Text(
-                        item['name'] as String,
+                        service['title'] as String,
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: Colors.white,
                           fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
@@ -536,14 +560,13 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
-    // عنوان الغرف
+
+  // عنوان الغرف
   Widget roomsTitle() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 22, 18, 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
             'الغرف الصوتية',
             style: TextStyle(
               color: Colors.white,
@@ -551,60 +574,55 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedTab = 1;
-              });
-            },
-            child: const Text(
-              'عرض الكل',
-              style: TextStyle(
-                color: purple,
-                fontSize: 12,
-              ),
+        ),
+        TextButton(
+          onPressed: () {
+            setState(() {
+              selectedTab = 1;
+            });
+          },
+          child: const Text(
+            'عرض الكل',
+            style: TextStyle(
+              color: Color(0xFFFFD76A),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   // بطاقة الغرفة
   Widget roomCard(RoomInfo room) {
-    return GestureDetector(
+    return InkWell(
       onTap: () => openRoom(room),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 5, 16, 10),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 13),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: panel,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: room.color.withOpacity(0.35),
+            color: room.color.withValues(alpha: 0.5),
           ),
         ),
         child: Row(
           children: [
             Container(
-              width: 58,
-              height: 58,
+              width: 53,
+              height: 53,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    room.color,
-                    room.color.withOpacity(0.4),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
+                color: room.color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(15),
               ),
               child: Icon(
                 room.icon,
-                color: Colors.white,
+                color: room.color,
                 size: 29,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 13),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,11 +631,11 @@ class _HomePageState extends State<HomePage> {
                     room.name,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 15,
                       fontWeight: FontWeight.bold,
+                      fontSize: 15,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   Text(
                     room.host,
                     style: const TextStyle(
@@ -625,7 +643,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 11,
                     ),
                   ),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: 5),
                   Row(
                     children: [
                       const Icon(
@@ -635,19 +653,19 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${room.members}',
+                        '${room.members} متصل',
                         style: const TextStyle(
                           color: muted,
                           fontSize: 11,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 9),
                       const Icon(
                         Icons.mic,
-                        color: blue,
+                        color: Color(0xFFFFD76A),
                         size: 14,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 3),
                       const Text(
                         '8 مقاعد',
                         style: TextStyle(
@@ -662,135 +680,333 @@ class _HomePageState extends State<HomePage> {
             ),
             const Icon(
               Icons.arrow_forward_ios,
-              color: muted,
-              size: 16,
+              color: Color(0xFFFFD76A),
+              size: 17,
             ),
           ],
         ),
       ),
     );
   }
-
-  // صفحة الاكتشاف
+  
+  // صفحة اكتشاف الغرف
   Widget buildDiscover() {
     return ListView(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(18),
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 18),
-          child: Text(
-            'اكتشف KOKI PARTY',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+        const Text(
+          'اكتشف عالم KOKI',
+          style: TextStyle(
+            color: Color(0xFFFFD76A),
+            fontSize: 23,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 18),
-          child: Text(
-            'اختار غرفة وابدأ سهرتك',
-            style: TextStyle(color: muted),
+        const Text(
+          'اختار غرفتك وابدأ سهرتك',
+          style: TextStyle(color: muted),
+        ),
+        const SizedBox(height: 22),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          decoration: BoxDecoration(
+            color: panel,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: const TextField(
+            decoration: InputDecoration(
+              icon: Icon(Icons.search, color: muted),
+              hintText: 'ابحث عن غرفة...',
+              hintStyle: TextStyle(color: muted),
+              border: InputBorder.none,
+            ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 22),
+        const Text(
+          'الغرف المميزة',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 19,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 14),
         ...rooms.map((room) => roomCard(room)),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: panel,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: purple),
+          ),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.workspace_premium,
+                color: Color(0xFFFFD76A),
+                size: 40,
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'عالم الملوك',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'استمتع بتجربة KOKI PARTY الملكية',
+                style: TextStyle(color: muted),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 14),
+              ElevatedButton(
+                onPressed: () {
+                  openRoom(rooms.first);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: purple,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('ادخل الغرفة'),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
   // صفحة الرسائل
   Widget buildMessages() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(
-            Icons.chat_bubble_outline,
-            color: purple,
-            size: 65,
-          ),
-          SizedBox(height: 15),
-          Text(
-            'الرسائل',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'مفيش رسائل جديدة دلوقتي',
-            style: TextStyle(color: muted),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // صفحة الحساب
-  Widget buildProfile() {
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       children: [
-        const SizedBox(height: 25),
-        const CircleAvatar(
-          radius: 48,
-          backgroundColor: panel2,
-          child: Icon(
-            Icons.person,
-            color: purple,
-            size: 55,
+        const Text(
+          'الرسائل',
+          style: TextStyle(
+            color: Color(0xFFFFD76A),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 15),
-        const Center(
-          child: Text(
-            'KOKI USER',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+        const SizedBox(height: 8),
+        const Text(
+          'تواصل مع أصدقائك في KOKI PARTY',
+          style: TextStyle(color: muted),
+        ),
+        const SizedBox(height: 22),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: panel,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: const Column(
+            children: [
+              Icon(
+                Icons.mark_chat_unread,
+                color: purple,
+                size: 55,
+              ),
+              SizedBox(height: 13),
+              Text(
+                'أهلاً بيك في الرسائل',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'هنا هتظهر محادثاتك وأصدقاؤك بعد تفعيل نظام الرسائل',
+                style: TextStyle(
+                  color: muted,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 5),
-        const Center(
-          child: Text(
-            'ID: 1000001',
+        const SizedBox(height: 20),
+        ListTile(
+          leading: const CircleAvatar(
+            backgroundColor: panel2,
+            child: Icon(Icons.support_agent, color: purple),
+          ),
+          title: const Text(
+            'خدمة عملاء KOKI',
+            style: TextStyle(color: Colors.white),
+          ),
+          subtitle: const Text(
+            'مركز المساعدة',
             style: TextStyle(color: muted),
           ),
-        ),
-        const SizedBox(height: 25),
-        profileOption(
-          Icons.account_balance_wallet,
-          'المحفظة',
-          showWallet,
-        ),
-        profileOption(
-          Icons.workspace_premium,
-          'عضوية VIP',
-          () => showMessage('قسم VIP تجريبي'),
-        ),
-        profileOption(
-          Icons.people,
-          'الأصدقاء',
-          () => showMessage('قسم الأصدقاء تجريبي'),
-        ),
-        profileOption(
-          Icons.settings,
-          'الإعدادات',
-          () => showMessage('الإعدادات قريباً'),
+          trailing: const Icon(
+            Icons.arrow_forward_ios,
+            color: muted,
+            size: 15,
+          ),
+          onTap: () {
+            showMessage('خدمة العملاء هتتفعّل قريباً');
+          },
         ),
       ],
     );
   }
 
-  // عناصر الحساب
-  Widget profileOption(
+  // صفحة الحساب الشخصي
+  Widget buildProfile() {
+    return ListView(
+      padding: const EdgeInsets.all(18),
+      children: [
+        const SizedBox(height: 20),
+        Center(
+          child: Container(
+            width: 105,
+            height: 105,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF8957F5),
+                  Color(0xFFD4AF37),
+                ],
+              ),
+              border: Border.all(
+                color: const Color(0xFFFFD76A),
+                width: 3,
+              ),
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 58,
+            ),
+          ),
+        ),
+        const SizedBox(height: 15),
+        const Center(
+          child: Text(
+            'KOKI MEMBER',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 7),
+        const Center(
+          child: Text(
+            'معرف المستخدم: 1000001',
+            style: TextStyle(color: muted),
+          ),
+        ),
+        const SizedBox(height: 22),
+        Container(
+          padding: const EdgeInsets.all(17),
+          decoration: BoxDecoration(
+            color: panel,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: panel2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _profileStat('العملات', '$coins'),
+              _profileStat('المستوى', '1'),
+              _profileStat('VIP', 'عادي'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 22),
+        const Text(
+          'إعدادات الحساب',
+          style: TextStyle(
+            color: Color(0xFFFFD76A),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _profileOption(
+          Icons.account_balance_wallet,
+          'المحفظة',
+          showWallet,
+        ),
+        _profileOption(
+          Icons.workspace_premium,
+          'عضوية VIP',
+          () => showMessage('عضوية VIP هتتفعّل قريباً'),
+        ),
+        _profileOption(
+          Icons.card_giftcard,
+          'الهدايا',
+          () => showMessage('قسم الهدايا هيتفعّل قريباً'),
+        ),
+        _profileOption(
+          Icons.security,
+          'الخصوصية والأمان',
+          () => showMessage('إعدادات الخصوصية هتتضاف قريباً'),
+        ),
+        _profileOption(
+          Icons.help_outline,
+          'المساعدة والدعم',
+          () => showMessage('مركز المساعدة هيتفعّل قريباً'),
+        ),
+        _profileOption(
+          Icons.info_outline,
+          'عن KOKI PARTY',
+          () => showMessage('KOKI PARTY - THE ROYAL WORLD'),
+        ),
+        const SizedBox(height: 25),
+        const Center(
+          child: Text(
+            'KOKI PARTY • THE ROYAL WORLD',
+            style: TextStyle(
+              color: muted,
+              fontSize: 10,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // إحصائيات الحساب
+  Widget _profileStat(String title, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Color(0xFFFFD76A),
+            fontSize: 19,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          title,
+          style: const TextStyle(
+            color: muted,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // خيارات الحساب
+  Widget _profileOption(
     IconData icon,
     String title,
     VoidCallback action,
@@ -803,83 +1019,29 @@ class _HomePageState extends State<HomePage> {
       ),
       child: ListTile(
         onTap: action,
-        leading: Icon(icon, color: purple),
+        leading: Icon(
+          icon,
+          color: const Color(0xFFFFD76A),
+        ),
         title: Text(
           title,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+          ),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios,
           color: muted,
-          size: 15,
+          size: 14,
         ),
       ),
     );
   }
-
-  // شريط التنقل السفلي
-  Widget bottomNavigation() {
-    final items = [
-      {'icon': Icons.home, 'name': 'الرئيسية'},
-      {'icon': Icons.explore, 'name': 'اكتشف'},
-      {'icon': Icons.chat, 'name': 'الرسائل'},
-      {'icon': Icons.person, 'name': 'حسابي'},
-    ];
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: panel,
-        border: Border(
-          top: BorderSide(color: Colors.white10),
-        ),
-      ),
-      child: SafeArea(
-        child: Row(
-          children: List.generate(items.length, (index) {
-            final bool active = selectedTab == index;
-
-            return Expanded(
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    selectedTab = index;
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 11),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        items[index]['icon'] as IconData,
-                        color: active ? purple : muted,
-                        size: 23,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        items[index]['name'] as String,
-                        style: TextStyle(
-                          color: active ? purple : muted,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
+  
 }
 
-// ==========================================
-// نهاية كلاس الصفحة الرئيسية
-// وبداية صفحة الغرفة الصوتية
-// ==========================================
-
+// شاشة الغرفة الصوتية
 class RoomPage extends StatefulWidget {
   final String roomName;
   final int coins;
@@ -900,11 +1062,12 @@ class _RoomPageState extends State<RoomPage> {
   late int coins;
   bool isMicMuted = true;
 
-  final List<String?> seats = List<String?>.filled(8, null);
+  final List<String?> seats =
+      List<String?>.filled(8, null);
 
   final List<String> chatMessages = [
-    'أهلاً بيكم في KOKI PARTY ❤️',
-    'نورتوا الغرفة يا أصدقاء',
+    'أهلاً بيكم في KOKI PARTY',
+    'نورتوا غرفة الملوك 👑',
   ];
 
   @override
@@ -913,23 +1076,20 @@ class _RoomPageState extends State<RoomPage> {
     coins = widget.coins;
   }
 
+  // تحديث العملات
   void changeCoins(int amount) {
     setState(() {
       coins = amount;
     });
+
     widget.onCoinsChanged(amount);
   }
 
-  void showRoomMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          textAlign: TextAlign.center,
-        ),
-        backgroundColor: panel2,
-      ),
-    );
+  // رسالة داخل الغرفة
+  void addMessage(String message) {
+    setState(() {
+      chatMessages.add(message);
+    });
   }
 
   @override
@@ -938,560 +1098,715 @@ class _RoomPageState extends State<RoomPage> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: bg,
-        appBar: AppBar(
-          backgroundColor: panel,
-          elevation: 0,
-          title: Text(
-            widget.roomName,
-            style: const TextStyle(
+        body: SafeArea(
+          child: Column(
+            children: [
+              roomHeader(),
+              const SizedBox(height: 15),
+              roomInfo(),
+              const SizedBox(height: 20),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(15),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'مقاعد المتحدثين',
+                        style: TextStyle(
+                          color: Color(0xFFFFD76A),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics:
+                            const NeverScrollableScrollPhysics(),
+                        itemCount: 8,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.85,
+                        ),
+                        itemBuilder: (context, index) {
+                          return seatWidget(index);
+                        },
+                      ),
+                      const SizedBox(height: 22),
+                      chatPreview(),
+                    ],
+                  ),
+                ),
+              ),
+              roomControls(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // رأس الغرفة
+  Widget roomHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 10,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(
+              Icons.arrow_back,
               color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 17,
             ),
           ),
-          actions: [
-            IconButton(
-              onPressed: () {
-                showRoomMessage('معلومات الغرفة');
-              },
-              icon: const Icon(Icons.info_outline),
-            ),
-            IconButton(
-              onPressed: () {
-                showRoomMessage('قائمة الغرفة');
-              },
-              icon: const Icon(Icons.more_vert),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            roomHeader(),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'مقاعد الصوت',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Text(
-                    '8 مقاعد',
-                    style: TextStyle(color: muted),
-                  ),
-                ],
+          Expanded(
+            child: Text(
+              widget.roomName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 18),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                itemCount: 8,
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 18,
-                  childAspectRatio: 0.80,
-                ),
-                itemBuilder: (context, index) {
-                  return seatWidget(index);
-                },
-              ),
+          ),
+          InkWell(
+            onTap: showRoomMenu,
+            child: const Icon(
+              Icons.more_vert,
+              color: Colors.white,
             ),
-            roomControls(),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   // معلومات الغرفة
-  Widget roomHeader() {
+  Widget roomInfo() {
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.all(15),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.symmetric(horizontal: 15),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF5132A0),
-            Color(0xFF191529),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: purple.withOpacity(0.4),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.roomName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'أهلاً بيكم في غرفة KOKI PARTY',
-            style: TextStyle(color: Colors.white70),
-          ),
-          const SizedBox(height: 15),
-          Row(
-            children: const [
-              Icon(Icons.people, color: Colors.white, size: 18),
-              SizedBox(width: 6),
-              Text(
-                'غرفة اجتماعية',
-                style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(width: 18),
-              Icon(Icons.mic, color: Colors.white, size: 18),
-              SizedBox(width: 6),
-              Text(
-                '8 مقاعد صوت',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-    Widget seatWidget(int index) {
-    final String? user = seats[index];
-    final bool isMySeat = user == 'أنت';
-
-    return GestureDetector(
-      onTap: () => seatAction(index),
-      child: Container(
-        decoration: BoxDecoration(
-          color: panel2,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isMySeat ? purple : Colors.white12,
-            width: isMySeat ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 27,
-              backgroundColor: isMySeat
-                  ? purple.withOpacity(0.25)
-                  : Colors.white10,
-              child: Icon(
-                user == null ? Icons.add : Icons.person,
-                color: user == null ? muted : Colors.white,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              user ?? 'مقعد ${index + 1}',
-              style: TextStyle(
-                color: user == null ? muted : Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (isMySeat)
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Icon(
-                  Icons.mic_off,
-                  color: Colors.orangeAccent,
-                  size: 15,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void seatAction(int index) {
-    setState(() {
-      if (seats[index] == 'أنت') {
-        seats[index] = null;
-        isMicMuted = true;
-        showRoomMessage('غادرت مقعد الصوت');
-        return;
-      }
-
-      if (seats[index] != null) {
-        showRoomMessage('المقعد محجوز بالفعل');
-        return;
-      }
-
-      if (seats.contains('أنت')) {
-        showRoomMessage('أنت موجود بالفعل على مقعد');
-        return;
-      }
-
-      seats[index] = 'أنت';
-    });
-
-    if (seats[index] == 'أنت') {
-      showRoomMessage('تم حجز المقعد بنجاح');
-    }
-  }
-
-  Widget roomControls() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 14,
-      ),
-      decoration: const BoxDecoration(
         color: panel,
-        border: Border(
-          top: BorderSide(color: Colors.white12),
-        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: panel2),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          controlButton(
-            icon: isMicMuted ? Icons.mic_off : Icons.mic,
-            label: isMicMuted ? 'فتح المايك' : 'كتم المايك',
-            onTap: () {
-              if (!seats.contains('أنت')) {
-                showRoomMessage('احجز مقعد الأول علشان تستخدم المايك');
-                return;
-              }
-
-              setState(() {
-                isMicMuted = !isMicMuted;
-              });
-
-              showRoomMessage(
-                isMicMuted
-                    ? 'تم كتم المايك'
-                    : 'تم فتح المايك التجريبي',
-              );
-            },
+          const Icon(
+            Icons.mic,
+            color: Color(0xFFFFD76A),
+            size: 30,
           ),
-          controlButton(
-            icon: Icons.card_giftcard,
-            label: 'هدايا',
-            onTap: showGifts,
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'KOKI PARTY LIVE',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'غرفة صوتية ملكية',
+                  style: TextStyle(
+                    color: muted,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
           ),
-          controlButton(
-            icon: Icons.chat_bubble_outline,
-            label: 'الدردشة',
-            onTap: showChat,
-          ),
-          controlButton(
-            icon: Icons.exit_to_app,
-            label: 'خروج',
-            onTap: () {
-              Navigator.pop(context);
-            },
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 7,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.circle,
+                  color: Colors.green,
+                  size: 8,
+                ),
+                SizedBox(width: 5),
+                Text(
+                  'LIVE',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget controlButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
+  // المقعد
+  Widget seatWidget(int index) {
+    final user = seats[index];
+
+    return InkWell(
+      onTap: () => seatAction(index),
+      borderRadius: BorderRadius.circular(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 58,
+            height: 58,
             decoration: BoxDecoration(
-              color: panel2,
-              borderRadius: BorderRadius.circular(16),
+              color: user == null ? panel2 : purple,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: user == null
+                    ? muted
+                    : const Color(0xFFFFD76A),
+                width: 2,
+              ),
             ),
             child: Icon(
-              icon,
-              color: purple,
-              size: 23,
+              user == null
+                  ? Icons.add
+                  : Icons.person,
+              color: Colors.white,
+              size: 29,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 7),
           Text(
-            label,
+            user ?? 'مقعد ${index + 1}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 11,
+              fontSize: 10,
             ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 3),
+          Icon(
+            user == null ? Icons.mic_off : Icons.mic,
+            color: user == null ? muted : Colors.green,
+            size: 15,
           ),
         ],
       ),
     );
   }
 
-  void showGifts() {
-    final gifts = [
-      {
-        'name': 'وردة',
-        'icon': Icons.local_florist,
-        'price': 100,
-      },
-      {
-        'name': 'قلب',
-        'icon': Icons.favorite,
-        'price': 300,
-      },
-      {
-        'name': 'نجمة',
-        'icon': Icons.star,
-        'price': 500,
-      },
-      {
-        'name': 'تاج',
-        'icon': Icons.workspace_premium,
-        'price': 1000,
-      },
-      {
-        'name': 'ألماسة',
-        'icon': Icons.diamond,
-        'price': 2000,
-      },
-      {
-        'name': 'صاروخ',
-        'icon': Icons.rocket_launch,
-        'price': 5000,
-      },
-    ];
+  // طلب دخول المقعد
+  void seatAction(int index) {
+    if (seats[index] != null) {
+      showMessage('المقعد مشغول حالياً');
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
       backgroundColor: panel,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(25),
-        ),
-      ),
       builder: (sheetContext) {
-        return Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'اختار هديتك 🎁',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'دخول مقعد المتحدث',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: gifts.length,
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1,
+                const SizedBox(height: 15),
+                const Text(
+                  'هل تريد الجلوس على هذا المقعد؟',
+                  style: TextStyle(color: muted),
                 ),
-                itemBuilder: (context, index) {
-                  final gift = gifts[index];
-                  final int price = gift['price'] as int;
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        seats[index] = 'أنت';
+                      });
 
-                  return GestureDetector(
-                    onTap: () {
-                      if (coins < price) {
-                        Navigator.pop(sheetContext);
-                        showRoomMessage('رصيدك من العملات غير كافي');
-                        return;
-                      }
-
-                      changeCoins(coins - price);
                       Navigator.pop(sheetContext);
-
-                      showRoomMessage(
-                        'تم إرسال ${gift['name']} بنجاح 🎁',
-                      );
+                      showMessage('أنت الآن على المقعد');
                     },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: panel2,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            gift['icon'] as IconData,
-                            color: purple,
-                            size: 30,
-                          ),
-                          const SizedBox(height: 7),
-                          Text(
-                            gift['name'] as String,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$price عملة',
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: purple,
+                      foregroundColor: Colors.white,
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'رصيدك الحالي: $coins عملة',
-                style: const TextStyle(
-                  color: Colors.amber,
-                  fontWeight: FontWeight.bold,
+                    child: const Text('اجلس على المقعد'),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-            ],
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                  },
+                  child: const Text(
+                    'إلغاء',
+                    style: TextStyle(color: muted),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  void showChat() {
-    final TextEditingController controller =
-        TextEditingController();
+  // أزرار الغرفة
+  Widget roomControls() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 12,
+      ),
+      decoration: const BoxDecoration(
+        color: panel,
+        border: Border(
+          top: BorderSide(color: panel2),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          controlButton(
+            isMicMuted ? Icons.mic_off : Icons.mic,
+            isMicMuted ? 'فتح المايك' : 'كتم',
+            () {
+              setState(() {
+                isMicMuted = !isMicMuted;
+              });
+              showMessage(
+                isMicMuted ? 'تم كتم المايك' : 'تم فتح المايك',
+              );
+            },
+          ),
+          controlButton(
+            Icons.card_giftcard,
+            'هدايا',
+            showGifts,
+          ),
+          controlButton(
+            Icons.chat,
+            'دردشة',
+            showChat,
+          ),
+          controlButton(
+            Icons.account_balance_wallet,
+            'المحفظة',
+            showRoomWallet,
+          ),
+          controlButton(
+            Icons.exit_to_app,
+            'خروج',
+            () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // زر تحكم
+  Widget controlButton(
+    IconData icon,
+    String title,
+    VoidCallback action,
+  ) {
+    return InkWell(
+      onTap: action,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: const Color(0xFFFFD76A),
+            size: 23,
+          ),
+          const SizedBox(height: 5),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // رسالة للمستخدم
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: panel2,
+      ),
+    );
+  }
+  
+  // قائمة الهدايا
+  void showGifts() {
+    final gifts = [
+      {'name': 'وردة', 'icon': '🌹', 'price': 100},
+      {'name': 'قلب', 'icon': '❤️', 'price': 300},
+      {'name': 'نجمة', 'icon': '⭐', 'price': 500},
+      {'name': 'تاج', 'icon': '👑', 'price': 1000},
+      {'name': 'ماسة', 'icon': '💎', 'price': 2000},
+      {'name': 'قلعة', 'icon': '🏰', 'price': 5000},
+    ];
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: panel,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(25),
+          top: Radius.circular(24),
         ),
       ),
       builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 20,
-                bottom: MediaQuery.of(sheetContext)
-                        .viewInsets
-                        .bottom +
-                    16,
-              ),
-              child: SizedBox(
-                height: 400,
-                child: Column(
-                  children: [
-                    const Text(
-                      'دردشة الغرفة 💬',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: chatMessages.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            margin: const EdgeInsets.only(
-                              bottom: 9,
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'هدايا KOKI PARTY',
+                  style: TextStyle(
+                    color: Color(0xFFFFD76A),
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'رصيدك: $coins عملة',
+                  style: const TextStyle(color: muted),
+                ),
+                const SizedBox(height: 20),
+                GridView.builder(
+                  shrinkWrap: true,
+                  itemCount: gifts.length,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemBuilder: (context, index) {
+                    final gift = gifts[index];
+                    final price = gift['price'] as int;
+
+                    return InkWell(
+                      onTap: () {
+                        if (coins < price) {
+                          Navigator.pop(sheetContext);
+                          showMessage('رصيدك غير كافي لإرسال الهدية');
+                          return;
+                        }
+
+                        changeCoins(coins - price);
+
+                        Navigator.pop(sheetContext);
+
+                        showMessage(
+                          'تم إرسال ${gift['name']} بنجاح',
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(15),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: panel2,
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(color: muted),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              gift['icon'] as String,
+                              style: const TextStyle(fontSize: 32),
                             ),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: panel2,
-                              borderRadius:
-                                  BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              chatMessages[index],
+                            const SizedBox(height: 5),
+                            Text(
+                              gift['name'] as String,
                               style: const TextStyle(
                                 color: Colors.white,
+                                fontSize: 12,
                               ),
                             ),
-                          );
-                        },
+                            const SizedBox(height: 4),
+                            Text(
+                              '$price عملة',
+                              style: const TextStyle(
+                                color: Color(0xFFFFD76A),
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 15),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // دردشة الغرفة
+  void showChat() {
+    final controller = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: panel,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(22),
+        ),
+      ),
+      builder: (sheetContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 15,
+              right: 15,
+              top: 20,
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 15,
+            ),
+            child: SizedBox(
+              height: 380,
+              child: Column(
+                children: [
+                  const Text(
+                    'دردشة الغرفة',
+                    style: TextStyle(
+                      color: Color(0xFFFFD76A),
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: controller,
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: chatMessages.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: panel2,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            chatMessages[index],
                             style: const TextStyle(
                               color: Colors.white,
                             ),
-                            decoration: InputDecoration(
-                              hintText: 'اكتب رسالتك...',
-                              hintStyle: const TextStyle(
-                                color: muted,
-                              ),
-                              filled: true,
-                              fillColor: panel2,
-                              border: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(14),
-                                borderSide: BorderSide.none,
-                              ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'اكتب رسالتك...',
+                            hintStyle: const TextStyle(color: muted),
+                            filled: true,
+                            fillColor: panel2,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide.none,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: () {
-                            final message =
-                                controller.text.trim();
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          final message = controller.text.trim();
 
-                            if (message.isEmpty) return;
+                          if (message.isEmpty) return;
 
-                            setState(() {
-                              chatMessages.add('أنت: $message');
-                            });
-
-                            controller.clear();
-                            setSheetState(() {});
-                          },
-                          icon: const Icon(
-                            Icons.send,
-                            color: purple,
-                          ),
+                          addMessage('أنت: $message');
+                          controller.clear();
+                        },
+                        icon: const Icon(
+                          Icons.send,
+                          color: Color(0xFFFFD76A),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // محفظة الغرفة
+  void showRoomWallet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: panel,
+      builder: (sheetContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.account_balance_wallet,
+                  color: Color(0xFFFFD76A),
+                  size: 48,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'محفظتك',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '$coins عملة',
+                  style: const TextStyle(
+                    color: Color(0xFFFFD76A),
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      showMessage(
+                        'الشحن الحقيقي محتاج ربط بوابة دفع',
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: purple,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('شحن العملات'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // قائمة خيارات الغرفة
+  void showRoomMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: panel,
+      builder: (sheetContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.report,
+                  color: Colors.orange,
+                ),
+                title: const Text(
+                  'الإبلاغ عن الغرفة',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  showMessage('تم تسجيل طلب الإبلاغ بشكل تجريبي');
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.share,
+                  color: purple,
+                ),
+                title: const Text(
+                  'مشاركة الغرفة',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  showMessage('مشاركة الغرفة هتتفعّل قريباً');
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.close,
+                  color: muted,
+                ),
+                title: const Text(
+                  'إغلاق',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                },
+              ),
+            ],
+          ),
         );
       },
     );
