@@ -15,6 +15,7 @@ export enum EarningSource {
 export enum EarningStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
+  WITHDRAWAL_REQUESTED = 'WITHDRAWAL_REQUESTED',
   PAID = 'PAID',
   CANCELLED = 'CANCELLED',
 }
@@ -45,9 +46,7 @@ export class HostEarning {
   })
   status: EarningStatus;
 
-  @Column({
-    type: 'bigint',
-  })
+  @Column({ type: 'bigint' })
   amount: string;
 
   @Column({
@@ -58,14 +57,19 @@ export class HostEarning {
   reference: string;
 
   @Column({
+    name: 'withdrawal_request_id',
+    type: 'uuid',
+    nullable: true,
+  })
+  withdrawalRequestId: string | null;
+
+  @Column({
     type: 'varchar',
     length: 500,
     nullable: true,
   })
   description: string | null;
 
-  @CreateDateColumn({
-    name: 'created_at',
-  })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
