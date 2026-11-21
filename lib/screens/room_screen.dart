@@ -1,14 +1,15 @@
-
 import 'package:flutter/material.dart';
 
 class RoomScreen extends StatefulWidget {
-  final String roomName;
-  final Map<String, dynamic>? roomData;
+  final String roomTitle;
+  final String hostName;
+  final String roomId;
 
   const RoomScreen({
     super.key,
-    this.roomName = 'غرفة الملوك',
-    this.roomData,
+    this.roomTitle = 'غرفة الملوك VIP',
+    this.hostName = 'KOKI KING',
+    this.roomId = '10001',
   });
 
   @override
@@ -16,51 +17,169 @@ class RoomScreen extends StatefulWidget {
 }
 
 class _RoomScreenState extends State<RoomScreen> {
-  static const Color bg = Color(0xFF090711);
-  static const Color panel = Color(0xFF191529);
-  static const Color gold = Color(0xFFFFD36A);
-  static const Color purple = Color(0xFF8957F5);
+  bool isMicMuted = false;
+  int coins = 10000;
+  String? activeGiftBanner;
 
-  bool isMuted = false;
-  bool isOwner = false;
-  bool allowRequests = true;
-
-  late String ownerName;
-
-  final List<String?> seatUsers = List<String?>.filled(8, null);
-
-  final List<String> messages = [
-    'أهلاً بيكم في KOKI PARTY 👑',
-    'منورين الغرفة ❤️',
+  final TextEditingController _chatController = TextEditingController();
+  final List> _messages = [
+    {'user': 'النظام', 'text': 'مرحباً بكم في عالم KOKI PARTY الملكي 👑'},
+    {'user': 'Amira VIP', 'text': 'منورين الغرفة جميعاً ✨'},
   ];
 
-  final TextEditingController messageController =
-      TextEditingController();
+  final List> _gifts = [
+    {'name': 'قلب ملكي', 'icon': '💖', 'price': 10},
+    {'name': 'تاج الذهب', 'icon': '👑', 'price': 100},
+    {'name': 'سيارة فاخرة', 'icon': '🏎️', 'price': 500},
+    {'name': 'حصان مجنح', 'icon': '🦄', 'price': 1000},
+    {'name': 'قلعة الأحلام', 'icon': '🏰', 'price': 2500},
+    {'name': 'صاروخ VIP', 'icon': '🚀', 'price': 5000},
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-
-    ownerName = widget.roomData?['owner']?.toString()
-        ?? 'KOKI USER';
-
-    isOwner = ownerName == 'KOKI USER';
-
-    allowRequests =
-        widget.roomData?['allowRequests'] as bool? ?? true;
-
-    seatUsers[0] = ownerName;
+  void _sendMessage() {
+    final txt = _chatController.text.trim();
+    if (txt.isEmpty) return;
+    setState(() {
+      _messages.add({'user': 'KOKI USER', 'text': txt});
+      _chatController.clear();
+    });
   }
 
-  @override
-  void dispose() {
-    messageController.dispose();
-    super.dispose();
-  }
-
-  String get roomDescription {
-    return widget.roomData?['description']?.toString() ??
-        'غرفة صوتية ملكية • 8 مقاعد';
+  void _openGiftBox() {
+    int selectedGiftIndex = 0;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF150B2E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'صندوق الهدايا الملكية 🎁',
+                        style: TextStyle(
+                          color: Color(0xFFFFD54F),
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          'الرصيد: $coins 💰',
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _gifts.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1.05,
+                    ),
+                    itemBuilder: (_, i) {
+                      final g = _gifts[i];
+                      final selected = selectedGiftIndex == i;
+                      return GestureDetector(
+                        onTap: () => setModalState(() => selectedGiftIndex = i),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF221347),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: selected ? const Color(0xFFFFD54F) : Colors.white12,
+                              width: selected ? 2 : 1,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(g['icon'], style: const TextStyle(fontSize: 30)),
+                              const SizedBox(height: 4),
+                              Text(
+                                g['name'],
+                                style: const TextStyle(color: Colors.white, fontSize: 12),
+                              ),
+                              Text(
+                                '${g['price']} عملة',
+                                style: const TextStyle(
+                                  color: Color(0xFFFFD54F),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFD54F),
+                        foregroundColor: const Color(0xFF120826),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () {
+                        final gift = _gifts[selectedGiftIndex];
+                        final int price = gift['price'];
+                        if (coins >= price) {
+                          Navigator.pop(ctx);
+                          setState(() {
+                            coins -= price;
+                            activeGiftBanner =
+                                'أرسل KOKI USER هدية ${gift['name']} ${gift['icon']}';
+                            _messages.add({
+                              'user': 'هدية ملكية',
+                              'text': 'أرسل KOKI USER ${gift['name']} ${gift['icon']}',
+                            });
+                          });
+                          Future.delayed(const Duration(seconds: 3), () {
+                            if (mounted) {
+                              setState(() => activeGiftBanner = null);
+                            }
+                          });
+                        }
+                      },
+                      child: const Text(
+                        'إرسال الهدية الآن',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -68,517 +187,277 @@ class _RoomScreenState extends State<RoomScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: bg,
-        appBar: AppBar(
-          backgroundColor: panel,
-          foregroundColor: gold,
-          centerTitle: true,
-          title: Text(widget.roomName),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: roomMenu,
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            roomHeader(),
-            Expanded(child: buildSeats()),
-            buildChat(),
-            buildControls(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget roomHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(17),
-      color: panel,
-      child: Column(
-        children: [
-          const Icon(
-            Icons.workspace_premium,
-            color: gold,
-            size: 35,
-          ),
-          const SizedBox(height: 7),
-          const Text(
-            'THE ROYAL WORLD',
-            style: TextStyle(
-              color: gold,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF281052), Color(0xFF130729), Color(0xFF090414)],
             ),
           ),
-          const SizedBox(height: 7),
-          Text(
-            roomDescription.isEmpty
-                ? 'غرفة صوتية ملكية'
-                : roomDescription,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.people,
-                color: gold,
-                size: 17,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                '${seatUsers.where((user) => user != null).length}/8 مقاعد',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
-              ),
-              if (widget.roomData?['isPrivate'] == true) ...[
-                const SizedBox(width: 12),
-                const Icon(
-                  Icons.lock,
-                  color: gold,
-                  size: 15,
-                ),
-                const SizedBox(width: 4),
-                const Text(
-                  'خاصة',
-                  style: TextStyle(
-                    color: gold,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildSeats() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 8,
-      gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.78,
-      ),
-      itemBuilder: (context, index) {
-        return seatItem(index);
-      },
-    );
-  }
-
-  Widget seatItem(int index) {
-    final user = seatUsers[index];
-    final occupied = user != null;
-
-    return InkWell(
-      onTap: () => onSeatTap(index),
-      borderRadius: BorderRadius.circular(15),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: occupied ? purple : panel,
-              border: Border.all(
-                color: occupied ? gold : Colors.white24,
-                width: 2,
-              ),
-            ),
-            child: Icon(
-              occupied ? Icons.person : Icons.add,
-              color: occupied ? gold : Colors.white70,
-              size: 30,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            occupied ? user : 'مقعد ${index + 1}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Icon(
-            occupied ? Icons.mic : Icons.mic_off,
-            color: occupied ? gold : Colors.white38,
-            size: 17,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void onSeatTap(int index) {
-    if (seatUsers[index] == null) {
-      if (!allowRequests && !isOwner) {
-        showMessage('طلبات المايك غير متاحة حاليًا');
-        return;
-      }
-
-      setState(() {
-        seatUsers[index] = 'أنت';
-      });
-
-      showMessage('تم الانضمام للمقعد تجريبيًا');
-      return;
-    }
-
-    if (isOwner && index != 0) {
-      showSeatOptions(index);
-    } else {
-      showMessage('المقعد مشغول بواسطة ${seatUsers[index]}');
-    }
-  }
-
-  Widget buildChat() {
-    return Container(
-      height: 165,
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      color: panel,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'دردشة الغرفة',
-            style: TextStyle(
-              color: gold,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Expanded(
-            child: ListView.builder(
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Text(
-                    messages[index],
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: messageController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'اكتب رسالتك...',
-                    hintStyle: const TextStyle(
-                      color: Colors.white38,
-                    ),
-                    filled: true,
-                    fillColor: bg,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onSubmitted: (_) => sendMessage(),
-                ),
-              ),
-              IconButton(
-                onPressed: sendMessage,
-                icon: const Icon(
-                  Icons.send,
-                  color: gold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void sendMessage() {
-    final text = messageController.text.trim();
-
-    if (text.isEmpty) return;
-
-    setState(() {
-      messages.add('أنت: $text');
-      messageController.clear();
-    });
-  }
-
-  Widget buildControls() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 12, 10, 20),
-      color: const Color(0xFF120F20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          controlButton(
-            isMuted ? Icons.mic_off : Icons.mic,
-            isMuted ? 'فتح المايك' : 'كتم المايك',
-            () {
-              setState(() {
-                isMuted = !isMuted;
-              });
-              showMessage(
-                isMuted ? 'تم كتم المايك' : 'تم فتح المايك',
-              );
-            },
-          ),
-          controlButton(
-            Icons.card_giftcard,
-            'الهدايا',
-            openGifts,
-          ),
-          controlButton(
-            Icons.chat,
-            'الدردشة',
-            () {
-              showMessage('اكتب رسالتك في صندوق الدردشة');
-            },
-          ),
-          controlButton(
-            Icons.settings,
-            'الإدارة',
-            roomMenu,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget controlButton(
-    IconData icon,
-    String label,
-    VoidCallback action,
-  ) {
-    return InkWell(
-      onTap: action,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: gold, size: 25),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 10,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void openGifts() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: panel,
-      builder: (context) {
-        final gifts = [
-          ['❤️', 'قلب'],
-          ['🌹', 'وردة'],
-          ['👑', 'تاج'],
-          ['💎', 'ماسة'],
-        ];
-
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
+          child: SafeArea(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'هدايا KOKI PARTY',
-                  style: TextStyle(
-                    color: gold,
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
+                // هيدر الغرفة
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black38,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0xFFFFD54F).withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Color(0xFFFFD54F),
+                              child: Icon(Icons.crown, color: Color(0xFF120826), size: 18),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.roomTitle,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                Text(
+                                  'ID: ${widget.roomId}',
+                                  style: const TextStyle(color: Colors.white60, fontSize: 10),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.power_settings_new_rounded, color: Colors.white70),
+                      ),
+                    ],
                   ),
                 ),
+
+                if (activeGiftBanner != null)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF6F00), Color(0xFFD500F9)],
+                      ),
+                    ),
+                    child: Text(
+                      activeGiftBanner!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 8),
+
+                // مقعد المضيف الملكي
+                Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFFD54F), Color(0xFFFF6F00), Color(0xFFFFD54F)],
+                        ),
+                      ),
+                      child: const CircleAvatar(
+                        radius: 34,
+                        backgroundColor: Color(0xFF1D0D3B),
+                        child: Icon(Icons.person, color: Color(0xFFFFD54F), size: 36),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD54F),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '👑 ${widget.hostName}',
+                        style: const TextStyle(
+                          color: Color(0xFF120826),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
                 const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: gifts.map((gift) {
-                    return InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                        showMessage(
-                          'اخترت ${gift[1]} - الهدية تجريبية',
-                        );
-                      },
-                      child: Column(
+
+                // شبكة 8 مقاعد مايك
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 8,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemBuilder: (_, index) {
+                      return Column(
                         children: [
-                          Text(
-                            gift[0],
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            gift[1],
-                            style: const TextStyle(
-                              color: Colors.white,
+                          Container(
+                            width: 54,
+                            height: 54,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.08),
+                              border: Border.all(
+                                color: const Color(0xFFFFD54F).withValues(alpha: 0.45),
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.chair_rounded,
+                              color: Color(0xFFFFD54F),
+                              size: 24,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'No.${index + 1}',
+                            style: const TextStyle(color: Colors.white70, fontSize: 11),
+                          ),
                         ],
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    },
+                  ),
                 ),
-                const SizedBox(height: 20),
+
+                const SizedBox(height: 10),
+
+                // منطقة الدردشة الحية
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    itemCount: _messages.length,
+                    itemBuilder: (_, i) {
+                      final msg = _messages[i];
+                      return Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black38,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${msg['user']}: ',
+                                  style: const TextStyle(
+                                    color: Color(0xFFFFD54F),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: msg['text'],
+                                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // الشريط السفلي للتحكم والهدايا
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 44,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _chatController,
+                                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                                  decoration: const InputDecoration(
+                                    hintText: 'اكتب رسالة...',
+                                    hintStyle: TextStyle(color: Colors.white54),
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _sendMessage,
+                                child: const Icon(Icons.send_rounded, color: Color(0xFFFFD54F), size: 20),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      CircleAvatar(
+                        backgroundColor: Colors.white.withValues(alpha: 0.12),
+                        child: IconButton(
+                          icon: Icon(
+                            isMicMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                            color: isMicMuted ? Colors.redAccent : Colors.white,
+                          ),
+                          onPressed: () => setState(() => isMicMuted = !isMicMuted),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _openGiftBox,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Color(0xFFFF6F00), Color(0xFFE040FB)],
+                            ),
+                          ),
+                          child: const Icon(Icons.card_giftcard_rounded, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  void roomMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: panel,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (isOwner)
-                ListTile(
-                  leading: const Icon(
-                    Icons.people,
-                    color: gold,
-                  ),
-                  title: const Text(
-                    'إدارة المقاعد',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    showMessage('اضغط على مقعد لإدارته');
-                  },
-                ),
-              if (isOwner)
-                SwitchListTile(
-                  value: allowRequests,
-                  activeColor: gold,
-                  title: const Text(
-                    'السماح بطلب المايك',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      allowRequests = value;
-                    });
-                    Navigator.pop(sheetContext);
-                  },
-                ),
-              ListTile(
-                leading: const Icon(
-                  Icons.shield,
-                  color: gold,
-                ),
-                title: const Text(
-                  'إدارة المشرفين',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  showMessage('إدارة المشرفين قيد الربط');
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.exit_to_app,
-                  color: gold,
-                ),
-                title: const Text(
-                  'مغادرة الغرفة',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void showSeatOptions(int index) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: panel,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(
-                  Icons.person_remove,
-                  color: gold,
-                ),
-                title: const Text(
-                  'إخلاء المقعد',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  setState(() {
-                    seatUsers[index] = null;
-                  });
-                  showMessage('تم إخلاء المقعد تجريبيًا');
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+        ),
+      ),
     );
   }
 }
