@@ -7,6 +7,7 @@ import { PoliciesService } from './policies.service';
 
 import { HostLevel } from './host-level.entity';
 import { HostLevelService } from './host-level.service';
+import { HostLevelController } from './host-level.controller';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { HostLevelService } from './host-level.service';
   ],
   controllers: [
     PoliciesController,
+    HostLevelController,
   ],
   providers: [
     PoliciesService,
