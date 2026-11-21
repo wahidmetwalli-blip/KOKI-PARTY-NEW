@@ -548,11 +548,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+
 class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _ProfileTile({required this.icon, required this.label});
+  const _ProfileTile({
+    required this.icon,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -565,9 +569,21 @@ class _ProfileTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: const Color(0xFFFFD54F), size: 28),
+          Icon(
+            icon,
+            color: const Color(0xFFFFD54F),
+            size: 28,
+          ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
-                     
+    );
+  }
+}
