@@ -99,6 +99,9 @@ class _RoomScreenState extends State<RoomScreen> {
                     ),
                     itemBuilder: (_, i) {
                       final g = _gifts[i];
+                      final String iconText = g['icon'] as String;
+                      final String nameText = g['name'] as String;
+                      final int priceVal = g['price'] as int;
                       final selected = selectedGiftIndex == i;
                       return GestureDetector(
                         onTap: () => setModalState(() => selectedGiftIndex = i),
@@ -114,14 +117,14 @@ class _RoomScreenState extends State<RoomScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(g['icon'], style: const TextStyle(fontSize: 30)),
+                              Text(iconText, style: const TextStyle(fontSize: 30)),
                               const SizedBox(height: 4),
                               Text(
-                                g['name'],
+                                nameText,
                                 style: const TextStyle(color: Colors.white, fontSize: 12),
                               ),
                               Text(
-                                '${g['price']} عملة',
+                                '$priceVal عملة',
                                 style: const TextStyle(
                                   color: Color(0xFFFFD54F),
                                   fontSize: 11,
@@ -148,16 +151,18 @@ class _RoomScreenState extends State<RoomScreen> {
                       ),
                       onPressed: () {
                         final gift = _gifts[selectedGiftIndex];
-                        final int price = gift['price'];
+                        final int price = gift['price'] as int;
+                        final String giftName = gift['name'] as String;
+                        final String giftIcon = gift['icon'] as String;
                         if (coins >= price) {
                           Navigator.pop(ctx);
                           setState(() {
                             coins -= price;
                             activeGiftBanner =
-                                'أرسل KOKI USER هدية ${gift['name']} ${gift['icon']}';
+                                'أرسل KOKI USER هدية $giftName $giftIcon';
                             _messages.add({
                               'user': 'هدية ملكية',
-                              'text': 'أرسل KOKI USER ${gift['name']} ${gift['icon']}',
+                              'text': 'أرسل KOKI USER $giftName $giftIcon',
                             });
                           });
                           Future.delayed(const Duration(seconds: 3), () {
@@ -198,7 +203,6 @@ class _RoomScreenState extends State<RoomScreen> {
           child: SafeArea(
             child: Column(
               children: [
-                // هيدر الغرفة
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   child: Row(
@@ -215,7 +219,7 @@ class _RoomScreenState extends State<RoomScreen> {
                             const CircleAvatar(
                               radius: 16,
                               backgroundColor: Color(0xFFFFD54F),
-                              child: Icon(Icons.crown, color: Color(0xFF120826), size: 18),
+                              child: Icon(Icons.workspace_premium, color: Color(0xFF120826), size: 18),
                             ),
                             const SizedBox(width: 8),
                             Column(
@@ -246,7 +250,6 @@ class _RoomScreenState extends State<RoomScreen> {
                     ],
                   ),
                 ),
-
                 if (activeGiftBanner != null)
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -265,10 +268,7 @@ class _RoomScreenState extends State<RoomScreen> {
                       ),
                     ),
                   ),
-
                 const SizedBox(height: 8),
-
-                // مقعد المضيف الملكي
                 Column(
                   children: [
                     Container(
@@ -303,10 +303,7 @@ class _RoomScreenState extends State<RoomScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 18),
-
-                // شبكة 8 مقاعد مايك
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GridView.builder(
@@ -348,10 +345,7 @@ class _RoomScreenState extends State<RoomScreen> {
                     },
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
-                // منطقة الدردشة الحية
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -390,8 +384,6 @@ class _RoomScreenState extends State<RoomScreen> {
                     },
                   ),
                 ),
-
-                // الشريط السفلي للتحكم والهدايا
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(
