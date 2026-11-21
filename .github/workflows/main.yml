@@ -1,14 +1,13 @@
-
-name: Create KOKI PARTY Flutter Project
+name: Build KOKI PARTY APK
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  create-project:
+  build-apk:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,22 +19,16 @@ jobs:
         with:
           channel: stable
 
-      - name: Create Flutter Android project
-        run: |
-          flutter create . --project-name koki_party --platforms=android --org com.kokiparty
+      - name: Get dependencies
+        run: flutter pub get
 
-      - name: Check Flutter project
-        run: |
-          test -f pubspec.yaml
-          test -f lib/main.dart
-          test -d android
-          flutter --version
+      - name: Build Android APK
+        run: flutter build apk --release
 
-      - name: Save project files
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Create KOKI PARTY Flutter project" || echo "No changes"
-          git push
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KOKI-PARTY-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
           
