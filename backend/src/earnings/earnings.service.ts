@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   NotFoundException,
@@ -6,7 +7,10 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import {
+  QueryFailedError,
+  Repository,
+} from 'typeorm';
 
 import {
   HostEarning,
@@ -32,19 +36,38 @@ export class EarningsService {
     reference: string,
     description?: string,
   ) {
-    if (!/^[1-9]\d*$/.test(amount)) {
+    if (
+      typeof amount !== 'string' ||
+      !/^[1-9]\d*$/.test(amount)
+    ) {
       throw new BadRequestException(
-        'Amount must be a positive whole number',
+        'Amount must be a positive integer in USD cents',
+      );
+    }
+
+    if (!Object.values(EarningSource).includes(source)) {
+      throw new BadRequestException(
+        'Invalid earning source',
       );
     }
 
     if (
-      !reference ||
+      typeof reference !== 'string' ||
       reference.trim().length === 0 ||
       reference.length > 150
     ) {
       throw new BadRequestException(
         'A valid unique reference is required',
+      );
+    }
+
+    if (
+      description !== undefined &&
+      (typeof description !== 'string' ||
+        description.length > 500)
+    ) {
+      throw new BadRequestException(
+        'Invalid earning description',
       );
     }
 
@@ -57,7 +80,7 @@ export class EarningsService {
     }
 
     const existing = await this.earningsRepository.findOne({
-      where: { reference },
+      where: { reference: reference.trim() },
     });
 
     if (existing) {
@@ -71,8 +94,9 @@ export class EarningsService {
       source,
       status: EarningStatus.PENDING,
       amount,
-      reference,
-      description: description || null,
+      currency: 'USD',
+      reference: reference.trim(),
+      description: description?.trim() || null,
     });
 
     try {
@@ -107,6 +131,7 @@ export class EarningsService {
     const summary = {
       pending: 0n,
       approved: 0n,
+      withdrawalRequested: 0n,
       paid: 0n,
       cancelled: 0n,
     };
@@ -123,6 +148,10 @@ export class EarningsService {
           summary.approved += amount;
           break;
 
+        case EarningStatus.WITHDRAWAL_REQUESTED:
+          summary.withdrawalRequested += amount;
+          break;
+
         case EarningStatus.PAID:
           summary.paid += amount;
           break;
@@ -134,10 +163,14 @@ export class EarningsService {
     }
 
     return {
+      currency: 'USD',
+      unit: 'cents',
       pending: summary.pending.toString(),
       approved: summary.approved.toString(),
+      withdrawalRequested:
+        summary.withdrawalRequested.toString(),
       paid: summary.paid.toString(),
       cancelled: summary.cancelled.toString(),
     };
   }
-    }
+  }
