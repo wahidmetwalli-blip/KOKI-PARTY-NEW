@@ -1,3 +1,4 @@
+
 import {
   Controller,
   Get,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 
 import { Request } from 'express';
+
 import {
   IsEnum,
   IsString,
@@ -49,6 +51,9 @@ export class WithdrawalsController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: CreateWithdrawalDto,
   ) {
+    // Amount is always submitted in USD cents.
+    // 1000 cents = 10 USD.
+    // Currency is fixed to USD by the backend service.
     return this.withdrawalsService.createWithdrawal(
       req.user.id,
       dto.amount,
