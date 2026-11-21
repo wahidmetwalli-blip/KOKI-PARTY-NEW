@@ -1147,7 +1147,94 @@ class _RoomPageState extends State<RoomPage> {
       ),
     );
   }
+  // معاينة دردشة الغرفة
+  Widget chatPreview() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF191529),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                color: Color(0xFFD4AF37),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'دردشة الغرفة',
+                style: TextStyle(
+                  color: Color(0xFFD4AF37),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _chatMessage('KOKI', 'أهلاً بكل الملوك ❤️'),
+          _chatMessage('Royal', 'منورين الغرفة 👑'),
+          _chatMessage('Admin', 'استمتعوا بوقتكم 🎉'),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B0915),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'اكتب رسالة...',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                ),
+                Icon(
+                  Icons.send_rounded,
+                  color: Color(0xFFD4AF37),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _chatMessage(String name, String message) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: '$name: ',
+              style: const TextStyle(
+                color: Color(0xFFD4AF37),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextSpan(
+              text: message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   // رأس الغرفة
   Widget roomHeader() {
     return Padding(
