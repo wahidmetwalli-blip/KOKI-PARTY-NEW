@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'create_room_screen.dart';
 import 'room_screen.dart';
 
-const Color bg = Color(0xFF090711);
-const Color panel = Color(0xFF191529);
-const Color gold = Color(0xFFD8B45A);
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -15,44 +11,52 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int selectedTab = 0;
+  static const Color bg = Color(0xFF090711);
+  static const Color panel = Color(0xFF191529);
+  static const Color gold = Color(0xFFFFD36A);
+  static const Color purple = Color(0xFF8957F5);
+
+  int selectedIndex = 0;
+  int coins = 10000;
 
   final List<Map<String, dynamic>> rooms = [
     {
       'name': 'غرفة الملوك',
-      'owner': 'ملك الليل',
-      'members': '124',
-      'image':
-          'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=900',
+      'owner': 'KOKI KING',
+      'members': 24,
+      'speakers': 3,
+      'icon': Icons.workspace_premium,
     },
     {
       'name': 'مملكة KOKI',
-      'owner': 'الأميرة',
-      'members': '86',
-      'image':
-          'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=900',
+      'owner': 'Royal Star',
+      'members': 126,
+      'speakers': 5,
+      'icon': Icons.diamond,
     },
     {
       'name': 'عالم الأصدقاء',
-      'owner': 'صاحب الغرفة',
-      'members': '52',
-      'image':
-          'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900',
+      'owner': 'Friends',
+      'members': 84,
+      'speakers': 4,
+      'icon': Icons.groups,
     },
     {
       'name': 'سهرة الملوك',
-      'owner': 'VIP KING',
-      'members': '39',
-      'image':
-          'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900',
+      'owner': 'Night King',
+      'members': 52,
+      'speakers': 2,
+      'icon': Icons.nightlight_round,
     },
   ];
 
-  void showMessage(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        backgroundColor: panel,
+  void openRoom(Map<String, dynamic> room) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RoomScreen(
+          roomName: room['name'] as String,
+        ),
       ),
     );
   }
@@ -66,17 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void openRoom(Map<String, dynamic> room) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RoomScreen(
-          roomName: room['name'] as String,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -85,177 +78,142 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: bg,
         body: SafeArea(
           child: IndexedStack(
-            index: selectedTab,
+            index: selectedIndex,
             children: [
               homePage(),
-              simplePage('اكتشف'),
-              roomsPage(),
-              simplePage('الرسائل'),
-              simplePage('حسابي'),
+              simplePage('اكتشف', Icons.explore),
+              simplePage('الرسائل', Icons.message),
+              simplePage('حسابي', Icons.person),
             ],
           ),
         ),
-        floatingActionButton: selectedTab == 0
-            ? FloatingActionButton.extended(
-                onPressed: openCreateRoom,
+        bottomNavigationBar: bottomBar(),
+        floatingActionButton: selectedIndex == 0
+            ? FloatingActionButton(
                 backgroundColor: gold,
                 foregroundColor: bg,
-                icon: const Icon(Icons.add),
-                label: const Text(
-                  'إنشاء روم',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                onPressed: openCreateRoom,
+                child: const Icon(Icons.add),
               )
             : null,
-        bottomNavigationBar: bottomBar(),
       ),
     );
   }
 
   Widget homePage() {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: header()),
-        SliverToBoxAdapter(child: welcome()),
-        SliverToBoxAdapter(child: shortcuts()),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 15, 18, 12),
-            child: Row(
-              children: [
-                const Text(
-                  'الغرف الصوتية',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    setState(() => selectedTab = 2);
-                  },
-                  child: const Text(
-                    'عرض الكل',
-                    style: TextStyle(color: gold),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) => roomCard(rooms[index]),
-            childCount: rooms.length,
-          ),
-        ),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 100),
-        ),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        header(),
+        const SizedBox(height: 22),
+        welcomeBanner(),
+        const SizedBox(height: 22),
+        shortcuts(),
+        const SizedBox(height: 25),
+        sectionTitle('الغرف الصوتية', 'كل الغرف'),
+        const SizedBox(height: 12),
+        ...rooms.map((room) => roomCard(room)),
+        const SizedBox(height: 80),
       ],
     );
   }
 
   Widget header() {
-    return Padding(
-      padding: const EdgeInsets.all(18),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 25,
-            backgroundColor: panel,
-            child: Icon(
-              Icons.workspace_premium,
-              color: gold,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'KOKI PARTY',
-                  style: TextStyle(
-                    color: gold,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
+    return Row(
+      children: [
+        const Icon(
+          Icons.workspace_premium,
+          color: gold,
+          size: 38,
+        ),
+        const SizedBox(width: 9),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'KOKI PARTY',
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
                 ),
-                Text(
-                  'THE ROYAL WORLD',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 9,
-                    letterSpacing: 2,
-                  ),
+              ),
+              Text(
+                'THE ROYAL WORLD',
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 9,
+                  letterSpacing: 2,
                 ),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: () {
-              showMessage('المحفظة هتتربط بنظام الشحن');
-            },
-            child: Container(
-              padding: const EdgeInsets.all(11),
-              decoration: BoxDecoration(
-                color: panel,
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: gold),
               ),
-              child: const Row(
-                children: [
-                  Icon(Icons.monetization_on, color: gold),
-                  SizedBox(width: 5),
-                  Text(
-                    '100000',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 9,
+          ),
+          decoration: BoxDecoration(
+            color: panel,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: gold.withOpacity(0.5)),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.monetization_on,
+                color: gold,
+                size: 18,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '$coins',
+                style: const TextStyle(
+                  color: gold,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget welcome() {
+  Widget welcomeBanner() {
     return Container(
-      height: 190,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF492D69),
+            Color(0xFF352052),
             Color(0xFF171126),
-            Color(0xFF30203D),
+            Color(0xFF0D0A16),
           ],
         ),
-        border: Border.all(
-          color: gold.withOpacity(0.5),
-        ),
+        border: Border.all(color: gold.withOpacity(0.4)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('👑', style: TextStyle(fontSize: 38)),
-          SizedBox(height: 8),
           Text(
-            'WELCOME TO KOKI PARTY',
+            'WELCOME TO',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              letterSpacing: 2,
+            ),
+          ),
+          SizedBox(height: 5),
+          Text(
+            'KOKI PARTY 👑',
             style: TextStyle(
               color: gold,
-              fontSize: 19,
-              fontWeight: FontWeight.w900,
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 8),
@@ -263,187 +221,156 @@ class _HomeScreenState extends State<HomeScreen> {
             'عالمك.. حفلتك.. مملكتك',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 17,
+              fontSize: 15,
             ),
           ),
         ],
       ),
     );
   }
-
+  
   Widget shortcuts() {
     final items = [
-      ['الهدايا', Icons.card_giftcard],
-      ['VIP', Icons.diamond],
-      ['المحفظة', Icons.account_balance_wallet],
-      ['الترتيب', Icons.emoji_events],
+      {'name': 'الغرف', 'icon': Icons.mic},
+      {'name': 'الهدايا', 'icon': Icons.card_giftcard},
+      {'name': 'VIP', 'icon': Icons.diamond},
+      {'name': 'المحفظة', 'icon': Icons.account_balance_wallet},
     ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: items.map((item) {
-          return InkWell(
-            onTap: () {
-              showMessage('قسم ${item[0]} قيد التجهيز');
-            },
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 10,
+        childAspectRatio: 0.85,
+      ),
+      itemBuilder: (context, index) {
+        return InkWell(
+          onTap: () {
+            showInfo(items[index]['name'] as String);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: panel,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: gold.withOpacity(0.2)),
+            ),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 55,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    color: panel,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: gold.withOpacity(0.4),
-                    ),
-                  ),
-                  child: Icon(
-                    item[1] as IconData,
-                    color: gold,
-                    size: 27,
-                  ),
+                Icon(
+                  items[index]['icon'] as IconData,
+                  color: gold,
+                  size: 27,
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: 8),
                 Text(
-                  item[0] as String,
+                  items[index]['name'] as String,
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: Colors.white,
                     fontSize: 11,
                   ),
                 ),
               ],
             ),
-          );
-        }).toList(),
-      ),
+          ),
+        );
+      },
     );
   }
-  
+
+  Widget sectionTitle(String title, String action) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: gold,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            setState(() {
+              selectedIndex = 1;
+            });
+          },
+          child: Text(
+            action,
+            style: const TextStyle(color: Colors.white60),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget roomCard(Map<String, dynamic> room) {
     return InkWell(
       onTap: () => openRoom(room),
+      borderRadius: BorderRadius.circular(17),
       child: Container(
-        height: 190,
-        margin: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 9,
-        ),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
           color: panel,
-          border: Border.all(
-            color: gold.withOpacity(0.35),
-          ),
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: gold.withOpacity(0.2)),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          fit: StackFit.expand,
+        child: Row(
           children: [
-            Image.network(
-              room['image'] as String,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) {
-                return Container(
-                  color: const Color(0xFF30203D),
-                  child: const Icon(
-                    Icons.meeting_room,
-                    color: gold,
-                    size: 55,
-                  ),
-                );
-              },
-            ),
             Container(
+              width: 55,
+              height: 55,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.9),
-                  ],
-                ),
+                color: purple.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                room['icon'] as IconData,
+                color: gold,
+                size: 29,
               ),
             ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(
-                      Icons.graphic_eq,
-                      color: gold,
-                      size: 16,
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      'LIVE',
-                      style: TextStyle(
-                        color: gold,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 15,
-              right: 15,
-              left: 15,
-              child: Row(
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          room['name'] as String,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          'المضيف: ${room['owner']}',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '🎙 8 مقاعد  •  👥 ${room['members']}',
-                          style: const TextStyle(
-                            color: gold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    room['name'] as String,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Icon(
-                    Icons.arrow_back_ios,
-                    color: gold,
-                    size: 20,
+                  const SizedBox(height: 5),
+                  Text(
+                    'المضيف: ${room['owner']}',
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${room['speakers']} متحدثين • ${room['members']} مستمع',
+                    style: const TextStyle(
+                      color: gold,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
+            ),
+            const Icon(
+              Icons.arrow_back_ios,
+              color: gold,
+              size: 17,
             ),
           ],
         ),
@@ -451,92 +378,65 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget roomsPage() {
-    return CustomScrollView(
-      slivers: [
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(18),
-            child: Text(
-              'كل الغرف الصوتية',
-              style: TextStyle(
-                color: gold,
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-              ),
+  Widget simplePage(String title, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: gold, size: 65),
+          const SizedBox(height: 15),
+          Text(
+            title,
+            style: const TextStyle(
+              color: gold,
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) => roomCard(rooms[index]),
-            childCount: rooms.length,
+          const SizedBox(height: 10),
+          const Text(
+            'القسم جاهز لإضافة وظائفه وربطه',
+            style: TextStyle(color: Colors.white60),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget simplePage(String title) {
-    return Center(
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: gold,
-          fontSize: 25,
-          fontWeight: FontWeight.bold,
-        ),
+        ],
       ),
     );
   }
 
   Widget bottomBar() {
-    final items = [
-      [Icons.home, 'الرئيسية'],
-      [Icons.explore, 'اكتشف'],
-      [Icons.meeting_room, 'الغرف'],
-      [Icons.message, 'الرسائل'],
-      [Icons.person, 'حسابي'],
+    final labels = ['الرئيسية', 'اكتشف', 'الرسائل', 'حسابي'];
+    final icons = [
+      Icons.home,
+      Icons.explore,
+      Icons.message,
+      Icons.person,
     ];
 
-    return Container(
-      color: panel,
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(items.length, (index) {
-            final active = selectedTab == index;
-
-            return InkWell(
-              onTap: () {
-                setState(() => selectedTab = index);
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      items[index][0] as IconData,
-                      color: active ? gold : Colors.white54,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      items[index][1] as String,
-                      style: TextStyle(
-                        color: active ? gold : Colors.white54,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+    return BottomNavigationBar(
+      currentIndex: selectedIndex,
+      onTap: (index) {
+        setState(() {
+          selectedIndex = index;
+        });
+      },
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: panel,
+      selectedItemColor: gold,
+      unselectedItemColor: Colors.white54,
+      items: List.generate(
+        labels.length,
+        (index) => BottomNavigationBarItem(
+          icon: Icon(icons[index]),
+          label: labels[index],
         ),
+      ),
+    );
+  }
+
+  void showInfo(String title) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$title: القسم قيد التجهيز والربط'),
       ),
     );
   }
