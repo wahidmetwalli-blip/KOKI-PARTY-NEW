@@ -1,0 +1,10 @@
+export enum UserRole {
+  OWNER = 'OWNER',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  ADMIN = 'ADMIN',
+  MODERATOR = 'MODERATOR',
+  HOST_AGENT = 'HOST_AGENT',
+  RESELLER = 'RESELLER',
+  HOST = 'HOST',
+  USER = 'USER',
+}
