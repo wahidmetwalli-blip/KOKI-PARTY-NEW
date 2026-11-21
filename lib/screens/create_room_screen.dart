@@ -1,22 +1,27 @@
-
 import 'package:flutter/material.dart';
-
-const Color roomBg = Color(0xFF090711);
-const Color roomPanel = Color(0xFF191529);
-const Color roomGold = Color(0xFFD8B45A);
-const Color roomPurple = Color(0xFF8957F5);
 
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({super.key});
 
   @override
-  State<CreateRoomScreen> createState() => _CreateRoomScreenState();
+  State<CreateRoomScreen> createState() =>
+      _CreateRoomScreenState();
 }
 
 class _CreateRoomScreenState extends State<CreateRoomScreen> {
-  final nameController = TextEditingController();
-  final descriptionController = TextEditingController();
-  final passwordController = TextEditingController();
+  static const Color bg = Color(0xFF090711);
+  static const Color panel = Color(0xFF191529);
+  static const Color gold = Color(0xFFFFD36A);
+  static const Color purple = Color(0xFF8957F5);
+
+  final TextEditingController nameController =
+      TextEditingController();
+
+  final TextEditingController descriptionController =
+      TextEditingController();
+
+  final TextEditingController passwordController =
+      TextEditingController();
 
   bool isPrivate = false;
   bool hasPassword = false;
@@ -31,27 +36,40 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     super.dispose();
   }
 
-  void showMessage(String value) {
+  void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(value),
-        backgroundColor: roomPanel,
-      ),
+      SnackBar(content: Text(message)),
     );
   }
 
   void createRoom() {
     if (nameController.text.trim().isEmpty) {
-      showMessage('اكتب اسم الروم الأول');
+      showMessage('من فضلك اكتب اسم الغرفة');
       return;
     }
 
-    if (hasPassword && passwordController.text.length < 4) {
-      showMessage('كلمة المرور لازم تكون 4 أرقام أو حروف على الأقل');
+    if (hasPassword &&
+        passwordController.text.trim().length < 4) {
+      showMessage('كلمة المرور لازم تكون 4 أحرف على الأقل');
       return;
     }
 
-    showMessage('بيانات الروم جاهزة للربط بنظام إنشاء الغرف');
+    final newRoom = <String, dynamic>{
+      'name': nameController.text.trim(),
+      'owner': 'KOKI USER',
+      'description': descriptionController.text.trim(),
+      'members': 1,
+      'speakers': 1,
+      'icon': Icons.workspace_premium,
+      'isPrivate': isPrivate,
+      'hasPassword': hasPassword,
+      'password': hasPassword
+          ? passwordController.text.trim()
+          : '',
+      'allowRequests': allowRequests,
+    };
+
+    Navigator.pop(context, newRoom);
   }
 
   @override
@@ -59,269 +77,298 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: roomBg,
+        backgroundColor: bg,
         appBar: AppBar(
-          backgroundColor: roomBg,
-          foregroundColor: roomGold,
+          backgroundColor: panel,
+          foregroundColor: gold,
+          centerTitle: true,
           title: const Text(
-            'إنشاء روم جديد',
+            'إنشاء غرفة جديدة',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          centerTitle: true,
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(18),
-          children: [
-            coverSection(),
-            const SizedBox(height: 24),
-            sectionTitle('بيانات الروم'),
-            inputField(
-              controller: nameController,
-              label: 'اسم الروم',
-              hint: 'مثال: مملكة KOKI',
-              icon: Icons.meeting_room,
-            ),
-            const SizedBox(height: 14),
-            inputField(
-              controller: descriptionController,
-              label: 'وصف الروم',
-              hint: 'اكتب وصف بسيط عن الروم',
-              icon: Icons.description,
-              maxLines: 3,
-            ),
-            const SizedBox(height: 25),
-            sectionTitle('خصوصية الروم'),
-            settingTile(
-              icon: Icons.lock,
-              title: 'روم خاص',
-              subtitle: 'الدخول للروم يكون حسب إعدادات الخصوصية',
-              value: isPrivate,
-              onChanged: (value) {
-                setState(() => isPrivate = value);
-              },
-            ),
-            settingTile(
-              icon: Icons.password,
-              title: 'حماية بكلمة مرور',
-              subtitle: 'اطلب كلمة مرور قبل دخول الروم',
-              value: hasPassword,
-              onChanged: (value) {
-                setState(() => hasPassword = value);
-              },
-            ),
-            if (hasPassword) ...[
-              const SizedBox(height: 10),
-              inputField(
-                controller: passwordController,
-                label: 'كلمة مرور الروم',
-                hint: '4 أحرف أو أرقام على الأقل',
-                icon: Icons.key,
-              ),
-            ],
-            const SizedBox(height: 14),
-            settingTile(
-              icon: Icons.mic,
-              title: 'طلبات الصعود للمايك',
-              subtitle: 'السماح للأعضاء بطلب الصعود للمقاعد',
-              value: allowRequests,
-              onChanged: (value) {
-                setState(() => allowRequests = value);
-              },
-            ),
-            const SizedBox(height: 25),
-            sectionTitle('المقاعد الصوتية'),
-            Container(
-              padding: const EdgeInsets.all(17),
-              decoration: BoxDecoration(
-                color: roomPanel,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: roomGold.withOpacity(0.3)),
-              ),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.groups,
-                    color: roomGold,
-                    size: 38,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '8 مقاعد صوتية',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 10),
+
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF352052),
+                        Color(0xFF171126),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: gold.withOpacity(0.4),
                     ),
                   ),
-                  const SizedBox(height: 15),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 13,
-                    runSpacing: 13,
-                    children: List.generate(
-                      8,
-                      (index) => Container(
-                        width: 58,
-                        height: 58,
-                        decoration: BoxDecoration(
-                          color: roomPurple.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: roomGold),
-                        ),
-                        child: const Icon(
-                          Icons.mic_none,
-                          color: roomGold,
+                  child: const Column(
+                    children: [
+                      Icon(
+                        Icons.workspace_premium,
+                        color: gold,
+                        size: 55,
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'اصنع مملكتك الخاصة',
+                        style: TextStyle(
+                          color: gold,
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                      SizedBox(height: 7),
+                      Text(
+                        'أنشئ غرفتك واجمع أصدقاءك في KOKI PARTY',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              height: 55,
-              child: ElevatedButton.icon(
-                onPressed: createRoom,
-                icon: const Icon(Icons.add_circle),
-                label: const Text(
-                  'إنشاء الروم',
+                ),
+
+                const SizedBox(height: 25),
+
+                const Text(
+                  'اسم الغرفة',
                   style: TextStyle(
+                    color: gold,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 9),
+
+                TextField(
+                  controller: nameController,
+                  maxLength: 30,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: inputDecoration(
+                    'مثال: غرفة الملوك',
+                    Icons.meeting_room,
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                const Text(
+                  'وصف الغرفة',
+                  style: TextStyle(
+                    color: gold,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 9),
+
+                TextField(
+                  controller: descriptionController,
+                  maxLength: 150,
+                  maxLines: 3,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: inputDecoration(
+                    'اكتب وصفاً بسيطاً للغرفة',
+                    Icons.description,
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                const Text(
+                  'إعدادات الغرفة',
+                  style: TextStyle(
+                    color: gold,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: roomGold,
-                  foregroundColor: roomBg,
-                  shape: RoundedRectangleBorder(
+
+                const SizedBox(height: 10),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: panel,
                     borderRadius: BorderRadius.circular(15),
                   ),
+                  child: SwitchListTile(
+                    value: isPrivate,
+                    activeColor: gold,
+                    title: const Text(
+                      'غرفة خاصة',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    subtitle: const Text(
+                      'تحديد الغرفة كغرفة خاصة',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                    secondary: const Icon(
+                      Icons.lock,
+                      color: gold,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        isPrivate = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: panel,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: SwitchListTile(
+                    value: hasPassword,
+                    activeColor: gold,
+                    title: const Text(
+                      'حماية بكلمة مرور',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    secondary: const Icon(
+                      Icons.password,
+                      color: gold,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        hasPassword = value;
+                      });
+                    },
+                  ),
+                ),
+
+                if (hasPassword) ...[
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: inputDecoration(
+                      'كلمة مرور الغرفة',
+                      Icons.lock_outline,
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 10),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: panel,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: SwitchListTile(
+                    value: allowRequests,
+                    activeColor: gold,
+                    title: const Text(
+                      'السماح بطلب المايك',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    subtitle: const Text(
+                      'يمكن للأعضاء طلب الصعود للمقاعد',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                    secondary: const Icon(
+                      Icons.mic,
+                      color: gold,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        allowRequests = value;
+                      });
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: purple.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: purple.withOpacity(0.5),
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: gold,
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'الغرفة مجهزة بثمانية مقاعد صوتية.',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: isCreating ? null : createRoom,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: gold,
+                      foregroundColor: bg,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: const Text(
+                      'إنشاء الغرفة 👑',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+              ],
             ),
-            const SizedBox(height: 25),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget coverSection() {
-    return Container(
-      height: 190,
-      decoration: BoxDecoration(
-        color: roomPanel,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: roomGold.withOpacity(0.4)),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () {
-          showMessage(
-            'اختيار صورة من المعرض هنفعّله في خطوة ربط الصور',
-          );
-        },
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.add_photo_alternate,
-              color: roomGold,
-              size: 55,
-            ),
-            SizedBox(height: 12),
-            Text(
-              'اختار صورة غلاف الروم',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 7),
-            Text(
-              'تقدر تغيّر الصورة في أي وقت',
-              style: TextStyle(color: Colors.white54),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 13),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: roomGold,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget inputField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    int maxLines = 1,
-  }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        labelStyle: const TextStyle(color: Colors.white70),
-        hintStyle: const TextStyle(color: Colors.white30),
-        prefixIcon: Icon(icon, color: roomGold),
-        filled: true,
-        fillColor: roomPanel,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.white12),
-        ),
-      ),
-    );
-  }
-
-  Widget settingTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: roomPanel,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: SwitchListTile(
-        value: value,
-        onChanged: onChanged,
-        activeColor: roomGold,
-        secondary: Icon(icon, color: roomGold),
-        title: Text(
-          title,
-          style: const TextStyle(color: Colors.white),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(color: Colors.white54, fontSize: 11),
-        ),
+  InputDecoration inputDecoration(
+    String hint,
+    IconData icon,
+  ) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white38),
+      prefixIcon: Icon(icon, color: gold),
+      filled: true,
+      fillColor: panel,
+      counterStyle: const TextStyle(color: Colors.white38),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
       ),
     );
   }
 }
-
