@@ -22,8 +22,7 @@ export enum WithdrawalMethod {
 }
 
 @Entity('withdrawal_requests')
-@Index(['hostUserId', 'createdAt'])
-@Index(['status', 'createdAt'])
+@Index(['hostUserId', 'status'])
 export class WithdrawalRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -41,8 +40,8 @@ export class WithdrawalRequest {
 
   @Column({
     type: 'varchar',
-    length: 10,
-    default: 'EUR',
+    length: 3,
+    default: 'USD',
   })
   currency: string;
 
@@ -69,7 +68,7 @@ export class WithdrawalRequest {
   @Column({
     name: 'payment_reference',
     type: 'varchar',
-    length: 150,
+    length: 255,
     nullable: true,
     unique: true,
   })
@@ -84,8 +83,7 @@ export class WithdrawalRequest {
 
   @Column({
     name: 'review_note',
-    type: 'varchar',
-    length: 500,
+    type: 'text',
     nullable: true,
   })
   reviewNote: string | null;
