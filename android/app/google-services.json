@@ -1,1 +1,39 @@
-
+{
+  "project_info": {
+    "project_number": "293768893021",
+    "project_id": "koki-party",
+    "storage_bucket": "koki-party.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293768893021:android:581ba8409b92ef3fc873b4",
+        "android_client_info": {
+          "package_name": "com.kokiparty.koki_party"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "293768893021-2v0t7g46k8evsrk73ffdba5jchuclsrd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCY8RMMSaId2I3e7Mluis00RTyrE4BmuLs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "293768893021-2v0t7g46k8evsrk73ffdba5jchuclsrd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
