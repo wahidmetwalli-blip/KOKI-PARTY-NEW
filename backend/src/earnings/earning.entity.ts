@@ -1,3 +1,4 @@
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -46,8 +47,19 @@ export class HostEarning {
   })
   status: EarningStatus;
 
-  @Column({ type: 'bigint' })
+  // Amount is stored in USD cents.
+  // 1000 cents = 10 USD.
+  @Column({
+    type: 'bigint',
+  })
   amount: string;
+
+  @Column({
+    type: 'varchar',
+    length: 3,
+    default: 'USD',
+  })
+  currency: string;
 
   @Column({
     type: 'varchar',
