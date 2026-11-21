@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'create_room_screen.dart';
-import 'room_screen.dart';
+
+import 'create_room_screen.dart' show CreateRoomScreen;
+
+import 'room_screen.dart' show RoomScreen;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -74,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (_) => const CreateRoomScreen(),
+        builder: (_) => CreateRoomScreen(),
       ),
     );
 
