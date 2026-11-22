@@ -1,104 +1,143 @@
 
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { WithdrawalRequest } from './withdrawal.entity';
-import { HostEarning } from '../earnings/earning.entity';
+import { Repository } from 'typeorm';
+
+import {
+  Agent,
+  AgentType,
+  AgentStatus,
+} from './agent.entity';
 
 @Injectable()
-export class WithdrawalsService {
+export class AgentsService {
   constructor(
-    @InjectRepository(WithdrawalRequest)
-    private readonly withdrawalsRepository: Repository<WithdrawalRequest>,
-    @InjectRepository(HostEarning)
-    private readonly earningsRepository: Repository<HostEarning>,
-    private readonly dataSource: DataSource,
+    @InjectRepository(Agent)
+    private readonly agentsRepository: Repository<Agent>,
   ) {}
 
-  async createWithdrawal(userId: string, amount: number) {
-    if (!Number.isSafeInteger(amount) || amount <= 0) {
-      throw new BadRequestException('Invalid withdrawal amount');
+  async create(
+    userId: string,
+    type: AgentType,
+    commissionRate = 0,
+  ): Promise<Agent> {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
     }
 
-    return this.dataSource.transaction(async (manager) => {
-      const earnings = await manager
-        .getRepository(HostEarning)
-        .createQueryBuilder('earning')
-        .setLock('pessimistic_write')
-        .where('earning.userId = :userId', { userId })
-        .andWhere('earning.status = :status', { status: 'APPROVED' })
-        .orderBy('earning.createdAt', 'ASC')
-        .getMany();
+    if (
+      !Number.isFinite(commissionRate) ||
+      commissionRate < 0 ||
+      commissionRate > 100
+    ) {
+      throw new BadRequestException('Invalid commission rate');
+    }
 
-      let remaining = amount;
-      const selected: HostEarning[] = [];
-
-      for (const earning of earnings) {
-        const available = Number(earning.amount);
-
-        if (!Number.isSafeInteger(available) || available <= 0) {
-          continue;
-        }
-
-        if (available <= remaining) {
-          selected.push(earning);
-          remaining -= available;
-        }
-
-        if (remaining === 0) break;
-      }
-
-      if (remaining !== 0) {
-        throw new BadRequestException(
-          'Insufficient approved earnings for this withdrawal',
-        );
-      }
-
-      const withdrawal = manager
-        .getRepository(WithdrawalRequest)
-        .create({
-          userId,
-          amount,
-          currency: 'USD',
-          status: 'PENDING',
-        });
-
-      const savedWithdrawal = await manager
-        .getRepository(WithdrawalRequest)
-        .save(withdrawal);
-
-      for (const earning of selected) {
-        earning.status = 'WITHDRAWAL_REQUESTED';
-        earning.withdrawalRequestId = savedWithdrawal.id;
-      }
-
-      await manager.getRepository(HostEarning).save(selected);
-
-      return savedWithdrawal;
+    const existing = await this.agentsRepository.findOne({
+      where: { userId, type },
     });
+
+    if (existing) {
+      throw new ConflictException(
+        'This user is already registered as this agent type',
+      );
+    }
+
+    const agent = this.agentsRepository.create({
+      userId,
+      type,
+      status: AgentStatus.PENDING,
+      commissionRate,
+    });
+
+    return this.agentsRepository.save(agent);
   }
 
-  async findMyWithdrawals(userId: string) {
-    return this.withdrawalsRepository.find({
-      where: { userId },
+  async findAll(): Promise<Agent[]> {
+    return this.agentsRepository.find({
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findMyWithdrawalById(userId: string, id: string) {
-    const withdrawal = await this.withdrawalsRepository.findOne({
-      where: { id, userId },
+  async findById(id: string): Promise<Agent> {
+    const agent = await this.agentsRepository.findOne({
+      where: { id },
     });
 
-    if (!withdrawal) {
-      throw new NotFoundException('Withdrawal request not found');
+    if (!agent) {
+      throw new NotFoundException('Agent not found');
     }
 
-    return withdrawal;
+    return agent;
   }
-                             }
-    
+
+  async findByUser(
+    userId: string,
+    type?: AgentType,
+  ): Promise<Agent[]> {
+    return this.agentsRepository.find({
+      where: type ? { userId, type } : { userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async updateStatus(
+    id: string,
+    status: AgentStatus,
+  ): Promise<Agent> {
+    if (!Object.values(AgentStatus).includes(status)) {
+      throw new BadRequestException('Invalid agent status');
+    }
+
+    const agent = await this.findById(id);
+    agent.status = status;
+
+    return this.agentsRepository.save(agent);
+  }
+
+  async updateCommission(
+    id: string,
+    commissionRate: number,
+  ): Promise<Agent> {
+    if (
+      !Number.isFinite(commissionRate) ||
+      commissionRate < 0 ||
+      commissionRate > 100
+    ) {
+      throw new BadRequestException('Invalid commission rate');
+    }
+
+    const agent = await this.findById(id);
+    agent.commissionRate = commissionRate;
+
+    return this.agentsRepository.save(agent);
+  }
+
+  async getStatistics() {
+    const agents = await this.agentsRepository.find();
+
+    return {
+      total: agents.length,
+      active: agents.filter(
+        (agent) => agent.status === AgentStatus.ACTIVE,
+      ).length,
+      pending: agents.filter(
+        (agent) => agent.status === AgentStatus.PENDING,
+      ).length,
+      suspended: agents.filter(
+        (agent) => agent.status === AgentStatus.SUSPENDED,
+      ).length,
+      hosts: agents.filter(
+        (agent) => agent.type === AgentType.HOST,
+      ).length,
+      rechargeAgents: agents.filter(
+        (agent) => agent.type === AgentType.RECHARGE,
+      ).length,
+    };
+  }
+        }
