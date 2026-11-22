@@ -1,8 +1,9 @@
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CreateAuditLogs1763857000000 } from './migrations/1763857000000-CreateAuditLogs';
+import { AddUsdCurrencyFields1763856000000 } from './migrations/1763856000000-AddUsdCurrencyFields';
+import { CreateAgentCommissions1763857000000 } from './migrations/1763857000000-CreateAgentCommissions';
+import { CreateAuditLogs1763857100000 } from './migrations/1763857100000-CreateAuditLogs';
 
 @Module({
   imports: [
@@ -20,7 +21,9 @@ import { CreateAuditLogs1763857000000 } from './migrations/1763857000000-CreateA
       synchronize: false,
       migrationsRun: false,
       migrations: [
-        CreateAuditLogs1763857000000,
+        AddUsdCurrencyFields1763856000000,
+        CreateAgentCommissions1763857000000,
+        CreateAuditLogs1763857100000,
       ],
     }),
   ],
