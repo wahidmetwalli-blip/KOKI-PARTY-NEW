@@ -50,4 +50,3 @@ export class CreateAgentCommissions1763857000000
       await queryRunner.dropTable('agent_commissions');
     }
   }
-      }
