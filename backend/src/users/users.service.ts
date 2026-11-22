@@ -1,3 +1,4 @@
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,6 +27,21 @@ export class UsersService {
   async findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id },
+    });
+  }
+
+  async findUsersForAdmin(): Promise<Partial<User>[]> {
+    return this.usersRepository.find({
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
+      order: { createdAt: 'DESC' },
+      take: 50,
     });
   }
 
