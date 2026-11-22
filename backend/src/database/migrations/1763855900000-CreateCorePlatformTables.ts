@@ -279,32 +279,8 @@ export class CreateCorePlatformTables1763855900000
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-      DROP TABLE IF EXISTS agency_members;
-      DROP TABLE IF EXISTS agencies;
-      DROP TABLE IF EXISTS policy_versions;
-      DROP TABLE IF EXISTS agent_payouts;
-      DROP TABLE IF EXISTS host_earnings;
-      DROP TABLE IF EXISTS withdrawal_requests;
-      DROP TABLE IF EXISTS host_levels;
-      DROP TABLE IF EXISTS wallet_transactions;
-      DROP TABLE IF EXISTS wallets;
-      DROP TABLE IF EXISTS agents;
-      DROP TABLE IF EXISTS users;
-
-      DROP TYPE IF EXISTS policy_versions_status_enum;
-      DROP TYPE IF EXISTS policy_versions_category_enum;
-      DROP TYPE IF EXISTS agent_payouts_status_enum;
-      DROP TYPE IF EXISTS withdrawal_requests_status_enum;
-      DROP TYPE IF EXISTS withdrawal_requests_method_enum;
-      DROP TYPE IF EXISTS host_earnings_status_enum;
-      DROP TYPE IF EXISTS host_earnings_source_enum;
-      DROP TYPE IF EXISTS wallet_transactions_type_enum;
-      DROP TYPE IF EXISTS agency_members_activity_enum;
-      DROP TYPE IF EXISTS agencies_status_enum;
-      DROP TYPE IF EXISTS agents_status_enum;
-      DROP TYPE IF EXISTS agents_type_enum;
-      DROP TYPE IF EXISTS users_role_enum;
-    `);
+    throw new Error(
+      'Rollback disabled to protect project data.',
+    );
   }
 }
