@@ -1,4 +1,3 @@
-
 import {
   Body,
   Controller,
@@ -71,6 +70,20 @@ export class AgentsController {
   @RequirePermissions(Permission.DASHBOARD_VIEW)
   getStatistics() {
     return this.agentsService.getStatistics();
+  }
+
+  @Get('commissions/statistics')
+  @RequirePermissions(Permission.DASHBOARD_VIEW)
+  getCommissionStatistics() {
+    return this.agentsService.getCommissionStatistics();
+  }
+
+  @Get(':id/commissions')
+  @RequirePermissions(Permission.DASHBOARD_VIEW)
+  getAgentCommissions(
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.agentsService.getAgentCommissions(id);
   }
 
   @Post('hosts')
