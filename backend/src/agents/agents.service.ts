@@ -102,7 +102,10 @@ export class AgentsService {
     return agent;
   }
 
-  async findByUser(userId: string, type?: AgentType): Promise<Agent[]> {
+  async findByUser(
+    userId: string,
+    type?: AgentType,
+  ): Promise<Agent[]> {
     return this.agentsRepository.find({
       where: type ? { userId, type } : { userId },
       order: { createdAt: 'DESC' },
@@ -170,11 +173,21 @@ export class AgentsService {
 
     return {
       total: agents.length,
-      active: agents.filter(a => a.status === AgentStatus.ACTIVE).length,
-      pending: agents.filter(a => a.status === AgentStatus.PENDING).length,
-      suspended: agents.filter(a => a.status === AgentStatus.SUSPENDED).length,
-      hosts: agents.filter(a => a.type === AgentType.HOST).length,
-      rechargeAgents: agents.filter(a => a.type === AgentType.RECHARGE).length,
+      active: agents.filter(
+        a => a.status === AgentStatus.ACTIVE,
+      ).length,
+      pending: agents.filter(
+        a => a.status === AgentStatus.PENDING,
+      ).length,
+      suspended: agents.filter(
+        a => a.status === AgentStatus.SUSPENDED,
+      ).length,
+      hosts: agents.filter(
+        a => a.type === AgentType.HOST,
+      ).length,
+      rechargeAgents: agents.filter(
+        a => a.type === AgentType.RECHARGE,
+      ).length,
     };
   }
 
@@ -186,7 +199,9 @@ export class AgentsService {
 
     for (const commission of commissions) {
       totalBaseAmount += BigInt(commission.baseAmount);
-      totalCommissionAmount += BigInt(commission.commissionAmount);
+      totalCommissionAmount += BigInt(
+        commission.commissionAmount,
+      );
     }
 
     return {
@@ -212,7 +227,9 @@ export class AgentsService {
 
     for (const commission of commissions) {
       totalBaseAmount += BigInt(commission.baseAmount);
-      totalCommissionAmount += BigInt(commission.commissionAmount);
+      totalCommissionAmount += BigInt(
+        commission.commissionAmount,
+      );
     }
 
     return {
@@ -248,6 +265,7 @@ export class AgentsService {
     });
 
     let totalCommission = 0n;
+
     for (const item of commissions) {
       totalCommission += BigInt(item.commissionAmount);
     }
@@ -279,19 +297,31 @@ export class AgentsService {
       pendingPayouts: pending.toString(),
       approvedPayouts: approved.toString(),
       paidPayouts: paid.toString(),
-      availableBalance: (totalCommission - reserved - paid).toString(),
+      availableBalance: (
+        totalCommission - reserved - paid
+      ).toString(),
     };
   }
 
-  async requestAgentPayout(agentId: string, amount: string) {
-    if (typeof amount !== 'string' || !/^[1-9]\d*$/.test(amount)) {
-      throw new BadRequestException('Amount must be positive USD cents');
+  async requestAgentPayout(
+    agentId: string,
+    amount: string,
+  ) {
+    if (
+      typeof amount !== 'string' ||
+      !/^[1-9]\d*$/.test(amount)
+    ) {
+      throw new BadRequestException(
+        'Amount must be positive USD cents',
+      );
     }
 
     return this.dataSource.transaction(async manager => {
       const agentsRepo = manager.getRepository(Agent);
-      const commissionsRepo = manager.getRepository(AgentCommission);
-      const payoutsRepo = manager.getRepository(AgentPayout);
+      const commissionsRepo =
+        manager.getRepository(AgentCommission);
+      const payoutsRepo =
+        manager.getRepository(AgentPayout);
 
       const agent = await agentsRepo.findOne({
         where: { id: agentId },
@@ -299,11 +329,15 @@ export class AgentsService {
       });
 
       if (!agent || agent.type !== AgentType.RECHARGE) {
-        throw new NotFoundException('Recharge agent not found');
+        throw new NotFoundException(
+          'Recharge agent not found',
+        );
       }
 
       if (agent.status !== AgentStatus.ACTIVE) {
-        throw new BadRequestException('Agent is not active');
+        throw new BadRequestException(
+          'Agent is not active',
+        );
       }
 
       const commissions = await commissionsRepo.find({
@@ -315,11 +349,13 @@ export class AgentsService {
       });
 
       let earned = 0n;
+
       for (const item of commissions) {
         earned += BigInt(item.commissionAmount);
       }
 
       let reserved = 0n;
+
       for (const payout of payouts) {
         if (
           payout.status === AgentPayoutStatus.PENDING ||
@@ -334,7 +370,9 @@ export class AgentsService {
       const requested = BigInt(amount);
 
       if (requested > available) {
-        throw new BadRequestException('Insufficient available commission balance');
+        throw new BadRequestException(
+          'Insufficient available commission balance',
+        );
       }
 
       const payout = payoutsRepo.create({
@@ -350,7 +388,9 @@ export class AgentsService {
 
   async reviewAgentPayout(
     payoutId: string,
-    status: AgentPayoutStatus.APPROVED | AgentPayoutStatus.REJECTED,
+    status:
+      | AgentPayoutStatus.APPROVED
+      | AgentPayoutStatus.REJECTED,
     adminId: string,
     note?: string,
   ) {
@@ -358,7 +398,9 @@ export class AgentsService {
       status !== AgentPayoutStatus.APPROVED &&
       status !== AgentPayoutStatus.REJECTED
     ) {
-      throw new BadRequestException('Invalid payout review status');
+      throw new BadRequestException(
+        'Invalid payout review status',
+      );
     }
 
     const payout = await this.payoutsRepository.findOne({
@@ -370,7 +412,9 @@ export class AgentsService {
     }
 
     if (payout.status !== AgentPayoutStatus.PENDING) {
-      throw new ConflictException('Payout is not pending');
+      throw new ConflictException(
+        'Payout is not pending',
+      );
     }
 
     payout.status = status;
@@ -384,7 +428,11 @@ export class AgentsService {
       `AGENT_PAYOUT_${status}`,
       'agent_payout',
       payoutId,
-      { agentId: payout.agentId, amount: payout.amount, note },
+      {
+        agentId: payout.agentId,
+        amount: payout.amount,
+        note,
+      },
     );
 
     return saved;
@@ -400,7 +448,9 @@ export class AgentsService {
       !paymentReference.trim() ||
       paymentReference.length > 255
     ) {
-      throw new BadRequestException('Valid payment reference is required');
+      throw new BadRequestException(
+        'Valid payment reference is required',
+      );
     }
 
     const payout = await this.payoutsRepository.findOne({
@@ -412,7 +462,9 @@ export class AgentsService {
     }
 
     if (payout.status !== AgentPayoutStatus.APPROVED) {
-      throw new ConflictException('Only approved payouts can be marked paid');
+      throw new ConflictException(
+        'Only approved payouts can be marked paid',
+      );
     }
 
     payout.status = AgentPayoutStatus.PAID;
@@ -436,4 +488,4 @@ export class AgentsService {
 
     return saved;
   }
-      }
+}
