@@ -3,6 +3,7 @@ import {
   Get,
   UseGuards,
   ForbiddenException,
+  Req,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -16,7 +17,11 @@ export class UsersController {
   ) {}
 
   @Get('count')
-  async countUsers() {
+  async countUsers(@Req() req: any) {
+    if (req.user?.role !== 'OWNER') {
+      throw new ForbiddenException('Owner access required');
+    }
+
     return {
       totalUsers: await this.usersService.countUsers(),
     };
