@@ -1,4 +1,3 @@
-
 import {
   Injectable,
   BadRequestException,
@@ -25,6 +24,8 @@ import {
   AgentType,
   AgentStatus,
 } from '../agents/agent.entity';
+
+import { AgentCommission } from '../agents/agent-commission.entity';
 
 @Injectable()
 export class WithdrawalsService {
@@ -337,8 +338,7 @@ export class WithdrawalsService {
       return saved;
     });
   }
-
-  async markWithdrawalPaid(
+    async markWithdrawalPaid(
     id: string,
     adminId: string,
     paymentReference: string,
@@ -355,6 +355,7 @@ export class WithdrawalsService {
       const withdrawalsRepo = manager.getRepository(WithdrawalRequest);
       const earningsRepo = manager.getRepository(HostEarning);
       const agentsRepo = manager.getRepository(Agent);
+      const commissionsRepo = manager.getRepository(AgentCommission);
 
       const request = await withdrawalsRepo
         .createQueryBuilder('withdrawal')
@@ -429,7 +430,7 @@ export class WithdrawalsService {
 
       await earningsRepo.save(earnings);
 
-      if (request.assignedAgentId) {
+      if (request.method === WithdrawalMethod.RECHARGE_AGENT) {
         const agent = await agentsRepo
           .createQueryBuilder('agent')
           .setLock('pessimistic_write')
@@ -448,12 +449,77 @@ export class WithdrawalsService {
           );
         }
 
+        const rateText = Number(agent.commissionRate)
+          .toFixed(2);
+
+        if (!/^\d+\.\d{2}$/.test(rateText)) {
+          throw new ConflictException(
+            'Invalid agent commission rate',
+          );
+        }
+
+        const [whole, fraction] = rateText.split('.');
+        const rateHundredths =
+          BigInt(whole) * 100n + BigInt(fraction);
+
+        if (rateHundredths > 10000n) {
+          throw new ConflictException(
+            'Agent commission rate cannot exceed 100%',
+          );
+        }
+
+        const baseAmount = BigInt(request.amount);
+        const commissionAmount = (
+          baseAmount * rateHundredths / 10000n
+        );
+
+        const existingCommission = await commissionsRepo.findOne({
+          where: { withdrawalRequestId: request.id },
+        });
+
+        if (existingCommission) {
+          throw new ConflictException(
+            'Commission has already been recorded for this withdrawal',
+          );
+        }
+
+        const commission = commissionsRepo.create({
+          agentId: agent.id,
+          withdrawalRequestId: request.id,
+          baseAmount: baseAmount.toString(),
+          commissionRate: rateText,
+          commissionAmount: commissionAmount.toString(),
+          currency: 'USD',
+        });
+
+        await commissionsRepo.save(commission);
+
+        agent.totalEarnings = (
+          BigInt(agent.totalEarnings || '0') +
+          commissionAmount
+        ).toString();
+
         agent.totalWithdrawn = (
           BigInt(agent.totalWithdrawn || '0') +
-          BigInt(request.amount)
+          baseAmount
         ).toString();
 
         await agentsRepo.save(agent);
+
+        await this.auditService.record(
+          adminId,
+          'AGENT_COMMISSION_RECORDED',
+          'agent_commission',
+          commission.id,
+          {
+            agentId: agent.id,
+            withdrawalRequestId: request.id,
+            baseAmount: baseAmount.toString(),
+            commissionRate: rateText,
+            commissionAmount: commissionAmount.toString(),
+            currency: 'USD',
+          },
+        );
       }
 
       request.status = WithdrawalStatus.PAID;
@@ -479,5 +545,4 @@ export class WithdrawalsService {
       return saved;
     });
   }
-                                       }
-                                       
+}
