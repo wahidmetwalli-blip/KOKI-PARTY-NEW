@@ -20,4 +20,18 @@ export class AuthController {
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
+
+  @Post('setup-owner')
+  @HttpCode(HttpStatus.CREATED)
+  async setupOwner(
+    @Body()
+    dto: {
+      email?: string;
+      phone?: string;
+      password: string;
+      setupKey: string;
+    },
+  ) {
+    return this.authService.setupOwner(dto);
+  }
 }
