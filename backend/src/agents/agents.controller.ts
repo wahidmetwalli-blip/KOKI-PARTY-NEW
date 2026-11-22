@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 
 import {
@@ -18,14 +19,8 @@ import {
   Min,
 } from 'class-validator';
 
-import {
-  AgentsService,
-} from './agents.service';
-
-import {
-  AgentType,
-  AgentStatus,
-} from './agent.entity';
+import { AgentsService } from './agents.service';
+import { AgentType, AgentStatus } from './agent.entity';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
@@ -79,45 +74,57 @@ export class AgentsController {
 
   @Post('hosts')
   @RequirePermissions(Permission.HOSTS_MANAGE)
-  createHost(@Body() dto: CreateAgentDto) {
+  createHost(
+    @Req() req: any,
+    @Body() dto: CreateAgentDto,
+  ) {
     return this.agentsService.create(
       dto.userId,
       AgentType.HOST,
       dto.commissionRate ?? 0,
+      req.user.id,
     );
   }
 
   @Post('recharge')
   @RequirePermissions(Permission.RECHARGE_MANAGE)
-  createRechargeAgent(@Body() dto: CreateAgentDto) {
+  createRechargeAgent(
+    @Req() req: any,
+    @Body() dto: CreateAgentDto,
+  ) {
     return this.agentsService.create(
       dto.userId,
       AgentType.RECHARGE,
       dto.commissionRate ?? 0,
+      req.user.id,
     );
   }
 
   @Patch(':id/status')
   @RequirePermissions(Permission.STAFF_MANAGE)
   updateStatus(
+    @Req() req: any,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateStatusDto,
   ) {
     return this.agentsService.updateStatus(
       id,
       dto.status,
+      req.user.id,
     );
   }
 
   @Patch(':id/commission')
   @RequirePermissions(Permission.STAFF_MANAGE)
   updateCommission(
+    @Req() req: any,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCommissionDto,
   ) {
     return this.agentsService.updateCommission(
       id,
       dto.commissionRate,
+      req.user.id,
     );
   }
   }
