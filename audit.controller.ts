@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 
 import { AuditService } from './audit.service';
+
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
@@ -22,13 +23,9 @@ export class AuditController {
   ) {}
 
   @Get()
-  @RequirePermissions(Permission.DASHBOARD_VIEW)
+  @RequirePermissions(Permission.AUDIT_LOG_VIEW)
   listRecent(
-    @Query(
-      'limit',
-      new DefaultValuePipe(100),
-      ParseIntPipe,
-    )
+    @Query('limit', new DefaultValuePipe(100), ParseIntPipe)
     limit: number,
   ) {
     return this.auditService.listRecent(limit);
