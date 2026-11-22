@@ -1,4 +1,3 @@
-
 import {
   BadRequestException,
   ConflictException,
@@ -15,6 +14,7 @@ import {
   AgentStatus,
 } from './agent.entity';
 
+import { AgentCommission } from './agent-commission.entity';
 import { AuditService } from '../audit/audit.service';
 
 @Injectable()
@@ -22,6 +22,10 @@ export class AgentsService {
   constructor(
     @InjectRepository(Agent)
     private readonly agentsRepository: Repository<Agent>,
+
+    @InjectRepository(AgentCommission)
+    private readonly commissionsRepository: Repository<AgentCommission>,
+
     private readonly auditService: AuditService,
   ) {}
 
@@ -179,4 +183,54 @@ export class AgentsService {
       ).length,
     };
   }
-}
+
+  async getCommissionStatistics() {
+    const commissions = await this.commissionsRepository.find();
+
+    let totalBaseAmount = 0n;
+    let totalCommissionAmount = 0n;
+
+    for (const commission of commissions) {
+      totalBaseAmount += BigInt(commission.baseAmount);
+      totalCommissionAmount += BigInt(
+        commission.commissionAmount,
+      );
+    }
+
+    return {
+      totalCommissions: commissions.length,
+      totalBaseAmount: totalBaseAmount.toString(),
+      totalCommissionAmount: totalCommissionAmount.toString(),
+      currency: 'USD',
+    };
+  }
+
+  async getAgentCommissions(agentId: string) {
+    await this.findById(agentId);
+
+    const commissions = await this.commissionsRepository.find({
+      where: { agentId },
+      order: { createdAt: 'DESC' },
+      take: 200,
+    });
+
+    let totalBaseAmount = 0n;
+    let totalCommissionAmount = 0n;
+
+    for (const commission of commissions) {
+      totalBaseAmount += BigInt(commission.baseAmount);
+      totalCommissionAmount += BigInt(
+        commission.commissionAmount,
+      );
+    }
+
+    return {
+      agentId,
+      count: commissions.length,
+      totalBaseAmount: totalBaseAmount.toString(),
+      totalCommissionAmount: totalCommissionAmount.toString(),
+      currency: 'USD',
+      commissions,
+    };
+  }
+  }
