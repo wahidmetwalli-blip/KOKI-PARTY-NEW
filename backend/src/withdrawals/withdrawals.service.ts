@@ -5,7 +5,9 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
+
 import { DataSource } from 'typeorm';
+import { AuditService } from '../audit/audit.service';
 
 import {
   HostEarning,
@@ -28,6 +30,7 @@ import {
 export class WithdrawalsService {
   constructor(
     private readonly dataSource: DataSource,
+    private readonly auditService: AuditService,
   ) {}
 
   async createWithdrawal(
@@ -111,6 +114,14 @@ export class WithdrawalsService {
 
       await earningsRepo.save(selected);
 
+      await this.auditService.record(
+        hostUserId,
+        'WITHDRAWAL_CREATED',
+        'withdrawal',
+        saved.id,
+        { amount, currency: 'USD', method },
+      );
+
       return saved;
     });
   }
@@ -176,7 +187,17 @@ export class WithdrawalsService {
       request.reviewedBy = adminId;
       request.reviewNote = note?.trim() || null;
 
-      return repo.save(request);
+      const saved = await repo.save(request);
+
+      await this.auditService.record(
+        adminId,
+        'WITHDRAWAL_APPROVED',
+        'withdrawal',
+        id,
+        { note: request.reviewNote },
+      );
+
+      return saved;
     });
   }
 
@@ -239,7 +260,17 @@ export class WithdrawalsService {
       request.reviewedBy = adminId;
       request.reviewNote = note.trim();
 
-      return withdrawalsRepo.save(request);
+      const saved = await withdrawalsRepo.save(request);
+
+      await this.auditService.record(
+        adminId,
+        'WITHDRAWAL_REJECTED',
+        'withdrawal',
+        id,
+        { note: request.reviewNote },
+      );
+
+      return saved;
     });
   }
 
@@ -293,7 +324,17 @@ export class WithdrawalsService {
       request.assignedAgentId = agent.id;
       request.reviewedBy = adminId;
 
-      return withdrawalsRepo.save(request);
+      const saved = await withdrawalsRepo.save(request);
+
+      await this.auditService.record(
+        adminId,
+        'WITHDRAWAL_AGENT_ASSIGNED',
+        'withdrawal',
+        id,
+        { agentId: agent.id },
+      );
+
+      return saved;
     });
   }
 
@@ -420,7 +461,23 @@ export class WithdrawalsService {
       request.reviewedBy = adminId;
       request.paidAt = new Date();
 
-      return withdrawalsRepo.save(request);
+      const saved = await withdrawalsRepo.save(request);
+
+      await this.auditService.record(
+        adminId,
+        'WITHDRAWAL_PAID',
+        'withdrawal',
+        id,
+        {
+          amount: request.amount,
+          currency: 'USD',
+          paymentReference: reference,
+          assignedAgentId: request.assignedAgentId,
+        },
+      );
+
+      return saved;
     });
   }
-      }
+                                       }
+                                       
