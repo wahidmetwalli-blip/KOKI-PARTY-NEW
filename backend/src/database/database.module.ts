@@ -1,3 +1,4 @@
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -5,13 +6,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
+      host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT || 5432),
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_DATABASE || 'koki_party',
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      ssl: {
+        rejectUnauthorized: false,
+      },
       autoLoadEntities: true,
       synchronize: false,
+      migrationsRun: false,
     }),
   ],
 })
