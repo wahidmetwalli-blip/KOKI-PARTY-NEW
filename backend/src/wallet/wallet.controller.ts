@@ -1,3 +1,4 @@
+
 import {
   Controller,
   Get,
@@ -9,13 +10,17 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { IsInt, IsPositive, IsString, MaxLength } from 'class-validator';
+import {
+  IsInt,
+  IsPositive,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 import { WalletService } from './wallet.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AgentsService } from '../agents/agents.service';
 import { AgentType, AgentStatus } from '../agents/agent.entity';
-import { WalletTransactionType } from './wallet.entity';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -34,7 +39,7 @@ class RechargeWalletDto {
   amount: number;
 
   @IsString()
-  @MaxLength(150)
+  @MaxLength(146)
   idempotencyKey: string;
 }
 
@@ -80,13 +85,12 @@ export class WalletController {
       );
     }
 
-    return this.walletService.adjustBalance(
+    return this.walletService.rechargeFromAgent(
+      agent.id,
+      req.user.id,
       dto.userId,
-      WalletTransactionType.CREDIT,
       String(dto.amount),
-      'Recharge by recharge agent',
       dto.idempotencyKey,
-      `agent:${agent.id}`,
     );
   }
 }
