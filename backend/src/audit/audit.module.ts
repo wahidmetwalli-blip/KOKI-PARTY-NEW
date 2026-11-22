@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuditLog } from './audit.entity';
 import { AuditService } from './audit.service';
+import { AuditController } from './audit.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -10,6 +11,7 @@ import { AuthModule } from '../auth/auth.module';
     TypeOrmModule.forFeature([AuditLog]),
     AuthModule,
   ],
+  controllers: [AuditController],
   providers: [AuditService],
   exports: [AuditService],
 })
