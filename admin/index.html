@@ -1,804 +1,413 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOKI PARTY | Admin Panel</title>
+<meta name="theme-color" content="#0b0910">
+<title>KOKI PARTY | لوحة المالك</title>
 
 <style>
 :root{
---bg:#0b0910;
---panel:#15111c;
---panel2:#1d1726;
---gold:#d6ad62;
---gold2:#f3d99b;
---text:#f5f0e8;
---muted:#9b91a6;
---border:#30263a;
---green:#40c995;
+  --bg:#0b0910;
+  --panel:#15111c;
+  --panel2:#21192b;
+  --gold:#d6ad62;
+  --gold2:#f3d99b;
+  --text:#f5f0e8;
+  --muted:#a79bad;
+  --border:#34283e;
 }
 *{box-sizing:border-box}
 body{
-margin:0;
-background:var(--bg);
-color:var(--text);
-font-family:Arial,Tahoma,sans-serif
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Tahoma,sans-serif;
 }
 button,input{font:inherit}
-.layout{display:flex;min-height:100vh}
+.layout{min-height:100vh}
 .sidebar{
-width:265px;
-background:#100d16;
-border-left:1px solid var(--border);
-padding:20px 14px;
-position:fixed;
-right:0;top:0;bottom:0;
-overflow-y:auto;
-z-index:5
+  position:fixed;
+  right:0;top:0;bottom:0;
+  width:260px;
+  padding:18px 13px;
+  background:#100d16;
+  border-left:1px solid var(--border);
+  overflow:auto;
+  z-index:10;
 }
 .brand{
-padding:12px 10px 22px;
-border-bottom:1px solid var(--border);
-margin-bottom:18px
+  padding:12px 10px 20px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:15px;
 }
 .logo{
-color:var(--gold2);
-font-size:23px;
-font-weight:900;
-letter-spacing:1px
+  font-size:22px;
+  font-weight:900;
+  color:var(--gold2);
 }
 .brand small{
-display:block;
-color:var(--muted);
-margin-top:7px;
-letter-spacing:2px
+  display:block;
+  color:var(--muted);
+  margin-top:7px;
 }
 .menu-title{
-font-size:11px;
-color:#80758b;
-margin:20px 10px 8px
+  font-size:11px;
+  color:#84788e;
+  margin:19px 10px 7px;
 }
 .menu-btn{
-width:100%;
-border:0;
-background:transparent;
-color:#c8bdce;
-padding:11px 12px;
-text-align:right;
-border-radius:9px;
-cursor:pointer;
-display:flex;
-align-items:center;
-gap:10px;
-margin:3px 0;
-font-size:14px
+  display:flex;
+  gap:10px;
+  align-items:center;
+  width:100%;
+  padding:11px 12px;
+  margin:3px 0;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:#d0c6d5;
+  text-align:right;
+  cursor:pointer;
 }
 .menu-btn:hover,.menu-btn.active{
-background:#2a2033;
-color:var(--gold2)
+  background:#2a2033;
+  color:var(--gold2);
 }
 .menu-btn.active{
-border-right:3px solid var(--gold)
+  border-right:3px solid var(--gold);
 }
 .main{
-margin-right:265px;
-width:calc(100% - 265px);
-padding:25px
+  margin-right:260px;
+  padding:24px;
 }
 .topbar{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:15px;
-margin-bottom:28px
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:24px;
 }
-.topbar h2{margin:0;font-size:22px}
-.top-actions{
-display:flex;
-gap:10px;
-align-items:center
-}
+.topbar h2{font-size:21px;margin:0}
 .admin-pill{
-border:1px solid var(--border);
-background:var(--panel);
-padding:10px 14px;
-border-radius:10px;
-color:var(--gold2);
-font-size:13px
+  padding:9px 13px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:var(--panel);
+  color:var(--gold2);
+  font-size:13px;
 }
 .menu-toggle{
-display:none;
-background:var(--panel2);
-border:1px solid var(--border);
-color:var(--gold2);
-padding:9px 12px;
-border-radius:8px
+  display:none;
 }
 .welcome{
-background:linear-gradient(115deg,#21172c,#17101f 65%,#33251b);
-border:1px solid #59452d;
-border-radius:16px;
-padding:25px;
-margin-bottom:22px
+  padding:23px;
+  border:1px solid #59452d;
+  border-radius:15px;
+  background:linear-gradient(115deg,#261a32,#17101f 65%,#33251b);
+  margin-bottom:18px;
 }
 .welcome h1{
-margin:0 0 10px;
-color:var(--gold2);
-font-size:25px
+  margin:0 0 9px;
+  color:var(--gold2);
+  font-size:24px;
 }
 .welcome p{
-margin:0;
-color:#c5b8ca;
-line-height:1.8
+  margin:0;
+  color:#d0c3d3;
+  line-height:1.8;
 }
 .grid{
-display:grid;
-grid-template-columns:repeat(4,minmax(0,1fr));
-gap:15px
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:13px;
 }
-.stat{
-background:var(--panel);
-border:1px solid var(--border);
-border-radius:13px;
-padding:18px
+.stat,.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:17px;
 }
-.stat .label{color:var(--muted);font-size:13px}
+.stat .label{
+  font-size:13px;
+  color:var(--muted);
+}
 .stat .number{
-font-size:26px;
-font-weight:bold;
-color:var(--gold2);
-margin-top:13px
+  font-size:25px;
+  color:var(--gold2);
+  font-weight:bold;
+  margin-top:12px;
 }
 .stat .note{
-font-size:11px;
-color:var(--muted);
-margin-top:7px
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
 }
 .section{display:none}
 .section.active{display:block}
-.panel{
-background:var(--panel);
-border:1px solid var(--border);
-border-radius:14px;
-padding:20px;
-margin-top:18px
-}
+.panel{margin-top:16px}
 .panel h3{
-margin:0 0 17px;
-color:var(--gold2)
+  margin:0 0 15px;
+  color:var(--gold2);
 }
 .section-head{
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:12px;
-flex-wrap:wrap;
-margin-bottom:18px
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
 }
-.section-head h2{margin:0;font-size:22px}
+.section-head h2{margin:0;font-size:21px}
 .muted{
-color:var(--muted);
-font-size:13px;
-line-height:1.8
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.8;
 }
 .toolbar{
-display:flex;
-gap:9px;
-flex-wrap:wrap;
-margin-bottom:15px
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-bottom:13px;
 }
 input{
-background:#0e0b13;
-border:1px solid var(--border);
-color:white;
-border-radius:8px;
-padding:11px 12px;
-min-width:180px;
-outline:none
+  min-width:180px;
+  max-width:100%;
+  padding:11px 12px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#0e0b13;
+  color:white;
+  outline:none;
 }
 input:focus{border-color:var(--gold)}
 .btn{
-background:var(--gold);
-color:#171019;
-border:0;
-border-radius:8px;
-padding:11px 16px;
-font-weight:bold;
-cursor:pointer
+  padding:10px 15px;
+  border:0;
+  border-radius:8px;
+  background:var(--gold);
+  color:#171019;
+  font-weight:bold;
+  cursor:pointer;
 }
 .btn.secondary{
-background:#2a2033;
-color:var(--gold2);
-border:1px solid var(--border)
-}
-.btn:active{transform:scale(.98)}
-</style>
-</head>
-<body>
-<div class="mobile-overlay" id="overlay" onclick="toggleMenu()"></div>
-<div class="layout">
-<aside class="sidebar" id="sidebar">
-<div class="brand">
-<div class="logo">👑 KOKI PARTY</div>
-<small>THE ROYAL WORLD · ADMIN</small>
-</div>
-<div id="menu"></div>
-</aside>
-<main class="main">
-<header class="topbar">
-<div style="display:flex;align-items:center;gap:12px">
-<button class="menu-toggle" onclick="toggleMenu()">☰</button>
-<h2 id="pageTitle">لوحة التحكم</h2>
-</div>
-<div class="top-actions">
-<div class="admin-pill">👑 الإدارة</div>
-</div>
-</header>
-
-.btn:active{transform:scale(.98)}
-.table-wrap{overflow-x:auto}
+  background:var(--panel2);
+  color:var(--gold2);
+  border:1px solid var(--border);
+}.table-wrap{overflow-x:auto}
 table{
-width:100%;
-border-collapse:collapse;
-min-width:600px
+  width:100%;
+  border-collapse:collapse;
+  min-width:600px;
 }
 th,td{
-padding:14px 12px;
-border-bottom:1px solid var(--border);
-text-align:right;
-font-size:13px
+  padding:13px 10px;
+  border-bottom:1px solid var(--border);
+  text-align:right;
+  font-size:13px;
 }
-th{
-color:var(--gold2);
-background:#1b1522
-}
-td{color:#d9d0de}
+th{color:var(--gold2);font-weight:bold}
+td{color:#d5cbd9}
 .empty{
-text-align:center;
-color:var(--muted);
-padding:30px
-}
-.cards{
-display:grid;
-grid-template-columns:repeat(3,minmax(0,1fr));
-gap:13px
-}
-.shortcut{
-background:var(--panel2);
-border:1px solid var(--border);
-padding:17px;
-border-radius:11px;
-cursor:pointer
-}
-.shortcut strong{
-display:block;
-color:var(--gold2);
-margin-bottom:7px
-}
-.shortcut span{
-font-size:12px;
-color:var(--muted)
+  padding:25px;
+  text-align:center;
+  color:var(--muted);
+  line-height:1.8;
 }
 .notice{
-background:#2a2117;
-border:1px solid #66502e;
-color:#e8cf9d;
-padding:13px;
-border-radius:9px;
-font-size:12px;
-line-height:1.8;
-margin-top:15px
+  padding:13px;
+  border:1px solid #59452d;
+  background:#211a20;
+  border-radius:9px;
+  color:#e6d2a7;
+  font-size:13px;
+  line-height:1.8;
 }
-.chart{
-height:170px;
-display:flex;
-align-items:end;
-gap:12px;
-padding:15px 5px 0
+.overlay{
+  display:none;
 }
-.bar{
-flex:1;
-background:linear-gradient(to top,#75502b,var(--gold));
-border-radius:6px 6px 0 0;
-min-height:8px;
-position:relative
+@media(max-width:900px){
+  .sidebar{
+    transform:translateX(100%);
+    transition:transform .25s;
+  }
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-right:0;padding:15px}
+  .menu-toggle{display:inline-block}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .overlay.show{
+    display:block;
+    position:fixed;
+    inset:0;
+    background:#0009;
+    z-index:9;
+  }
 }
-.bar span{
-position:absolute;
-bottom:-25px;
-right:0;left:0;
-text-align:center;
-font-size:10px;
-color:var(--muted)
-}
-.mobile-overlay{display:none}
-@media(max-width:1000px){
-.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.cards{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:700px){
-.sidebar{
-transform:translateX(110%);
-transition:.25s
-}
-.sidebar.open{transform:translateX(0)}
-.mobile-overlay.show{
-display:block;
-position:fixed;
-inset:0;
-background:#0009;
-z-index:4
-}
-.main{
-margin-right:0;
-width:100%;
-padding:16px
-}
-.menu-toggle{display:block}
-.topbar h2{font-size:17px}
-.admin-pill{font-size:11px;padding:8px}
-.grid{gap:9px}
-.stat{padding:13px}
-.stat .number{font-size:21px}
-.cards{grid-template-columns:1fr}
-.welcome{padding:19px}
-.welcome h1{font-size:21px}
+@media(max-width:480px){
+  .grid{grid-template-columns:1fr 1fr;gap:8px}
+  .stat{padding:12px}
+  .stat .number{font-size:20px}
+  .welcome h1{font-size:20px}
 }
 </style>
+</head>
 
-<section class="section active" id="dashboard">
-<div class="welcome">
-<h1>WELCOME TO KOKI PARTY</h1>
-<p>لوحة الإدارة الملكية — تحكم في المستخدمين والوكلاء
-والمضيفين والعمليات المالية من مكان واحد.</p>
-</div>
+<body>
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-<div class="grid">
-<div class="stat">
-<div class="label">إجمالي المستخدمين</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط قاعدة البيانات</div>
-</div>
-<div class="stat">
-<div class="label">إجمالي المضيفين</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط البيانات</div>
-</div>
-<div class="stat">
-<div class="label">الوكالات</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط البيانات</div>
-</div>
-<div class="stat">
-<div class="label">الغرف النشطة</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط البيانات</div>
-</div>
-<div class="stat">
-<div class="label">طلبات السحب</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط البيانات</div>
-</div>
-<div class="stat">
-<div class="label">العملات المباعة</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط البيانات</div>
-</div>
-<div class="stat">
-<div class="label">مستخدمو VIP</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط البيانات</div>
-</div>
-<div class="stat">
-<div class="label">البلاغات</div>
-<div class="number">—</div>
-<div class="note">بانتظار ربط البيانات</div>
-</div>
-</div>
-
-<div class="panel">
-<h3>الوصول السريع</h3>
-<div class="cards">
-<div class="shortcut" onclick="showSection('agency','Agency')">
-<strong>🏢 إدارة الوكالات</strong>
-<span>عرض وإدارة الوكالات</span>
-</div>
-<div class="shortcut" onclick="showSection('host','Host')">
-<strong>🎙️ إدارة المضيفين</strong>
-<span>متابعة المضيفين</span>
-</div>
-<div class="shortcut" onclick="showSection('withdrawals','Withdrawals')">
-<strong>💵 طلبات السحب</strong>
-<span>مراجعة طلبات السحب</span>
-</div>
-</div>
-</div>
-
-<div class="panel">
-<h3>نمو المستخدمين</h3>
-<div class="muted">الرسم هيظهر بعد توصيل بيانات الإحصائيات.</div>
-<div class="chart">
-<div class="bar" style="height:25%"><span>يناير</span></div>
-<div class="bar" style="height:38%"><span>فبراير</span></div>
-<div class="bar" style="height:32%"><span>مارس</span></div>
-<div class="bar" style="height:55%"><span>أبريل</span></div>
-<div class="bar" style="height:45%"><span>مايو</span></div>
-<div class="bar" style="height:70%"><span>يونيو</span></div>
-</div>
-<div class="notice">الرسم تجريبي للعرض فقط، وليس إحصائيات حقيقية.</div>
-</div>
-</section>
-
-<section class="section" id="agency">
-<div class="section-head">
-<h2>🏢 إدارة الوكالات</h2>
-<button class="btn" onclick="addAgency()">+ إضافة وكالة</button>
-</div>
-<div class="panel">
-<div class="toolbar">
-<input id="agencySearch" placeholder="ابحث عن وكالة..."
-oninput="filterTable('agencyTable',this.value)">
-</div>
-<div class="table-wrap">
-<table id="agencyTable">
-<thead>
-<tr>
-<th>اسم الوكالة</th>
-<th>المدير</th>
-<th>عدد المضيفين</th>
-<th>الحالة</th>
-</tr>
-</thead>
-<tbody id="agencyRows">
-<tr><td colspan="4" class="empty">
-لا توجد بيانات متصلة حاليًا.
-</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="notice">
-واجهة الوكالات للعرض حاليًا. الإضافة والحفظ يحتاجان ربط API فعلي.
-</div>
-</section>
-
-<section class="section" id="host">
-<div class="section-head">
-<h2>🎙️ إدارة المضيفين</h2>
-<button class="btn" onclick="notReady()">+ إضافة مضيف</button>
-</div>
-<div class="panel">
-<div class="toolbar">
-<input placeholder="ابحث عن مضيف..."
-oninput="filterTable('hostTable',this.value)">
-</div>
-<div class="table-wrap">
-<table id="hostTable">
-<thead>
-<tr>
-<th>رقم المضيف</th>
-<th>الاسم</th>
-<th>الوكالة</th>
-<th>الأرباح</th>
-<th>الحالة</th>
-</tr>
-</thead>
-<tbody>
-<tr><td colspan="5" class="empty">
-لا توجد بيانات متصلة حاليًا.
-</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-</section>
-
-<section class="section" id="agents">
-<div class="section-head">
-<h2>💳 وكلاء الشحن</h2>
-<button class="btn" onclick="notReady()">+ إضافة وكيل</button>
-</div>
-<div class="panel">
-<div class="table-wrap">
-<table>
-<thead>
-<tr>
-<th>الوكيل</th>
-<th>النوع</th>
-<th>العمولة</th>
-<th>الحالة</th>
-</tr>
-</thead>
-<tbody>
-<tr><td colspan="4" class="empty">
-اربط API الوكلاء لعرض البيانات الحقيقية.
-</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-</section>
-
-<section class="section" id="withdrawals">
-<div class="section-head">
-<h2>💵 طلبات السحب</h2>
-</div>
-<div class="panel">
-<div class="toolbar">
-<input placeholder="ابحث برقم الطلب...">
-</div>
-<div class="table-wrap">
-<table>
-<thead>
-<tr>
-<th>رقم الطلب</th>
-<th>المضيف</th>
-<th>المبلغ USD</th>
-<th>الحالة</th>
-<th>الإجراء</th>
-</tr>
-</thead>
-<tbody>
-<tr><td colspan="5" class="empty">
-لا توجد بيانات متصلة — يلزم ربط API السحب.
-</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-</section>
-</main>
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="logo">👑 KOKI PARTY</div>
+    <small>THE ROYAL WORLD · لوحة المالك</small>
   </div>
-  
-<section class="section" id="generic">
-<div class="welcome">
-<h1 id="genericTitle">القسم</h1>
-<p id="genericDescription">
-القسم موجود في لوحة الإدارة ويحتاج ربط وظائفه بالسيرفر.
-</p>
-</div>
-<div class="panel">
-<h3>حالة القسم</h3>
-<p class="muted">
-الواجهة الرئيسية للقسم قيد التجهيز.
-لن تظهر بيانات حقيقية إلا بعد تنفيذ وربط API الخاص به.
-</p>
-<div class="notice">
-القسم ظاهر في لوحة التحكم، لكنه لم يكتمل برمجيًا بعد.
-</div>
-</div>
-</section>
+
+  <div class="menu-title">الرئيسية</div>
+  <button class="menu-btn active" onclick="showSection('dashboard',this)">🏠 لوحة التحكم</button>
+
+  <div class="menu-title">إدارة التطبيق</div>
+  <button class="menu-btn" onclick="showSection('users',this)">👥 المستخدمون</button>
+  <button class="menu-btn" onclick="showSection('rooms',this)">🎙️ الغرف الصوتية</button>
+  <button class="menu-btn" onclick="showSection('hosts',this)">🎤 المضيفون</button>
+  <button class="menu-btn" onclick="showSection('agencies',this)">🏢 الوكالات</button>
+  <button class="menu-btn" onclick="showSection('agents',this)">🤝 الوكلاء</button>
+
+  <div class="menu-title">الأموال والأرباح</div>
+  <button class="menu-btn" onclick="showSection('wallets',this)">🪙 المحافظ والعملات</button>
+  <button class="menu-btn" onclick="showSection('recharge',this)">💳 عمليات الشحن</button>
+  <button class="menu-btn" onclick="showSection('earnings',this)">💰 أرباح المضيفين</button>
+  <button class="menu-btn" onclick="showSection('withdrawals',this)">💸 طلبات السحب</button>
+
+  <div class="menu-title">النظام</div>
+  <button class="menu-btn" onclick="showSection('gifts',this)">🎁 الهدايا</button>
+  <button class="menu-btn" onclick="showSection('reports',this)">🚨 البلاغات</button>
+  <button class="menu-btn" onclick="showSection('audit',this)">📋 سجل العمليات</button>
+  <button class="menu-btn" onclick="showSection('settings',this)">⚙️ الإعدادات</button>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn menu-toggle" onclick="toggleMenu()">☰</button>
+      <h2 id="pageTitle">لوحة التحكم</h2>
+    </div>
+    <div class="admin-pill">👑 المالك الأساسي</div>
+  </header>
+
+  <section class="section active" id="dashboard">
+    <div class="welcome">
+      <h1>مرحباً بك في KOKI PARTY</h1>
+      <p>لوحة الإدارة الرئيسية للتحكم في المستخدمين والغرف والمضيفين والوكلاء والأموال.</p>
+    </div>
+
+    <div class="grid">
+      <div class="stat"><div class="label">إجمالي المستخدمين</div><div class="number">—</div><div class="note">بانتظار ربط البيانات</div></div>
+      <div class="stat"><div class="label">الغرف الصوتية</div><div class="number">—</div><div class="note">بانتظار ربط البيانات</div></div>
+      <div class="stat"><div class="label">المضيفون</div><div class="number">—</div><div class="note">بانتظار ربط البيانات</div></div>
+      <div class="stat"><div class="label">طلبات السحب</div><div class="number">—</div><div class="note">بانتظار ربط البيانات</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>حالة لوحة الإدارة</h3>
+      <div class="notice">الواجهة قيد التجهيز. الأرقام والعمليات لن تظهر إلا بعد ربطها بقاعدة البيانات وواجهات API الحقيقية.</div>
+    </div>
+  </section>  <section class="section" id="users">
+    <div class="section-head"><h2>المستخدمون</h2></div>
+    <div class="panel"><div class="empty">قائمة المستخدمين هتظهر هنا بعد ربط API المستخدمين.</div></div>
+  </section>
+
+  <section class="section" id="rooms">
+    <div class="section-head"><h2>الغرف الصوتية</h2></div>
+    <div class="panel"><div class="empty">بيانات الغرف هتظهر هنا بعد ربط API الغرف.</div></div>
+  </section>
+
+  <section class="section" id="hosts">
+    <div class="section-head"><h2>إدارة المضيفين</h2></div>
+    <div class="panel"><div class="empty">بيانات المضيفين وأرباحهم هتظهر هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="agencies">
+    <div class="section-head"><h2>إدارة الوكالات</h2></div>
+    <div class="panel"><div class="empty">الوكالات وأعضاؤها هتظهر هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="agents">
+    <div class="section-head"><h2>إدارة الوكلاء</h2></div>
+    <div class="panel"><div class="empty">وكلاء المضيفين ووكلاء الشحن هتظهر بياناتهم هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="wallets">
+    <div class="section-head"><h2>المحافظ والعملات</h2></div>
+    <div class="panel"><div class="empty">أرصدة المحافظ وحركات العملات هتظهر هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="recharge">
+    <div class="section-head"><h2>عمليات الشحن</h2></div>
+    <div class="panel"><div class="empty">سجل الشحن والعمولات هيتعرض هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="earnings">
+    <div class="section-head"><h2>أرباح المضيفين</h2></div>
+    <div class="panel"><div class="empty">الأرباح بالدولار الأمريكي USD هتظهر هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="withdrawals">
+    <div class="section-head"><h2>طلبات السحب</h2></div>
+    <div class="panel"><div class="empty">طلبات السحب وحالات الدفع هتظهر هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="gifts">
+    <div class="section-head"><h2>الهدايا</h2></div>
+    <div class="panel"><div class="empty">إدارة الهدايا وأسعارها هتظهر هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="reports">
+    <div class="section-head"><h2>البلاغات</h2></div>
+    <div class="panel"><div class="empty">البلاغات هتظهر هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="audit">
+    <div class="section-head"><h2>سجل العمليات</h2></div>
+    <div class="panel"><div class="empty">سجل عمليات الإدارة هيتعرض هنا بعد ربط API.</div></div>
+  </section>
+
+  <section class="section" id="settings">
+    <div class="section-head"><h2>إعدادات النظام</h2></div>
+    <div class="panel"><div class="empty">إعدادات النظام هتتضاف بعد تجهيز صلاحيات الإدارة.</div></div>
+  </section>
+</main>
 
 <script>
-const groups = [
-["الرئيسية",[
-["dashboard","▦","Dashboard"]
-]],
-["إدارة المستخدمين",[
-["users","👤","Users"],
-["host","🎙️","Host"],
-["agency","🏢","Agency"]
-]],
-["الغرف",[
-["rooms","🎧","Voice Rooms"],
-["livestream","📹","Livestream"],
-["livehistory","📺","Livestream History"]
-]],
-["المالية",[
-["coinseller","🪙","Coin Seller"],
-["finance","💰","Financial Management"],
-["plans","📋","Plan"],
-["planhistory","🗂️","Plan History"],
-["withdrawals","💵","Withdrawals"],
-["topup","➕","Wallet Topup"],
-["gifttransactions","🎁","Gift Transactions"],
-["gateways","💳","Payment Gateways"],
-["cointransactions","🪙","Coin Transactions"],
-["rates","💱","Exchange Rate Tiers"],
-["p2p","🔁","P2P Transactions"],
-["agents","🤝","Recharge Agents"]
-]],
-["الألعاب",[
-["games","🎮","Games"],
-["rounds","🎲","Game Rounds"],
-["linkgames","🔗","Link Games (legacy)"],
-["gaminghistory","📜","Gaming History (legacy)"]
-]],
-["إدارة المحتوى",[
-["banner","🖼️","Banner"],
-["broadcastgift","🎁","Broadcast Gift"],
-["theme","🎨","Theme"],
-["song","🎵","Song"],
-["hashtag","#️⃣","Hashtag"],
-["post","📝","Post"],
-["video","🎬","Video"]
-]],
-["التفاعل",[
-["gift","🎁","Gift"],
-["sticker","🌟","Sticker"],
-["fakecomment","💬","Fake Comment"],
-["suggested","✉️","Suggested Message"],
-["leaderboard","🏆","Leaderboard Seeding"],
-["announcements","📢","Announcement Banners"]
-]],
-["التواصل",[
-["chat","💬","Chat"],
-["vip","👑","VIP"]
-]],
-["المتجر والمميزات",[
-["store","🛍️","Store"],
-["frames","🖼️","Avatar Frame"],
-["rewards","🎁","Get Started Rewards"],
-["badges","🏅","Entrance Badges"],
-["bubbles","💭","Chat Bubbles"],
-["effects","✨","Entrance Effects"],
-["userbadges","🎖️","User Badges"]
-]],
-["الإشراف",[
-["reports","🚨","Reported User"],
-["complaints","📨","Complaint Request"],
-["daily","📅","Daily Rewards"]
-]],
-["التسويق",[
-["ads","📣","Google Ad"],
-["languages","🌐","Language Management"],
-["language","🗣️","Language"]
-]],
-["الإدارة والصلاحيات",[
-["staff","👮","Staff"],
-["bdregions","🌍","BD Regions"],
-["bd","🤝","BD"]
-]],
-["النظام",[
-["settings","⚙️","Setting"],
-["profile","👤","Profile"],
-["logout","🚪","Log Out"]
-]]
-];
+function showSection(id,button){
+  document.querySelectorAll('.section').forEach(function(section){
+    section.classList.remove('active');
+  });
 
-const menu=document.getElementById("menu");
+  const target=document.getElementById(id);
+  if(!target)return;
 
-groups.forEach(group=>{
-const title=document.createElement("div");
-title.className="menu-title";
-title.textContent=group[0];
-menu.appendChild(title);
+  target.classList.add('active');
 
-group[1].forEach(item=>{
-const btn=document.createElement("button");
-btn.className="menu-btn";
-btn.innerHTML=
-`<span>${item[1]}</span><span>${item[2]}</span>`;
-btn.onclick=()=>showSection(item[0],item[2]);
-btn.dataset.section=item[0];
-menu.appendChild(btn);
-});
-});
+  document.querySelectorAll('.menu-btn').forEach(function(item){
+    item.classList.remove('active');
+  });
+
+  if(button)button.classList.add('active');
+
+  const title=button?button.textContent.trim():'لوحة التحكم';
+  document.getElementById('pageTitle').textContent=title;
+
+  closeMenu();
+}
+
+function toggleMenu(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+function closeMenu(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
 </script>
-
-<section class="section" id="generic">
-<div class="welcome">
-<h1 id="genericTitle">القسم</h1>
-<p id="genericDescription">
-القسم موجود في لوحة الإدارة ويحتاج ربط وظائفه بالسيرفر.
-</p>
-</div>
-<div class="panel">
-<h3>حالة القسم</h3>
-<p class="muted">
-الواجهة الرئيسية للقسم قيد التجهيز.
-لن تظهر بيانات حقيقية إلا بعد تنفيذ وربط API الخاص به.
-</p>
-<div class="notice">
-القسم ظاهر في لوحة التحكم، لكنه لم يكتمل برمجيًا بعد.
-</div>
-</div>
-</section>
-
-<script>
-const groups = [
-["الرئيسية",[
-["dashboard","▦","Dashboard"]
-]],
-["إدارة المستخدمين",[
-["users","👤","Users"],
-["host","🎙️","Host"],
-["agency","🏢","Agency"]
-]],
-["الغرف",[
-["rooms","🎧","Voice Rooms"],
-["livestream","📹","Livestream"],
-["livehistory","📺","Livestream History"]
-]],
-["المالية",[
-["coinseller","🪙","Coin Seller"],
-["finance","💰","Financial Management"],
-["plans","📋","Plan"],
-["planhistory","🗂️","Plan History"],
-["withdrawals","💵","Withdrawals"],
-["topup","➕","Wallet Topup"],
-["gifttransactions","🎁","Gift Transactions"],
-["gateways","💳","Payment Gateways"],
-["cointransactions","🪙","Coin Transactions"],
-["rates","💱","Exchange Rate Tiers"],
-["p2p","🔁","P2P Transactions"],
-["agents","🤝","Recharge Agents"]
-]],
-["الألعاب",[
-["games","🎮","Games"],
-["rounds","🎲","Game Rounds"],
-["linkgames","🔗","Link Games (legacy)"],
-["gaminghistory","📜","Gaming History (legacy)"]
-]],
-["إدارة المحتوى",[
-["banner","🖼️","Banner"],
-["broadcastgift","🎁","Broadcast Gift"],
-["theme","🎨","Theme"],
-["song","🎵","Song"],
-["hashtag","#️⃣","Hashtag"],
-["post","📝","Post"],
-["video","🎬","Video"]
-]],
-["التفاعل",[
-["gift","🎁","Gift"],
-["sticker","🌟","Sticker"],
-["fakecomment","💬","Fake Comment"],
-["suggested","✉️","Suggested Message"],
-["leaderboard","🏆","Leaderboard Seeding"],
-["announcements","📢","Announcement Banners"]
-]],
-["التواصل",[
-["chat","💬","Chat"],
-["vip","👑","VIP"]
-]],
-["المتجر والمميزات",[
-["store","🛍️","Store"],
-["frames","🖼️","Avatar Frame"],
-["rewards","🎁","Get Started Rewards"],
-["badges","🏅","Entrance Badges"],
-["bubbles","💭","Chat Bubbles"],
-["effects","✨","Entrance Effects"],
-["userbadges","🎖️","User Badges"]
-]],
-["الإشراف",[
-["reports","🚨","Reported User"],
-["complaints","📨","Complaint Request"],
-["daily","📅","Daily Rewards"]
-]],
-["التسويق",[
-["ads","📣","Google Ad"],
-["languages","🌐","Language Management"],
-["language","🗣️","Language"]
-]],
-["الإدارة والصلاحيات",[
-["staff","👮","Staff"],
-["bdregions","🌍","BD Regions"],
-["bd","🤝","BD"]
-]],
-["النظام",[
-["settings","⚙️","Setting"],
-["profile","👤","Profile"],
-["logout","🚪","Log Out"]
-]]
-];
-
-const menu=document.getElementById("menu");
-
-groups.forEach(group=>{
-const title=document.createElement("div");
-title.className="menu-title";
-title.textContent=group[0];
-menu.appendChild(title);
-
-group[1].forEach(item=>{
-const btn=document.createElement("button");
-btn.className="menu-btn";
-btn.innerHTML=
-`<span>${item[1]}</span><span>${item[2]}</span>`;
-btn.onclick=()=>showSection(item[0],item[2]);
-btn.dataset.section=item[0];
-menu.appendChild(btn);
-});
-});
-</script>
+</body>
+</html>
