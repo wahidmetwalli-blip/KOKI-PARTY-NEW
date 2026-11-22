@@ -6,6 +6,7 @@ import {
   Req,
   UseGuards,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { IsInt, IsPositive, IsString, MaxLength } from 'class-validator';
@@ -64,13 +65,17 @@ export class WalletController {
       throw new BadRequestException('Invalid target user');
     }
 
-    const agent = await this.agentsService.findByUser(
+    const agents = await this.agentsService.findByUser(
       req.user.id,
       AgentType.RECHARGE,
     );
 
-    if (!agent || agent.status !== AgentStatus.ACTIVE) {
-      throw new BadRequestException(
+    const agent = agents.find(
+      (item) => item.status === AgentStatus.ACTIVE,
+    );
+
+    if (!agent) {
+      throw new ForbiddenException(
         'Active recharge agent account required',
       );
     }
@@ -84,4 +89,4 @@ export class WalletController {
       `agent:${agent.id}`,
     );
   }
-    }
+}
