@@ -4,7 +4,6 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-
 import { DataSource } from 'typeorm';
 
 import {
@@ -39,106 +38,86 @@ export class WithdrawalsService {
     }
 
     if (!Object.values(WithdrawalMethod).includes(method)) {
-      throw new BadRequestException(
-        'Invalid withdrawal method',
-      );
+      throw new BadRequestException('Invalid withdrawal method');
     }
 
     const requestedAmount = BigInt(amount);
 
-    return this.dataSource.transaction(
-      async (manager) => {
-        const earningsRepository =
-          manager.getRepository(HostEarning);
+    return this.dataSource.transaction(async (manager) => {
+      const earningsRepository = manager.getRepository(HostEarning);
+      const withdrawalRepository = manager.getRepository(WithdrawalRequest);
 
-        const withdrawalRepository =
-          manager.getRepository(WithdrawalRequest);
+      const earnings = await earningsRepository
+        .createQueryBuilder('earning')
+        .setLock('pessimistic_write')
+        .where('earning.hostUserId = :hostUserId', { hostUserId })
+        .andWhere('earning.status = :status', {
+          status: EarningStatus.APPROVED,
+        })
+        .andWhere('earning.withdrawalRequestId IS NULL')
+        .orderBy('earning.createdAt', 'ASC')
+        .getMany();
 
-        const earnings = await earningsRepository
-          .createQueryBuilder('earning')
-          .setLock('pessimistic_write')
-          .where('earning.hostUserId = :hostUserId', {
-            hostUserId,
-          })
-          .andWhere('earning.status = :status', {
-            status: EarningStatus.APPROVED,
-          })
-          .andWhere(
-            'earning.withdrawalRequestId IS NULL',
-          )
-          .orderBy('earning.createdAt', 'ASC')
-          .getMany();
+      let total = 0n;
+      const selectedEarnings: HostEarning[] = [];
 
-        let total = 0n;
+      for (const earning of earnings) {
+        const earningAmount = BigInt(earning.amount);
 
-        const selectedEarnings: HostEarning[] = [];
-
-        for (const earning of earnings) {
-          const earningAmount = BigInt(earning.amount);
-
-          if (earningAmount <= 0n) {
-            throw new BadRequestException(
-              'Invalid earning record amount',
-            );
-          }
-
-          if (
-            total + earningAmount <= requestedAmount
-          ) {
-            selectedEarnings.push(earning);
-            total += earningAmount;
-          }
-
-          if (total === requestedAmount) {
-            break;
-          }
-        }
-
-        if (total !== requestedAmount) {
+        if (earningAmount <= 0n) {
           throw new BadRequestException(
-            'Insufficient approved earnings or amount does not match available earning records',
+            'Invalid earning record amount',
           );
         }
 
-        const withdrawal = withdrawalRepository.create({
-          hostUserId,
-          amount,
-          currency: 'USD',
-          method,
-          status: WithdrawalStatus.PENDING,
-          assignedAgentId: null,
-          paymentReference: null,
-          reviewedBy: null,
-          reviewNote: null,
-          paidAt: null,
-        });
-
-        const savedWithdrawal =
-          await withdrawalRepository.save(withdrawal);
-
-        for (const earning of selectedEarnings) {
-          earning.status =
-            EarningStatus.WITHDRAWAL_REQUESTED;
-
-          earning.withdrawalRequestId =
-            savedWithdrawal.id;
+        if (total + earningAmount <= requestedAmount) {
+          selectedEarnings.push(earning);
+          total += earningAmount;
         }
 
-        await earningsRepository.save(selectedEarnings);
+        if (total === requestedAmount) {
+          break;
+        }
+      }
 
-        return savedWithdrawal;
-      },
-    );
+      if (total !== requestedAmount) {
+        throw new BadRequestException(
+          'Insufficient approved earnings or amount does not match available earning records',
+        );
+      }
+
+      const withdrawal = withdrawalRepository.create({
+        hostUserId,
+        amount,
+        currency: 'USD',
+        method,
+        status: WithdrawalStatus.PENDING,
+        assignedAgentId: null,
+        paymentReference: null,
+        reviewedBy: null,
+        reviewNote: null,
+        paidAt: null,
+      });
+
+      const savedWithdrawal = await withdrawalRepository.save(withdrawal);
+
+      for (const earning of selectedEarnings) {
+        earning.status = EarningStatus.WITHDRAWAL_REQUESTED;
+        earning.withdrawalRequestId = savedWithdrawal.id;
+      }
+
+      await earningsRepository.save(selectedEarnings);
+
+      return savedWithdrawal;
+    });
   }
 
   async getMyWithdrawals(hostUserId: string) {
-    return this.dataSource
-      .getRepository(WithdrawalRequest)
-      .find({
-        where: { hostUserId },
-        order: { createdAt: 'DESC' },
-        take: 100,
-      });
+    return this.dataSource.getRepository(WithdrawalRequest).find({
+      where: { hostUserId },
+      order: { createdAt: 'DESC' },
+      take: 100,
+    });
   }
 
   async getWithdrawalById(
@@ -155,11 +134,9 @@ export class WithdrawalsService {
       });
 
     if (!withdrawal) {
-      throw new NotFoundException(
-        'Withdrawal request not found',
-      );
+      throw new NotFoundException('Withdrawal request not found');
     }
 
     return withdrawal;
   }
-          }
+        }
