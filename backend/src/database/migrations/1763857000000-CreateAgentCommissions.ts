@@ -9,58 +9,20 @@ export class CreateAgentCommissions1763857000000
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    if (await queryRunner.hasTable('agent_commissions')) {
-      return;
-    }
+    if (await queryRunner.hasTable('agent_commissions')) return;
 
     await queryRunner.createTable(
       new Table({
         name: 'agent_commissions',
         columns: [
-          {
-            name: 'id',
-            type: 'uuid',
-            isPrimary: true,
-            default: 'gen_random_uuid()',
-          },
-          {
-            name: 'agent_id',
-            type: 'uuid',
-            isNullable: false,
-          },
-          {
-            name: 'withdrawal_request_id',
-            type: 'uuid',
-            isNullable: false,
-          },
-          {
-            name: 'base_amount',
-            type: 'bigint',
-            isNullable: false,
-          },
-          {
-            name: 'commission_rate',
-            type: 'decimal',
-            precision: 5,
-            scale: 2,
-            isNullable: false,
-          },
-          {
-            name: 'commission_amount',
-            type: 'bigint',
-            isNullable: false,
-          },
-          {
-            name: 'currency',
-            type: 'varchar',
-            length: '3',
-            default: "'USD'",
-          },
-          {
-            name: 'created_at',
-            type: 'timestamp',
-            default: 'now()',
-          },
+          { name: 'id', type: 'uuid', isPrimary: true, default: 'gen_random_uuid()' },
+          { name: 'agent_id', type: 'uuid', isNullable: false },
+          { name: 'withdrawal_request_id', type: 'uuid', isNullable: false },
+          { name: 'base_amount', type: 'bigint', isNullable: false },
+          { name: 'commission_rate', type: 'decimal', precision: 5, scale: 2, isNullable: false },
+          { name: 'commission_amount', type: 'bigint', isNullable: false },
+          { name: 'currency', type: 'varchar', length: '3', default: "'USD'" },
+          { name: 'created_at', type: 'timestamp', default: 'now()' },
         ],
       }),
     );
