@@ -1,9 +1,10 @@
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Agent } from './agent.entity';
 import { AgentCommission } from './agent-commission.entity';
+import { AgentPayout } from './agent-payout.entity';
+
 import { AgentsService } from './agents.service';
 import { AgentsController } from './agents.controller';
 
@@ -15,6 +16,7 @@ import { AuditModule } from '../audit/audit.module';
     TypeOrmModule.forFeature([
       Agent,
       AgentCommission,
+      AgentPayout,
     ]),
     AuthModule,
     AuditModule,
