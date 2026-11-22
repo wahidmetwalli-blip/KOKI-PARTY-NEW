@@ -2,6 +2,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { CreateAuditLogs1763857000000 } from './migrations/1763857000000-CreateAuditLogs';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -17,6 +19,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       autoLoadEntities: true,
       synchronize: false,
       migrationsRun: false,
+      migrations: [
+        CreateAuditLogs1763857000000,
+      ],
     }),
   ],
 })
