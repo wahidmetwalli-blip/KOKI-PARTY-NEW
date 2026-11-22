@@ -9,6 +9,7 @@ import {
 import { WalletService } from './wallet.service';
 import { WalletController } from './wallet.controller';
 import { AuthModule } from '../auth/auth.module';
+import { AgentsModule } from '../agents/agents.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthModule } from '../auth/auth.module';
       WalletTransaction,
     ]),
     AuthModule,
+    AgentsModule,
   ],
   controllers: [WalletController],
   providers: [WalletService],
