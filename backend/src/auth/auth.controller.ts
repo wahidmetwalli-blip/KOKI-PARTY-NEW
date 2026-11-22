@@ -30,6 +30,9 @@ export class AuthController {
       phone?: string;
       password: string;
       setupKey: string;
+    } = {
+      password: '',
+      setupKey: '',
     },
   ) {
     return this.authService.setupOwner(dto);
