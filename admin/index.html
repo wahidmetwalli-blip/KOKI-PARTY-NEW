@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,12 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0b0910">
 <title>KOKI PARTY | لوحة المالك</title>
-
 <style>
 :root{
-  --bg:#0b0910;--panel:#15111c;--panel2:#21192b;
-  --gold:#d6ad62;--gold2:#f3d99b;--text:#f5f0e8;
-  --muted:#a79bad;--border:#34283e;
+ --bg:#0b0910;--panel:#15111c;--panel2:#21192b;
+ --gold:#d6ad62;--gold2:#f3d99b;--text:#f5f0e8;
+ --muted:#a79bad;--border:#34283e;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Tahoma,sans-serif}
@@ -58,8 +56,6 @@ button,input{font:inherit}
 .notice{padding:13px;border:1px solid #59452d;background:#211a20;border-radius:9px;color:#e6d2a7;font-size:13px;line-height:1.8}
 .btn{padding:9px 13px;border:0;border-radius:8px;background:var(--gold);color:#171019;font-weight:bold;cursor:pointer}
 .btn:disabled{opacity:.6;cursor:wait}
-
-/* تسجيل دخول المالك */
 #loginScreen{
  position:fixed;inset:0;z-index:100;background:#0b0910;
  display:flex;align-items:center;justify-content:center;padding:18px
@@ -80,7 +76,6 @@ button,input{font:inherit}
 #loginMessage{color:#f0b3a8;font-size:13px;line-height:1.7;margin-top:12px;text-align:center}
 #loginMessage.success{color:#a8d9a8}
 .overlay{display:none}
-
 @media(max-width:900px){
  .sidebar{transform:translateX(100%);transition:transform .25s}
  .sidebar.open{transform:translateX(0)}
@@ -98,10 +93,8 @@ button,input{font:inherit}
 }
 </style>
 </head>
-
 <body>
 
-<!-- شاشة دخول المالك -->
 <div id="loginScreen">
  <div class="login-card">
   <h1>👑 KOKI PARTY</h1>
@@ -124,23 +117,19 @@ button,input{font:inherit}
   <div class="logo">👑 KOKI PARTY</div>
   <small>THE ROYAL WORLD · لوحة المالك</small>
  </div>
-
  <div class="menu-title">الرئيسية</div>
  <button class="menu-btn active" onclick="showSection('dashboard',this)">🏠 لوحة التحكم</button>
-
  <div class="menu-title">إدارة التطبيق</div>
  <button class="menu-btn" onclick="showSection('users',this)">👥 المستخدمون</button>
  <button class="menu-btn" onclick="showSection('rooms',this)">🎙️ الغرف الصوتية</button>
  <button class="menu-btn" onclick="showSection('hosts',this)">🎤 المضيفون</button>
  <button class="menu-btn" onclick="showSection('agencies',this)">🏢 الوكالات</button>
  <button class="menu-btn" onclick="showSection('agents',this)">🤝 الوكلاء</button>
-
  <div class="menu-title">الأموال والأرباح</div>
  <button class="menu-btn" onclick="showSection('wallets',this)">🪙 المحافظ والعملات</button>
  <button class="menu-btn" onclick="showSection('recharge',this)">💳 عمليات الشحن</button>
  <button class="menu-btn" onclick="showSection('earnings',this)">💰 أرباح المضيفين</button>
  <button class="menu-btn" onclick="showSection('withdrawals',this)">💸 طلبات السحب</button>
-
  <div class="menu-title">النظام</div>
  <button class="menu-btn" onclick="showSection('gifts',this)">🎁 الهدايا</button>
  <button class="menu-btn" onclick="showSection('reports',this)">🚨 البلاغات</button>
@@ -165,7 +154,6 @@ button,input{font:inherit}
    <h1>مرحباً بك في KOKI PARTY</h1>
    <p>لوحة الإدارة الرئيسية للتحكم في المستخدمين والغرف والمضيفين والوكلاء والأموال.</p>
   </div>
-
   <div class="grid">
    <div class="stat">
     <div class="label">إجمالي المستخدمين</div>
@@ -176,7 +164,6 @@ button,input{font:inherit}
    <div class="stat"><div class="label">المضيفون</div><div class="number">—</div><div class="note">بانتظار ربط API المضيفين</div></div>
    <div class="stat"><div class="label">طلبات السحب</div><div class="number">—</div><div class="note">بانتظار ربط API السحب</div></div>
   </div>
-
   <div class="panel">
    <h3>حالة لوحة الإدارة</h3>
    <div class="notice" id="dashboardStatus">جاري الاتصال بالسيرفر...</div>
@@ -184,142 +171,116 @@ button,input{font:inherit}
  </section>
 
  <section class="section" id="users">
-  <div class="section-head"><h2>المستخدمون</h2></div>
-  <div class="panel"><div class="empty">قائمة المستخدمين هتظهر هنا بعد تجهيز API القائمة.</div></div>
+  <div class="section-head">
+   <h2>المستخدمون</h2>
+   <button class="btn" type="button" onclick="loadUsers()">تحديث القائمة</button>
+  </div>
+  <div class="panel">
+   <div class="notice" id="usersStatus">افتح القسم لتحميل المستخدمين.</div>
+   <div style="overflow-x:auto;margin-top:14px">
+    <table style="width:100%;border-collapse:collapse;min-width:650px">
+     <thead>
+      <tr style="color:var(--gold2);text-align:right;border-bottom:1px solid var(--border)">
+       <th style="padding:12px">رقم المستخدم</th>
+       <th style="padding:12px">البريد الإلكتروني</th>
+       <th style="padding:12px">الهاتف</th>
+       <th style="padding:12px">الصلاحية</th>
+       <th style="padding:12px">الحالة</th>
+       <th style="padding:12px">تاريخ التسجيل</th>
+      </tr>
+     </thead>
+     <tbody id="usersTableBody"></tbody>
+    </table>
+   </div>
+  </div>
  </section>
 
  <section class="section" id="rooms">
   <div class="section-head"><h2>الغرف الصوتية</h2></div>
   <div class="panel"><div class="empty">بيانات الغرف هتظهر هنا بعد ربط API الغرف.</div></div>
  </section>
-
  <section class="section" id="hosts">
   <div class="section-head"><h2>إدارة المضيفين</h2></div>
   <div class="panel"><div class="empty">بيانات المضيفين وأرباحهم هتظهر هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="agencies">
   <div class="section-head"><h2>إدارة الوكالات</h2></div>
   <div class="panel"><div class="empty">الوكالات وأعضاؤها هتظهر هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="agents">
   <div class="section-head"><h2>إدارة الوكلاء</h2></div>
   <div class="panel"><div class="empty">وكلاء المضيفين ووكلاء الشحن هتظهر بياناتهم هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="wallets">
   <div class="section-head"><h2>المحافظ والعملات</h2></div>
   <div class="panel"><div class="empty">أرصدة المحافظ وحركات العملات هتظهر هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="recharge">
   <div class="section-head"><h2>عمليات الشحن</h2></div>
   <div class="panel"><div class="empty">سجل الشحن والعمولات هيتعرض هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="earnings">
   <div class="section-head"><h2>أرباح المضيفين</h2></div>
   <div class="panel"><div class="empty">الأرباح بالدولار الأمريكي USD هتظهر هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="withdrawals">
   <div class="section-head"><h2>طلبات السحب</h2></div>
   <div class="panel"><div class="empty">طلبات السحب وحالات الدفع هتظهر هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="gifts">
   <div class="section-head"><h2>الهدايا</h2></div>
   <div class="panel"><div class="empty">إدارة الهدايا وأسعارها هتظهر هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="reports">
   <div class="section-head"><h2>البلاغات</h2></div>
   <div class="panel"><div class="empty">البلاغات هتظهر هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="audit">
   <div class="section-head"><h2>سجل العمليات</h2></div>
   <div class="panel"><div class="empty">سجل عمليات الإدارة هيتعرض هنا بعد ربط API.</div></div>
  </section>
-
  <section class="section" id="settings">
   <div class="section-head"><h2>إعدادات النظام</h2></div>
   <div class="panel"><div class="empty">إعدادات النظام هتتضاف بعد تجهيز صلاحيات الإدارة.</div></div>
  </section>
 </main>
-
 <script>
-const API_URL = 'https://koki-party-new.onrender.com/api';
-const TOKEN_KEY = 'koki_access_token';
-
-const loginScreen = document.getElementById('loginScreen');
-const loginForm = document.getElementById('loginForm');
-const loginButton = document.getElementById('loginButton');
-const loginMessage = document.getElementById('loginMessage');
-
-function showLogin(message=''){
- loginScreen.style.display='flex';
- loginMessage.textContent=message;
- loginMessage.className='';
-}
-
-function hideLogin(){
- loginScreen.style.display='none';
-}
+const API_BASE='https://koki-party-new.onrender.com/api';
+const TOKEN_KEY='koki_access_token';
 
 function getToken(){
  return sessionStorage.getItem(TOKEN_KEY);
 }
 
-function logout(){
- sessionStorage.removeItem(TOKEN_KEY);
- document.getElementById('usersCount').textContent='—';
- document.getElementById('usersCountNote').textContent='سجّل الدخول لعرض البيانات';
- document.getElementById('dashboardStatus').textContent='تم تسجيل الخروج.';
- showLogin('سجّل دخول المالك للمتابعة.');
-}
-
-async function apiRequest(path, options={}){
+async function apiRequest(path,options={}){
+ const headers={
+  'Content-Type':'application/json',
+  ...(options.headers||{})
+ };
  const token=getToken();
+ if(token)headers.Authorization='Bearer '+token;
 
- const response=await fetch(API_URL+path,{
+ const response=await fetch(API_BASE+path,{
   ...options,
-  headers:{
-   'Content-Type':'application/json',
-   ...(token?{Authorization:'Bearer '+token}:{}),
-   ...(options.headers||{})
-  }
+  headers
  });
-
  const data=await response.json().catch(()=>({}));
-
- if(response.status===401){
-  logout();
-  throw new Error('انتهت جلسة الدخول. سجّل الدخول مرة تانية.');
- }
-
  if(!response.ok){
-  throw new Error(
-   typeof data.message==='string'?data.message:'حصل خطأ في الاتصال بالسيرفر.'
-  );
+  throw new Error(data.message||'حصل خطأ في الاتصال بالسيرفر.');
  }
-
  return data;
 }
 
 async function loadDashboard(){
  try{
   const data=await apiRequest('/admin/users/count');
-
   if(typeof data.totalUsers!=='number'){
    throw new Error('استجابة عدد المستخدمين غير صحيحة.');
   }
-
   document.getElementById('usersCount').textContent=
    data.totalUsers.toLocaleString('en-US');
-
-  document.getElementById('usersCountNote').textContent='العدد الحقيقي من قاعدة البيانات';
+  document.getElementById('usersCountNote').textContent=
+   'العدد الحقيقي من قاعدة البيانات';
   document.getElementById('dashboardStatus').textContent=
    'تم تسجيل الدخول والاتصال بقاعدة البيانات بنجاح.';
  }catch(error){
@@ -327,68 +288,94 @@ async function loadDashboard(){
  }
 }
 
-loginForm.addEventListener('submit',async function(event){
- event.preventDefault();
+async function loadUsers(){
+ const status=document.getElementById('usersStatus');
+ const body=document.getElementById('usersTableBody');
+ if(!status||!body)return;
 
- loginButton.disabled=true;
- loginButton.textContent='جاري تسجيل الدخول...';
- loginMessage.textContent='';
+ status.textContent='جاري تحميل المستخدمين...';
+ body.replaceChildren();
 
  try{
-  const response=await fetch(API_URL+'/auth/login',{
-   method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({
-    identifier:document.getElementById('identifier').value.trim(),
-    password:document.getElementById('password').value
-   })
+  const data=await apiRequest('/admin/users');
+  if(!Array.isArray(data.users)){
+   throw new Error('استجابة قائمة المستخدمين غير صحيحة.');
+  }
+
+  if(data.users.length===0){
+   status.textContent='مفيش مستخدمين مسجلين لحد دلوقتي.';
+   return;
+  }
+
+  data.users.forEach(function(user){
+   const tr=document.createElement('tr');
+   tr.style.borderBottom='1px solid var(--border)';
+
+   const values=[
+    user.id||'—',
+    user.email||'—',
+    user.phone||'—',
+    user.role||'USER',
+    user.isActive?'نشط':'موقوف',
+    user.createdAt?
+     new Date(user.createdAt).toLocaleString('ar-EG'):'—'
+   ];
+
+   values.forEach(function(value){
+    const td=document.createElement('td');
+    td.style.padding='12px';
+    td.textContent=String(value);
+    tr.appendChild(td);
+   });
+
+   body.appendChild(tr);
   });
 
-  const data=await response.json().catch(()=>({}));
-
-  if(!response.ok){
-   throw new Error(
-    typeof data.message==='string'?data.message:'بيانات الدخول غير صحيحة.'
-   );
-  }
-
-  if(!data.access_token || data.user?.role!=='OWNER'){
-   throw new Error('الحساب ده مش حساب المالك الأساسي.');
-  }
-
-  sessionStorage.setItem(TOKEN_KEY,data.access_token);
-  loginForm.reset();
-  hideLogin();
-  await loadDashboard();
+  status.textContent=
+   'تم تحميل '+data.users.length+' مستخدم (آخر 50 مستخدم).';
 
  }catch(error){
-  loginMessage.textContent=error.message;
- }finally{
-  loginButton.disabled=false;
-  loginButton.textContent='تسجيل الدخول';
+  status.textContent=error.message;
  }
-});
+}
 
 function showSection(id,button){
  document.querySelectorAll('.section').forEach(function(section){
   section.classList.remove('active');
  });
 
- const target=document.getElementById(id);
- if(!target)return;
+ const selected=document.getElementById(id);
+ if(selected)selected.classList.add('active');
 
- target.classList.add('active');
-
- document.querySelectorAll('.menu-btn').forEach(function(item){
-  item.classList.remove('active');
+ document.querySelectorAll('.menu-btn').forEach(function(btn){
+  btn.classList.remove('active');
  });
 
  if(button)button.classList.add('active');
 
+ const titles={
+  dashboard:'لوحة التحكم',
+  users:'المستخدمون',
+  rooms:'الغرف الصوتية',
+  hosts:'المضيفون',
+  agencies:'الوكالات',
+  agents:'الوكلاء',
+  wallets:'المحافظ والعملات',
+  recharge:'عمليات الشحن',
+  earnings:'أرباح المضيفين',
+  withdrawals:'طلبات السحب',
+  gifts:'الهدايا',
+  reports:'البلاغات',
+  audit:'سجل العمليات',
+  settings:'الإعدادات'
+ };
+
  document.getElementById('pageTitle').textContent=
-  button?button.textContent.trim():'لوحة التحكم';
+  titles[id]||'KOKI PARTY';
 
  closeMenu();
+
+ if(id==='users')loadUsers();
 }
 
 function toggleMenu(){
@@ -401,17 +388,59 @@ function closeMenu(){
  document.getElementById('overlay').classList.remove('show');
 }
 
-async function startApp(){
- if(!getToken()){
-  showLogin();
-  return;
- }
+function logout(){
+ sessionStorage.removeItem(TOKEN_KEY);
+ location.reload();
+}
 
- hideLogin();
+document.getElementById('loginForm').addEventListener('submit',async function(event){
+ event.preventDefault();
+
+ const button=document.getElementById('loginButton');
+ const message=document.getElementById('loginMessage');
+ const identifier=document.getElementById('identifier').value.trim();
+ const password=document.getElementById('password').value;
+
+ button.disabled=true;
+ button.textContent='جاري تسجيل الدخول...';
+ message.textContent='';
+
+ try{
+  const data=await apiRequest('/auth/login',{
+   method:'POST',
+   body:JSON.stringify({identifier,password})
+  });
+
+  if(!data.access_token||!data.user){
+   throw new Error('بيانات تسجيل الدخول غير مكتملة.');
+  }
+
+  if(data.user.role!=='OWNER'){
+   throw new Error('الحساب ده مش حساب المالك الأساسي.');
+  }
+
+  sessionStorage.setItem(TOKEN_KEY,data.access_token);
+  document.getElementById('loginScreen').style.display='none';
+  await loadDashboard();
+
+ }catch(error){
+  message.textContent=error.message;
+ }finally{
+  button.disabled=false;
+  button.textContent='تسجيل الدخول';
+ }
+});
+
+async function startAdmin(){
+ const token=getToken();
+
+ if(!token)return;
+
+ document.getElementById('loginScreen').style.display='none';
  await loadDashboard();
 }
 
-startApp();
+startAdmin();
 </script>
 </body>
 </html>
