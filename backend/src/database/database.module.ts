@@ -6,6 +6,7 @@ import { AddUsdCurrencyFields1763856000000 } from './migrations/1763856000000-Ad
 import { CreateAgentCommissions1763857000000 } from './migrations/1763857000000-CreateAgentCommissions';
 import { CreateAuditLogs1763857100000 } from './migrations/1763857100000-CreateAuditLogs';
 import { CreateRooms1763857200000 } from './migrations/1763857200000-CreateRooms';
+import { CreateRoomSeats1763857300000 } from './migrations/1763857300000-CreateRoomSeats';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CreateRooms1763857200000 } from './migrations/1763857200000-CreateRooms
         CreateAgentCommissions1763857000000,
         CreateAuditLogs1763857100000,
         CreateRooms1763857200000,
+        CreateRoomSeats1763857300000,
       ],
     }),
   ],
