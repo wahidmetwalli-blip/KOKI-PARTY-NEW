@@ -189,7 +189,49 @@ class _RoomScreenState extends State<RoomScreen> {
     if (busy) return;
 
     setState(() => busy = true);
+  Future<void> toggleMic() async {
+    if (busy) return;
 
+    final mySeat = seats.where(
+      (seat) => seat['userId']?.toString() == currentUserId,
+    ).toList();
+
+    if (mySeat.isEmpty) {
+      showMessage('لازم تحجز مقعد الأول علشان تستخدم المايك');
+      return;
+    }
+
+    final seatNumber =
+        (mySeat.first['seatNumber'] as num).toInt();
+
+    final newMuteState = !isMicMuted;
+
+    setState(() => busy = true);
+
+    try {
+      await apiRequest(
+        'PATCH',
+        '/api/rooms/${widget.roomId}/seats/$seatNumber/mute',
+        body: {'isMuted': newMuteState},
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        isMicMuted = newMuteState;
+      });
+
+      await loadRoomData();
+
+      showMessage(
+        newMuteState ? 'تم كتم المايك' : 'تم فتح المايك',
+      );
+    } catch (e) {
+      showMessage(e.toString());
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
     try {
       await apiRequest(
         'DELETE',
