@@ -1,4 +1,3 @@
-
 import {
   Injectable,
   NotFoundException,
@@ -9,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Room } from './room.entity';
+import { RoomSeat } from './room-seat.entity';
 import { User } from '../users/user.entity';
 
 @Injectable()
@@ -16,6 +16,9 @@ export class RoomsService {
   constructor(
     @InjectRepository(Room)
     private readonly roomsRepository: Repository<Room>,
+
+    @InjectRepository(RoomSeat)
+    private readonly roomSeatsRepository: Repository<RoomSeat>,
 
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -72,7 +75,24 @@ export class RoomsService {
       isActive: true,
     });
 
-    return this.roomsRepository.save(room);
+    const savedRoom = await this.roomsRepository.save(room);
+
+    const seats = Array.from({ length: 8 }, (_, index) =>
+      this.roomSeatsRepository.create({
+        roomId: savedRoom.id,
+        seatNumber: index + 1,
+        userId: null,
+        isMuted: true,
+        occupiedAt: null,
+      }),
+    );
+
+    await this.roomSeatsRepository.save(seats);
+
+    return {
+      ...savedRoom,
+      seats,
+    };
   }
 
   async update(
@@ -134,4 +154,4 @@ export class RoomsService {
 
     return this.roomsRepository.save(room);
   }
-        }
+}
