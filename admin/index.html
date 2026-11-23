@@ -789,8 +789,10 @@ function logout() {
   location.reload();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+ document.addEventListener('DOMContentLoaded', () => {
   if (accessToken) {
+    document.getElementById('loginScreen').style.display = 'none';
+    showSection('dashboard');
     loadRooms();
   }
 });
