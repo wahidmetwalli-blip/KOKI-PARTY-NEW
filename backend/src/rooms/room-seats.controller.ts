@@ -10,10 +10,9 @@ import {
   Body,
   Req,
   UseGuards,
-  IsBoolean,
-  IsNotEmpty,
 } from '@nestjs/common';
 
+import { IsBoolean } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoomSeatsService } from './room-seats.service';
 
@@ -29,9 +28,7 @@ export class RoomSeatsController {
   ) {}
 
   @Get()
-  findAll(
-    @Param('roomId', ParseUUIDPipe) roomId: string,
-  ) {
+  findAll(@Param('roomId', ParseUUIDPipe) roomId: string) {
     return this.roomSeatsService.findAll(roomId);
   }
 
@@ -42,11 +39,7 @@ export class RoomSeatsController {
     @Param('seatNumber', ParseIntPipe) seatNumber: number,
     @Req() req: any,
   ) {
-    return this.roomSeatsService.take(
-      roomId,
-      seatNumber,
-      req.user.id,
-    );
+    return this.roomSeatsService.take(roomId, seatNumber, req.user.id);
   }
 
   @Delete('leave')
@@ -55,10 +48,7 @@ export class RoomSeatsController {
     @Param('roomId', ParseUUIDPipe) roomId: string,
     @Req() req: any,
   ) {
-    return this.roomSeatsService.leave(
-      roomId,
-      req.user.id,
-    );
+    return this.roomSeatsService.leave(roomId, req.user.id);
   }
 
   @Patch(':seatNumber/mute')
