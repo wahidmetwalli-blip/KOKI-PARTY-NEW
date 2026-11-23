@@ -1,40 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b0910">
+<title>KOKI PARTY | لوحة المالك</title>
+<style>
+:root{
+ --bg:#0b0910;--panel:#15111c;--panel2:#21192b;
+ --gold:#d6ad62;--gold2:#f3d99b;--text:#f5f0e8;
+ --muted:#a79bad;--border:#34283e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Tahoma,sans-serif}
+button,input{font:inherit}
+.sidebar{
+ position:fixed;right:0;top:0;bottom:0;width:260px;padding:18px 13px;
+ background:#100d16;border-left:1px solid var(--border);overflow:auto;z-index:10
+}
+.brand{padding:12px 10px 20px;border-bottom:1px solid var(--border);margin-bottom:15px}
+.logo{font-size:22px;font-weight:900;color:var(--gold2)}
+.brand small{display:block;color:var(--muted);margin-top:7px}
+.menu-title{font-size:11px;color:#84788e;margin:19px 10px 7px}
+.menu-btn{
+ display:flex;gap:10px;align-items:center;width:100%;padding:11px 12px;
+ margin:3px 0;border:0;border-radius:9px;background:transparent;
+ color:#d0c6d5;text-align:right;cursor:pointer
+}
+.menu-btn:hover,.menu-btn.active{background:#2a2033;color:var(--gold2)}
+.menu-btn.active{border-right:3px solid var(--gold)}
+.main{margin-right:260px;padding:24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
+.topbar h2{font-size:21px;margin:0}
+.admin-pill{display:flex;align-items:center;gap:10px;padding:9px 13px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--gold2);font-size:13px}
+.menu-toggle{display:none}
+.welcome{
+ padding:23px;border:1px solid #59452d;border-radius:15px;
+ background:linear-gradient(115deg,#261a32,#17101f 65%,#33251b);margin-bottom:18px
+}
+.welcome h1{margin:0 0 9px;color:var(--gold2);font-size:24px}
+.welcome p{margin:0;color:#d0c3d3;line-height:1.8}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.stat,.panel{background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:17px}
+.stat .label{font-size:13px;color:var(--muted)}
+.stat .number{font-size:25px;color:var(--gold2);font-weight:bold;margin-top:12px}
+.stat .note{font-size:11px;color:var(--muted);margin-top:6px}
+.section{display:none}
+.section.active{display:block}
+.panel{margin-top:16px}
+.panel h3{margin:0 0 15px;color:var(--gold2)}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.section-head h2{margin:0;font-size:21px}
+.muted{color:var(--muted);font-size:13px;line-height:1.8}
+.empty{padding:25px;text-align:center;color:var(--muted);line-height:1.8}
+.notice{padding:13px;border:1px solid #59452d;background:#211a20;border-radius:9px;color:#e6d2a7;font-size:13px;line-height:1.8}
+.btn{padding:9px 13px;border:0;border-radius:8px;background:var(--gold);color:#171019;font-weight:bold;cursor:pointer}
+.btn:disabled{opacity:.6;cursor:wait}
+#loginScreen{
+ position:fixed;inset:0;z-index:100;background:#0b0910;
+ display:flex;align-items:center;justify-content:center;padding:18px
+}
+.login-card{
+ width:100%;max-width:420px;background:var(--panel);
+ border:1px solid #8e7138;border-radius:17px;padding:25px
+}
+.login-card h1{text-align:center;color:var(--gold2);margin:0 0 8px}
+.login-card p{text-align:center;color:var(--muted);line-height:1.7}
+.login-card label{display:block;color:var(--gold2);margin:16px 0 7px}
+.login-card input{
+ width:100%;min-width:0;padding:13px;border-radius:9px;
+ border:1px solid var(--border);background:#0e0b13;color:white;outline:none
+}
+.login-card input:focus{border-color:var(--gold)}
+.login-card button{width:100%;margin-top:20px;padding:13px}
+#loginMessage{color:#f0b3a8;font-size:13px;line-height:1.7;margin-top:12px;text-align:center}
+#loginMessage.success{color:#a8d9a8}
+.overlay{display:none}
+@media(max-width:900px){
+ .sidebar{transform:translateX(100%);transition:transform .25s}
+ .sidebar.open{transform:translateX(0)}
+ .main{margin-right:0;padding:15px}
+ .menu-toggle{display:inline-block}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .overlay.show{display:block;position:fixed;inset:0;background:#0009;z-index:9}
+}
+@media(max-width:480px){
+ .grid{grid-template-columns:1fr 1fr;gap:8px}
+ .stat{padding:12px}
+ .stat .number{font-size:20px}
+ .welcome h1{font-size:20px}
+ .admin-pill{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+ <div class="login-card">
+  <h1>👑 KOKI PARTY</h1>
+  <p>تسجيل دخول المالك الأساسي</p>
+  <form id="loginForm">
+   <label for="identifier">البريد الإلكتروني أو رقم الهاتف</label>
+   <input id="identifier" type="text" autocomplete="username" required>
+   <label for="password">كلمة المرور</label>
+   <input id="password" type="password" autocomplete="current-password" required>
+   <button class="btn" id="loginButton" type="submit">تسجيل الدخول</button>
+  </form>
+  <div id="loginMessage" role="status"></div>
+ </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<aside class="sidebar" id="sidebar">
+ <div class="brand">
+  <div class="logo">👑 KOKI PARTY</div>
+  <small>THE ROYAL WORLD · لوحة المالك</small>
+ </div>
+ <div class="menu-title">الرئيسية</div>
+ <button class="menu-btn active" onclick="showSection('dashboard',this)">🏠 لوحة التحكم</button>
+ <div class="menu-title">إدارة التطبيق</div>
+ <button class="menu-btn" onclick="showSection('users',this)">👥 المستخدمون</button>
+ <button class="menu-btn" onclick="showSection('rooms',this)">🎙️ الغرف الصوتية</button>
+ <button class="menu-btn" onclick="showSection('hosts',this)">🎤 المضيفون</button>
+ <button class="menu-btn" onclick="showSection('agencies',this)">🏢 الوكالات</button>
+ <button class="menu-btn" onclick="showSection('agents',this)">🤝 الوكلاء</button>
+ <div class="menu-title">الأموال والأرباح</div>
+ <button class="menu-btn" onclick="showSection('wallets',this)">🪙 المحافظ والعملات</button>
+ <button class="menu-btn" onclick="showSection('recharge',this)">💳 عمليات الشحن</button>
+ <button class="menu-btn" onclick="showSection('earnings',this)">💰 أرباح المضيفين</button>
+ <button class="menu-btn" onclick="showSection('withdrawals',this)">💸 طلبات السحب</button>
+ <div class="menu-title">النظام</div>
+ <button class="menu-btn" onclick="showSection('gifts',this)">🎁 الهدايا</button>
+ <button class="menu-btn" onclick="showSection('reports',this)">🚨 البلاغات</button>
+ <button class="menu-btn" onclick="showSection('audit',this)">📋 سجل العمليات</button>
+ <button class="menu-btn" onclick="showSection('settings',this)">⚙️ الإعدادات</button>
+</aside>
+
+<main class="main">
+ <header class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+   <button class="btn menu-toggle" onclick="toggleMenu()">☰</button>
+   <h2 id="pageTitle">لوحة التحكم</h2>
+  </div>
+  <div class="admin-pill">
+   👑 المالك الأساسي
+   <button class="btn" onclick="logout()">خروج</button>
+  </div>
+ </header>
+
+ <section class="section active" id="dashboard">
+  <div class="welcome">
+   <h1>مرحباً بك في KOKI PARTY</h1>
+   <p>لوحة الإدارة الرئيسية للتحكم في المستخدمين والغرف والمضيفين والوكلاء والأموال.</p>
+  </div>
+  <div class="grid">
+   <div class="stat">
+    <div class="label">إجمالي المستخدمين</div>
+    <div class="number" id="usersCount">—</div>
+    <div class="note" id="usersCountNote">بانتظار تحميل البيانات</div>
+   </div>
+   <div class="stat"><div class="label">الغرف الصوتية</div><div class="number">—</div><div class="note">بانتظار ربط API الغرف</div></div>
+   <div class="stat"><div class="label">المضيفون</div><div class="number">—</div><div class="note">بانتظار ربط API المضيفين</div></div>
+   <div class="stat"><div class="label">طلبات السحب</div><div class="number">—</div><div class="note">بانتظار ربط API السحب</div></div>
+  </div>
+  <div class="panel">
+   <h3>حالة لوحة الإدارة</h3>
+   <div class="notice" id="dashboardStatus">جاري الاتصال بالسيرفر...</div>
+  </div>
+ </section>
+
+ <section class="section" id="users">
+  <div class="section-head">
+   <h2>المستخدمون</h2>
+   <button class="btn" type="button" onclick="loadUsers()">تحديث القائمة</button>
+  </div>
+  <div class="panel">
+   <div class="notice" id="usersStatus">افتح القسم لتحميل المستخدمين.</div>
+   <div style="overflow-x:auto;margin-top:14px">
+    <table style="width:100%;border-collapse:collapse;min-width:650px">
+     <thead>
+      <tr style="color:var(--gold2);text-align:right;border-bottom:1px solid var(--border)">
+       <th style="padding:12px">رقم المستخدم</th>
+       <th style="padding:12px">البريد الإلكتروني</th>
+       <th style="padding:12px">الهاتف</th>
+       <th style="padding:12px">الصلاحية</th>
+       <th style="padding:12px">الحالة</th>
+       <th style="padding:12px">تاريخ التسجيل</th>
+      </tr>
+     </thead>
+     <tbody id="usersTableBody"></tbody>
+    </table>
+   </div>
+  </div>
+ </section>
+
+ <section class="section" id="rooms">
+  <div class="section-head"><h2>الغرف الصوتية</h2></div>
+  <div class="panel"><div class="empty">بيانات الغرف هتظهر هنا بعد ربط API الغرف.</div></div>
+ </section>
+
 <section class="section" id="hosts">
   <div class="section-head">
     <h2>إدارة المضيفين</h2>
     <button class="btn" onclick="loadAgents('HOST')">تحديث</button>
   </div>
   <div class="panel">
-    <div class="notice" id="hostsStatus">جاري تحميل المضيفين...</div>
+    <div class="notice" id="hostsStatus">افتح القسم لتحميل المضيفين.</div>
     <div style="overflow-x:auto;margin-top:14px">
       <table style="width:100%;min-width:650px;border-collapse:collapse">
-        <thead>
-          <tr style="color:var(--gold2);text-align:right">
-            <th>رقم المستخدم</th><th>الحالة</th>
-            <th>العمولة %</th><th>تاريخ الإضافة</th><th>الإجراء</th>
-          </tr>
-        </thead>
+        <thead><tr style="color:var(--gold2);text-align:right">
+          <th style="padding:12px">رقم المستخدم</th><th style="padding:12px">الحالة</th>
+          <th style="padding:12px">العمولة %</th><th style="padding:12px">تاريخ الإضافة</th><th style="padding:12px">الإجراء</th>
+        </tr></thead>
         <tbody id="hostsTableBody"></tbody>
       </table>
     </div>
-    <div class="notice" style="margin-top:18px">
-      إضافة مضيف جديد باستخدام رقم المستخدم UUID من قسم المستخدمين.
-    </div>
-    <input id="newHostUserId" placeholder="UUID رقم المستخدم"
-      style="padding:12px;width:100%;margin:10px 0;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
-    <input id="newHostCommission" type="number" min="0" max="100" value="0"
-      placeholder="نسبة العمولة"
-      style="padding:12px;width:100%;margin-bottom:10px;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
+    <div class="notice" style="margin-top:18px">إضافة مضيف جديد باستخدام UUID من قسم المستخدمين.</div>
+    <input id="newHostUserId" placeholder="UUID رقم المستخدم" style="padding:12px;width:100%;margin:10px 0;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
+    <input id="newHostCommission" type="number" min="0" max="100" value="0" placeholder="نسبة العمولة" style="padding:12px;width:100%;margin-bottom:10px;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
     <button class="btn" onclick="createAgent('HOST')">إضافة مضيف</button>
   </div>
 </section>
 
 <section class="section" id="agencies">
   <div class="section-head"><h2>إدارة الوكالات</h2></div>
-  <div class="panel">
-    <div class="notice">
-      قسم الوكالات المستقلة محتاج Backend خاص بالوكالات. مش هنعرض بيانات وهمية؛ هنربطه بعد تجهيز نظام الوكالات وأعضائها.
-    </div>
-  </div>
+  <div class="panel"><div class="notice">إدارة الوكالات المستقلة وأعضائها محتاجة Backend خاص بالوكالات. مش هنعرض بيانات وهمية؛ هنربطها بعد تجهيز النظام.</div></div>
 </section>
 
 <section class="section" id="agents">
@@ -43,26 +234,422 @@
     <button class="btn" onclick="loadAgents('RECHARGE')">تحديث</button>
   </div>
   <div class="panel">
-    <div class="notice" id="agentsStatus">جاري تحميل وكلاء الشحن...</div>
+    <div class="notice" id="agentsStatus">افتح القسم لتحميل وكلاء الشحن.</div>
     <div style="overflow-x:auto;margin-top:14px">
       <table style="width:100%;min-width:650px;border-collapse:collapse">
-        <thead>
-          <tr style="color:var(--gold2);text-align:right">
-            <th>رقم المستخدم</th><th>الحالة</th>
-            <th>العمولة %</th><th>تاريخ الإضافة</th><th>الإجراء</th>
-          </tr>
-        </thead>
+        <thead><tr style="color:var(--gold2);text-align:right">
+          <th style="padding:12px">رقم المستخدم</th><th style="padding:12px">الحالة</th>
+          <th style="padding:12px">العمولة %</th><th style="padding:12px">تاريخ الإضافة</th><th style="padding:12px">الإجراء</th>
+        </tr></thead>
         <tbody id="agentsTableBody"></tbody>
       </table>
     </div>
-    <div class="notice" style="margin-top:18px">
-      إضافة وكيل شحن جديد باستخدام UUID من قسم المستخدمين.
-    </div>
-    <input id="newRechargeUserId" placeholder="UUID رقم المستخدم"
-      style="padding:12px;width:100%;margin:10px 0;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
-    <input id="newRechargeCommission" type="number" min="0" max="100" value="0"
-      placeholder="نسبة العمولة"
-      style="padding:12px;width:100%;margin-bottom:10px;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
+    <div class="notice" style="margin-top:18px">إضافة وكيل شحن جديد باستخدام UUID من قسم المستخدمين.</div>
+    <input id="newRechargeUserId" placeholder="UUID رقم المستخدم" style="padding:12px;width:100%;margin:10px 0;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
+    <input id="newRechargeCommission" type="number" min="0" max="100" value="0" placeholder="نسبة العمولة" style="padding:12px;width:100%;margin-bottom:10px;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
     <button class="btn" onclick="createAgent('RECHARGE')">إضافة وكيل شحن</button>
   </div>
 </section>
+
+ <section class="section" id="wallets">
+  <div class="section-head"><h2>المحافظ والعملات</h2></div>
+  <div class="panel"><div class="empty">أرصدة المحافظ وحركات العملات هتظهر هنا بعد ربط API.</div></div>
+ </section>
+ <section class="section" id="recharge">
+  <div class="section-head"><h2>عمليات الشحن</h2></div>
+  <div class="panel"><div class="empty">سجل الشحن والعمولات هيتعرض هنا بعد ربط API.</div></div>
+ </section>
+ <section class="section" id="earnings">
+  <div class="section-head"><h2>أرباح المضيفين</h2></div>
+  <div class="panel"><div class="empty">الأرباح بالدولار الأمريكي USD هتظهر هنا بعد ربط API.</div></div>
+ </section>
+ <section class="section" id="withdrawals">
+  <div class="section-head"><h2>طلبات السحب</h2></div>
+  <div class="panel"><div class="empty">طلبات السحب وحالات الدفع هتظهر هنا بعد ربط API.</div></div>
+ </section>
+ <section class="section" id="gifts">
+  <div class="section-head"><h2>الهدايا</h2></div>
+  <div class="panel"><div class="empty">إدارة الهدايا وأسعارها هتظهر هنا بعد ربط API.</div></div>
+ </section>
+ <section class="section" id="reports">
+  <div class="section-head"><h2>البلاغات</h2></div>
+  <div class="panel"><div class="empty">البلاغات هتظهر هنا بعد ربط API.</div></div>
+ </section>
+ <section class="section" id="audit">
+  <div class="section-head"><h2>سجل العمليات</h2></div>
+  <div class="panel"><div class="empty">سجل عمليات الإدارة هيتعرض هنا بعد ربط API.</div></div>
+ </section>
+ <section class="section" id="settings">
+  <div class="section-head"><h2>إعدادات النظام</h2></div>
+  <div class="panel"><div class="empty">إعدادات النظام هتتضاف بعد تجهيز صلاحيات الإدارة.</div></div>
+ </section>
+    </main>
+    <script>
+const API_BASE='https://koki-party-new.onrender.com/api';
+const TOKEN_KEY='koki_access_token';
+
+function getToken(){
+ return sessionStorage.getItem(TOKEN_KEY);
+}
+
+async function apiRequest(path,options={}){
+ const headers={
+  'Content-Type':'application/json',
+  ...(options.headers||{})
+ };
+ const token=getToken();
+ if(token)headers.Authorization='Bearer '+token;
+
+ const response=await fetch(API_BASE+path,{
+  ...options,
+  headers
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok){
+  throw new Error(data.message||'حصل خطأ في الاتصال بالسيرفر.');
+ }
+ return data;
+}
+
+async function loadDashboard(){
+ try{
+  const data=await apiRequest('/admin/users/count');
+  if(typeof data.totalUsers!=='number'){
+   throw new Error('استجابة عدد المستخدمين غير صحيحة.');
+  }
+  document.getElementById('usersCount').textContent=
+   data.totalUsers.toLocaleString('en-US');
+  document.getElementById('usersCountNote').textContent=
+   'العدد الحقيقي من قاعدة البيانات';
+  document.getElementById('dashboardStatus').textContent=
+   'تم تسجيل الدخول والاتصال بقاعدة البيانات بنجاح.';
+ }catch(error){
+  document.getElementById('dashboardStatus').textContent=error.message;
+ }
+}
+
+async function loadUsers(){
+ const status=document.getElementById('usersStatus');
+ const body=document.getElementById('usersTableBody');
+ if(!status||!body)return;
+
+ status.textContent='جاري تحميل المستخدمين...';
+ body.replaceChildren();
+
+ try{
+  const data=await apiRequest('/admin/users');
+  if(!Array.isArray(data.users)){
+   throw new Error('استجابة قائمة المستخدمين غير صحيحة.');
+  }
+
+  if(data.users.length===0){
+   status.textContent='مفيش مستخدمين مسجلين لحد دلوقتي.';
+   return;
+  }
+
+  data.users.forEach(function(user){
+   const tr=document.createElement('tr');
+   tr.style.borderBottom='1px solid var(--border)';
+
+   const values=[
+    user.id||'—',
+    user.email||'—',
+    user.phone||'—',
+    user.role||'USER',
+    user.isActive?'نشط':'موقوف',
+    user.createdAt?
+     new Date(user.createdAt).toLocaleString('ar-EG'):'—'
+   ];
+
+   values.forEach(function(value){
+    const td=document.createElement('td');
+    td.style.padding='12px';
+    td.textContent=String(value);
+    tr.appendChild(td);
+   });
+
+   body.appendChild(tr);
+  });
+
+  status.textContent=
+   'تم تحميل '+data.users.length+' مستخدم (آخر 50 مستخدم).';
+
+ }catch(error){
+  status.textContent=error.message;
+ }
+}
+
+async function loadAgents(type){
+ const host=type==='HOST';
+ const status=document.getElementById(host?'hostsStatus':'agentsStatus');
+ const body=document.getElementById(host?'hostsTableBody':'agentsTableBody');
+ if(!status||!body)return;
+
+ status.textContent='جاري تحميل البيانات...';
+ body.replaceChildren();
+
+ try{
+  const data=await apiRequest('/agents');
+  const all=Array.isArray(data)?data:data.agents;
+
+  if(!Array.isArray(all)){
+   throw new Error('استجابة قائمة الوكلاء غير صحيحة.');
+  }
+
+  const list=all.filter(a=>a.type===type);
+
+  if(!list.length){
+   status.textContent='مفيش سجلات في القسم ده حاليًا.';
+   return;
+  }
+
+  list.forEach(agent=>{
+   const tr=document.createElement('tr');
+   tr.style.borderBottom='1px solid var(--border)';
+
+   [
+    agent.userId||'—',
+    agent.status||'—',
+    agent.commissionRate??0,
+    agent.createdAt?
+     new Date(agent.createdAt).toLocaleString('ar-EG'):'—'
+   ].forEach(value=>{
+    const td=document.createElement('td');
+    td.style.padding='12px';
+    td.textContent=String(value);
+    tr.appendChild(td);
+   });
+
+   const td=document.createElement('td');
+   td.style.padding='12px';
+
+   const select=document.createElement('select');
+   select.style.cssText=
+    'padding:7px;margin:4px;background:#100d16;color:white;border:1px solid var(--border);border-radius:6px';
+
+   ['PENDING','ACTIVE','SUSPENDED'].forEach(value=>{
+    const option=document.createElement('option');
+    option.value=value;
+    option.textContent=value;
+    option.selected=agent.status===value;
+    select.appendChild(option);
+   });
+
+   const saveStatus=document.createElement('button');
+   saveStatus.className='btn';
+   saveStatus.textContent='حفظ الحالة';
+   saveStatus.onclick=()=>{
+    updateAgentStatus(agent.id,select.value,type);
+   };
+
+   const rate=document.createElement('input');
+   rate.type='number';
+   rate.min='0';
+   rate.max='100';
+   rate.step='0.01';
+   rate.value=agent.commissionRate??0;
+   rate.style.cssText=
+    'width:75px;padding:7px;margin:4px;background:#100d16;color:white;border:1px solid var(--border);border-radius:6px';
+
+   const saveRate=document.createElement('button');
+   saveRate.className='btn';
+   saveRate.textContent='حفظ العمولة';
+   saveRate.onclick=()=>{
+    updateAgentCommission(agent.id,rate.value,type);
+   };
+
+   td.append(select,saveStatus,rate,saveRate);
+   tr.appendChild(td);
+   body.appendChild(tr);
+  });
+
+  status.textContent='تم تحميل '+list.length+' سجل.';
+
+ }catch(error){
+  status.textContent=error.message;
+ }
+}
+
+async function createAgent(type){
+ const host=type==='HOST';
+
+ const userId=document.getElementById(
+  host?'newHostUserId':'newRechargeUserId'
+ ).value.trim();
+
+ const commissionRate=Number(document.getElementById(
+  host?'newHostCommission':'newRechargeCommission'
+ ).value);
+
+ if(!userId){
+  alert('اكتب UUID المستخدم أولاً.');
+  return;
+ }
+
+ if(!Number.isFinite(commissionRate)||
+    commissionRate<0||commissionRate>100){
+  alert('نسبة العمولة لازم تكون من 0 إلى 100.');
+  return;
+ }
+
+ try{
+  await apiRequest(
+   type==='HOST'?'/agents/hosts':'/agents/recharge',
+   {
+    method:'POST',
+    body:JSON.stringify({userId,commissionRate})
+   }
+  );
+
+  alert('تمت الإضافة بنجاح.');
+  loadAgents(type);
+
+ }catch(error){
+  alert(error.message);
+ }
+}
+
+async function updateAgentStatus(id,status,type){
+ try{
+  await apiRequest('/agents/'+id+'/status',{
+   method:'PATCH',
+   body:JSON.stringify({status})
+  });
+
+  alert('تم تحديث الحالة.');
+  loadAgents(type);
+
+ }catch(error){
+  alert(error.message);
+ }
+}
+
+async function updateAgentCommission(id,commissionRate,type){
+ const rate=Number(commissionRate);
+
+ if(!Number.isFinite(rate)||rate<0||rate>100){
+  alert('العمولة لازم تكون من 0 إلى 100.');
+  return;
+ }
+
+ try{
+  await apiRequest('/agents/'+id+'/commission',{
+   method:'PATCH',
+   body:JSON.stringify({commissionRate:rate})
+  });
+
+  alert('تم تحديث العمولة.');
+  loadAgents(type);
+
+ }catch(error){
+  alert(error.message);
+ }
+}
+
+function showSection(id,button){
+ document.querySelectorAll('.section').forEach(function(section){
+  section.classList.remove('active');
+ });
+
+ const selected=document.getElementById(id);
+ if(selected)selected.classList.add('active');
+
+ document.querySelectorAll('.menu-btn').forEach(function(btn){
+  btn.classList.remove('active');
+ });
+
+ if(button)button.classList.add('active');
+
+ const titles={
+  dashboard:'لوحة التحكم',
+  users:'المستخدمون',
+  rooms:'الغرف الصوتية',
+  hosts:'المضيفون',
+  agencies:'الوكالات',
+  agents:'الوكلاء',
+  wallets:'المحافظ والعملات',
+  recharge:'عمليات الشحن',
+  earnings:'أرباح المضيفين',
+  withdrawals:'طلبات السحب',
+  gifts:'الهدايا',
+  reports:'البلاغات',
+  audit:'سجل العمليات',
+  settings:'الإعدادات'
+ };
+
+ document.getElementById('pageTitle').textContent=
+  titles[id]||'KOKI PARTY';
+
+ closeMenu();
+
+ if(id==='users')loadUsers();
+ if(id==='hosts')loadAgents('HOST');
+ if(id==='agents')loadAgents('RECHARGE');
+}
+
+function toggleMenu(){
+ document.getElementById('sidebar').classList.toggle('open');
+ document.getElementById('overlay').classList.toggle('show');
+}
+
+function closeMenu(){
+ document.getElementById('sidebar').classList.remove('open');
+ document.getElementById('overlay').classList.remove('show');
+}
+
+function logout(){
+ sessionStorage.removeItem(TOKEN_KEY);
+ location.reload();
+}
+
+document.getElementById('loginForm').addEventListener('submit',async function(event){
+ event.preventDefault();
+
+ const button=document.getElementById('loginButton');
+ const message=document.getElementById('loginMessage');
+ const identifier=document.getElementById('identifier').value.trim();
+ const password=document.getElementById('password').value;
+
+ button.disabled=true;
+ button.textContent='جاري تسجيل الدخول...';
+ message.textContent='';
+
+ try{
+  const data=await apiRequest('/auth/login',{
+   method:'POST',
+   body:JSON.stringify({identifier,password})
+  });
+
+  if(!data.access_token||!data.user){
+   throw new Error('بيانات تسجيل الدخول غير مكتملة.');
+  }
+
+  if(data.user.role!=='OWNER'){
+   throw new Error('الحساب ده مش حساب المالك الأساسي.');
+  }
+
+  sessionStorage.setItem(TOKEN_KEY,data.access_token);
+  document.getElementById('loginScreen').style.display='none';
+  await loadDashboard();
+
+ }catch(error){
+  message.textContent=error.message;
+ }finally{
+  button.disabled=false;
+  button.textContent='تسجيل الدخول';
+ }
+});
+
+async function startAdmin(){
+ const token=getToken();
+
+ if(!token)return;
+
+ document.getElementById('loginScreen').style.display='none';
+ await loadDashboard();
+}
+
+startAdmin();
+</script>
+</body>
+</html>
