@@ -1,3 +1,4 @@
+
 import {
   Body,
   Controller,
@@ -17,6 +18,8 @@ import {
   MaxLength,
   IsUrl,
   IsNotEmpty,
+  IsInt,
+  IsIn,
 } from 'class-validator';
 
 import { RoomsService } from './rooms.service';
@@ -51,6 +54,11 @@ class UpdateRoomDto {
   @IsString()
   @MaxLength(500)
   description?: string;
+
+  @IsOptional()
+  @IsInt()
+  @IsIn([10, 12, 15, 20])
+  maxSeats?: number;
 
   @IsOptional()
   @IsString()
