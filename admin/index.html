@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -56,6 +57,29 @@ button,input{font:inherit}
 .notice{padding:13px;border:1px solid #59452d;background:#211a20;border-radius:9px;color:#e6d2a7;font-size:13px;line-height:1.8}
 .btn{padding:9px 13px;border:0;border-radius:8px;background:var(--gold);color:#171019;font-weight:bold;cursor:pointer}
 .btn:disabled{opacity:.6;cursor:wait}
+.field{
+ width:100%;padding:13px;margin:8px 0;
+ background:#100d16;color:white;border:1px solid var(--border);
+ border-radius:8px;outline:none
+}
+.field:focus{border-color:var(--gold)}
+.room-card{
+ background:#21192b;border:1px solid var(--border);
+ border-radius:12px;padding:15px;margin:12px 0
+}
+.room-card h3{margin:0 0 8px;color:var(--gold2)}
+.room-meta{font-size:12px;color:var(--muted);line-height:1.8;overflow-wrap:anywhere}
+.seats-grid{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:8px;margin-top:14px
+}
+.seat{
+ border:1px solid #59452d;border-radius:9px;
+ background:#15111c;padding:12px 5px;text-align:center;
+ min-height:75px;font-size:12px;overflow-wrap:anywhere
+}
+.seat strong{display:block;color:var(--gold2);font-size:17px;margin-bottom:5px}
+.seat.occupied{border-color:#8d7040;background:#302338}
 #loginScreen{
  position:fixed;inset:0;z-index:100;background:#0b0910;
  display:flex;align-items:center;justify-content:center;padding:18px
@@ -90,6 +114,7 @@ button,input{font:inherit}
  .stat .number{font-size:20px}
  .welcome h1{font-size:20px}
  .admin-pill{font-size:11px}
+ .seats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
 </head>
@@ -148,508 +173,582 @@ button,input{font:inherit}
    <button class="btn" onclick="logout()">خروج</button>
   </div>
  </header>
+ 
+<div class="content">
 
- <section class="section active" id="dashboard">
-  <div class="welcome">
-   <h1>مرحباً بك في KOKI PARTY</h1>
-   <p>لوحة الإدارة الرئيسية للتحكم في المستخدمين والغرف والمضيفين والوكلاء والأموال.</p>
-  </div>
-  <div class="grid">
-   <div class="stat">
-    <div class="label">إجمالي المستخدمين</div>
-    <div class="number" id="usersCount">—</div>
-    <div class="note" id="usersCountNote">بانتظار تحميل البيانات</div>
-   </div>
-   <div class="stat"><div class="label">الغرف الصوتية</div><div class="number">—</div><div class="note">بانتظار ربط API الغرف</div></div>
-   <div class="stat"><div class="label">المضيفون</div><div class="number">—</div><div class="note">بانتظار ربط API المضيفين</div></div>
-   <div class="stat"><div class="label">طلبات السحب</div><div class="number">—</div><div class="note">بانتظار ربط API السحب</div></div>
-  </div>
-  <div class="panel">
-   <h3>حالة لوحة الإدارة</h3>
-   <div class="notice" id="dashboardStatus">جاري الاتصال بالسيرفر...</div>
-  </div>
- </section>
-
- <section class="section" id="users">
-  <div class="section-head">
-   <h2>المستخدمون</h2>
-   <button class="btn" type="button" onclick="loadUsers()">تحديث القائمة</button>
-  </div>
-  <div class="panel">
-   <div class="notice" id="usersStatus">افتح القسم لتحميل المستخدمين.</div>
-   <div style="overflow-x:auto;margin-top:14px">
-    <table style="width:100%;border-collapse:collapse;min-width:650px">
-     <thead>
-      <tr style="color:var(--gold2);text-align:right;border-bottom:1px solid var(--border)">
-       <th style="padding:12px">رقم المستخدم</th>
-       <th style="padding:12px">البريد الإلكتروني</th>
-       <th style="padding:12px">الهاتف</th>
-       <th style="padding:12px">الصلاحية</th>
-       <th style="padding:12px">الحالة</th>
-       <th style="padding:12px">تاريخ التسجيل</th>
-      </tr>
-     </thead>
-     <tbody id="usersTableBody"></tbody>
-    </table>
-   </div>
-  </div>
- </section>
-
- <section class="section" id="rooms">
-  <div class="section-head"><h2>الغرف الصوتية</h2></div>
-  <div class="panel"><div class="empty">بيانات الغرف هتظهر هنا بعد ربط API الغرف.</div></div>
- </section>
-
-<section class="section" id="hosts">
-  <div class="section-head">
-    <h2>إدارة المضيفين</h2>
-    <button class="btn" onclick="loadAgents('HOST')">تحديث</button>
-  </div>
-  <div class="panel">
-    <div class="notice" id="hostsStatus">افتح القسم لتحميل المضيفين.</div>
-    <div style="overflow-x:auto;margin-top:14px">
-      <table style="width:100%;min-width:650px;border-collapse:collapse">
-        <thead><tr style="color:var(--gold2);text-align:right">
-          <th style="padding:12px">رقم المستخدم</th><th style="padding:12px">الحالة</th>
-          <th style="padding:12px">العمولة %</th><th style="padding:12px">تاريخ الإضافة</th><th style="padding:12px">الإجراء</th>
-        </tr></thead>
-        <tbody id="hostsTableBody"></tbody>
-      </table>
+  <!-- DASHBOARD -->
+  <section class="page active" id="dashboard">
+    <div class="page-heading">
+      <h2>لوحة التحكم</h2>
+      <p>نظرة عامة على KOKI PARTY</p>
     </div>
-    <div class="notice" style="margin-top:18px">إضافة مضيف جديد باستخدام UUID من قسم المستخدمين.</div>
-    <input id="newHostUserId" placeholder="UUID رقم المستخدم" style="padding:12px;width:100%;margin:10px 0;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
-    <input id="newHostCommission" type="number" min="0" max="100" value="0" placeholder="نسبة العمولة" style="padding:12px;width:100%;margin-bottom:10px;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
-    <button class="btn" onclick="createAgent('HOST')">إضافة مضيف</button>
-  </div>
-</section>
 
-<section class="section" id="agencies">
-  <div class="section-head"><h2>إدارة الوكالات</h2></div>
-  <div class="panel"><div class="notice">إدارة الوكالات المستقلة وأعضائها محتاجة Backend خاص بالوكالات. مش هنعرض بيانات وهمية؛ هنربطها بعد تجهيز النظام.</div></div>
-</section>
-
-<section class="section" id="agents">
-  <div class="section-head">
-    <h2>وكلاء الشحن</h2>
-    <button class="btn" onclick="loadAgents('RECHARGE')">تحديث</button>
-  </div>
-  <div class="panel">
-    <div class="notice" id="agentsStatus">افتح القسم لتحميل وكلاء الشحن.</div>
-    <div style="overflow-x:auto;margin-top:14px">
-      <table style="width:100%;min-width:650px;border-collapse:collapse">
-        <thead><tr style="color:var(--gold2);text-align:right">
-          <th style="padding:12px">رقم المستخدم</th><th style="padding:12px">الحالة</th>
-          <th style="padding:12px">العمولة %</th><th style="padding:12px">تاريخ الإضافة</th><th style="padding:12px">الإجراء</th>
-        </tr></thead>
-        <tbody id="agentsTableBody"></tbody>
-      </table>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span>👥 المستخدمون</span>
+        <strong id="totalUsers">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>🎙️ الغرف</span>
+        <strong id="totalRooms">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>🎤 المضيفون</span>
+        <strong id="totalHosts">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>🪙 العملات</span>
+        <strong id="totalCoins">0</strong>
+      </div>
     </div>
-    <div class="notice" style="margin-top:18px">إضافة وكيل شحن جديد باستخدام UUID من قسم المستخدمين.</div>
-    <input id="newRechargeUserId" placeholder="UUID رقم المستخدم" style="padding:12px;width:100%;margin:10px 0;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
-    <input id="newRechargeCommission" type="number" min="0" max="100" value="0" placeholder="نسبة العمولة" style="padding:12px;width:100%;margin-bottom:10px;background:#100d16;color:white;border:1px solid var(--border);border-radius:8px">
-    <button class="btn" onclick="createAgent('RECHARGE')">إضافة وكيل شحن</button>
-  </div>
-</section>
 
- <section class="section" id="wallets">
-  <div class="section-head"><h2>المحافظ والعملات</h2></div>
-  <div class="panel"><div class="empty">أرصدة المحافظ وحركات العملات هتظهر هنا بعد ربط API.</div></div>
- </section>
- <section class="section" id="recharge">
-  <div class="section-head"><h2>عمليات الشحن</h2></div>
-  <div class="panel"><div class="empty">سجل الشحن والعمولات هيتعرض هنا بعد ربط API.</div></div>
- </section>
- <section class="section" id="earnings">
-  <div class="section-head"><h2>أرباح المضيفين</h2></div>
-  <div class="panel"><div class="empty">الأرباح بالدولار الأمريكي USD هتظهر هنا بعد ربط API.</div></div>
- </section>
- <section class="section" id="withdrawals">
-  <div class="section-head"><h2>طلبات السحب</h2></div>
-  <div class="panel"><div class="empty">طلبات السحب وحالات الدفع هتظهر هنا بعد ربط API.</div></div>
- </section>
- <section class="section" id="gifts">
-  <div class="section-head"><h2>الهدايا</h2></div>
-  <div class="panel"><div class="empty">إدارة الهدايا وأسعارها هتظهر هنا بعد ربط API.</div></div>
- </section>
- <section class="section" id="reports">
-  <div class="section-head"><h2>البلاغات</h2></div>
-  <div class="panel"><div class="empty">البلاغات هتظهر هنا بعد ربط API.</div></div>
- </section>
- <section class="section" id="audit">
-  <div class="section-head"><h2>سجل العمليات</h2></div>
-  <div class="panel"><div class="empty">سجل عمليات الإدارة هيتعرض هنا بعد ربط API.</div></div>
- </section>
- <section class="section" id="settings">
-  <div class="section-head"><h2>إعدادات النظام</h2></div>
-  <div class="panel"><div class="empty">إعدادات النظام هتتضاف بعد تجهيز صلاحيات الإدارة.</div></div>
- </section>
-    </main>
-    <script>
-const API_BASE='https://koki-party-new.onrender.com/api';
-const TOKEN_KEY='koki_access_token';
+    <div class="panel">
+      <h3>مرحباً بك في لوحة المالك 👑</h3>
+      <p>من هنا تقدر تدير المستخدمين والغرف والمضيفين والوكلاء والأموال.</p>
+    </div>
+  </section>
 
-function getToken(){
- return sessionStorage.getItem(TOKEN_KEY);
+  <!-- USERS -->
+  <section class="page" id="users">
+    <div class="page-heading">
+      <h2>إدارة المستخدمين</h2>
+      <p>عرض ومتابعة حسابات المستخدمين</p>
+    </div>
+    <div class="panel">
+      <button class="btn" onclick="loadUsers()">تحديث المستخدمين</button>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>المستخدم</th>
+              <th>البريد الإلكتروني</th>
+              <th>الدور</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr><td colspan="4">اضغط تحديث المستخدمين</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROOMS -->
+  <section class="page" id="rooms">
+    <div class="page-heading">
+      <h2>الغرف الصوتية</h2>
+      <p>إنشاء الغرف ومتابعة المقاعد</p>
+    </div>
+
+    <div class="panel">
+      <h3>إنشاء غرفة جديدة</h3>
+      <form id="createRoomForm">
+        <label>اسم الغرفة</label>
+        <input id="roomName" type="text" placeholder="مثال: غرفة الملوك" required>
+
+        <label>وصف الغرفة</label>
+        <input id="roomDescription" type="text" placeholder="اكتب وصف الغرفة">
+
+        <button class="btn" type="submit">إنشاء الغرفة</button>
+      </form>
+      <p id="roomMessage"></p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-heading">
+        <h3>قائمة الغرف</h3>
+        <button class="btn secondary" onclick="loadRooms()">تحديث</button>
+      </div>
+      <div id="roomsList">جاري تحميل الغرف...</div>
+    </div>
+
+    <div class="panel">
+      <h3>مقاعد الغرفة</h3>
+      <p id="selectedRoomName">اختار غرفة لعرض المقاعد</p>
+      <div id="roomSeats" class="seats-grid">
+        <div class="seat">1</div>
+        <div class="seat">2</div>
+        <div class="seat">3</div>
+        <div class="seat">4</div>
+        <div class="seat">5</div>
+        <div class="seat">6</div>
+        <div class="seat">7</div>
+        <div class="seat">8</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOSTS -->
+  <section class="page" id="hosts">
+    <div class="page-heading">
+      <h2>إدارة المضيفين</h2>
+      <p>متابعة المضيفين وحساباتهم</p>
+    </div>
+    <div class="panel">
+      <button class="btn" onclick="loadUsers()">تحديث البيانات</button>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>المضيف</th>
+              <th>معرّف الحساب</th>
+              <th>الدور</th>
+            </tr>
+          </thead>
+          <tbody id="hostsTable">
+            <tr><td colspan="3">لا توجد بيانات محملة</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENCIES -->
+  <section class="page" id="agencies">
+    <div class="page-heading">
+      <h2>الوكالات</h2>
+      <p>إدارة وكالات المضيفين</p>
+    </div>
+    <div class="panel">
+      <p>قسم إدارة الوكالات جاهز لإضافة وظائف الإدارة وربطه بواجهة الخادم.</p>
+    </div>
+  </section>
+
+  <!-- AGENTS -->
+  <section class="page" id="agents">
+    <div class="page-heading">
+      <h2>وكلاء الشحن</h2>
+      <p>إدارة وكلاء شحن العملات</p>
+    </div>
+    <div class="panel">
+      <h3>إضافة وكيل شحن</h3>
+      <form id="createAgentForm">
+        <label>معرّف المستخدم</label>
+        <input id="agentUserId" type="text" placeholder="أدخل معرّف المستخدم" required>
+        <button class="btn" type="submit">إضافة الوكيل</button>
+      </form>
+      <p id="agentMessage"></p>
+    </div>
+    <div class="panel">
+      <h3>الوكلاء المسجلون</h3>
+      <button class="btn secondary" onclick="loadAgents()">تحديث</button>
+      <div id="agentsList">لا توجد بيانات محملة</div>
+    </div>
+  </section>
+
+  <!-- WALLETS -->
+  <section class="page" id="wallets">
+    <div class="page-heading">
+      <h2>المحافظ والعملات</h2>
+      <p>متابعة أرصدة المستخدمين</p>
+    </div>
+    <div class="panel">
+      <p>إدارة أرصدة العملات والمحافظ هتظهر هنا بعد ربط واجهات المحفظة.</p>
+    </div>
+  </section>
+
+  <!-- RECHARGE -->
+  <section class="page" id="recharge">
+    <div class="page-heading">
+      <h2>عمليات الشحن</h2>
+      <p>متابعة طلبات شحن العملات</p>
+    </div>
+    <div class="panel">
+      <p>قسم عمليات الشحن.</p>
+    </div>
+  </section>
+
+  <!-- EARNINGS -->
+  <section class="page" id="earnings">
+    <div class="page-heading">
+      <h2>أرباح المضيفين</h2>
+      <p>متابعة مستحقات ورواتب المضيفين بالدولار الأمريكي</p>
+    </div>
+    <div class="panel">
+      <p>قسم حساب أرباح المضيفين.</p>
+    </div>
+  </section>
+
+  <!-- WITHDRAWALS -->
+  <section class="page" id="withdrawals">
+    <div class="page-heading">
+      <h2>طلبات السحب</h2>
+      <p>متابعة طلبات سحب الأرباح بالدولار الأمريكي</p>
+    </div>
+    <div class="panel">
+      <p>طلبات السحب ومراجعتها من خلال الإدارة.</p>
+    </div>
+  </section>
+
+  <!-- GIFTS -->
+  <section class="page" id="gifts">
+    <div class="page-heading">
+      <h2>الهدايا</h2>
+      <p>إدارة هدايا KOKI PARTY</p>
+    </div>
+    <div class="panel">
+      <p>قسم إدارة الهدايا.</p>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="page" id="reports">
+    <div class="page-heading">
+      <h2>البلاغات</h2>
+      <p>متابعة بلاغات المستخدمين</p>
+    </div>
+    <div class="panel">
+      <p>قسم البلاغات والمراجعة.</p>
+    </div>
+  </section>
+
+  <!-- AUDIT -->
+  <section class="page" id="audit">
+    <div class="page-heading">
+      <h2>سجل العمليات</h2>
+      <p>متابعة العمليات الإدارية</p>
+    </div>
+    <div class="panel">
+      <p>سجل عمليات الإدارة.</p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="page" id="settings">
+    <div class="page-heading">
+      <h2>الإعدادات</h2>
+      <p>إعدادات لوحة المالك</p>
+    </div>
+    <div class="panel">
+      <p>إعدادات التطبيق والإدارة.</p>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<script>
+ 
+const API_BASE = '/api';
+let accessToken = sessionStorage.getItem('koki_access_token') || '';
+let currentRoomId = null;
+
+function showMessage(elementId, message, isError = false) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  element.textContent = message;
+  element.style.color = isError ? '#ff7777' : '#e7c66e';
 }
 
-async function apiRequest(path,options={}){
- const headers={
-  'Content-Type':'application/json',
-  ...(options.headers||{})
- };
- const token=getToken();
- if(token)headers.Authorization='Bearer '+token;
+async function apiRequest(path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
 
- const response=await fetch(API_BASE+path,{
-  ...options,
-  headers
- });
- const data=await response.json().catch(()=>({}));
- if(!response.ok){
-  throw new Error(data.message||'حصل خطأ في الاتصال بالسيرفر.');
- }
- return data;
-}
-
-async function loadDashboard(){
- try{
-  const data=await apiRequest('/admin/users/count');
-  if(typeof data.totalUsers!=='number'){
-   throw new Error('استجابة عدد المستخدمين غير صحيحة.');
-  }
-  document.getElementById('usersCount').textContent=
-   data.totalUsers.toLocaleString('en-US');
-  document.getElementById('usersCountNote').textContent=
-   'العدد الحقيقي من قاعدة البيانات';
-  document.getElementById('dashboardStatus').textContent=
-   'تم تسجيل الدخول والاتصال بقاعدة البيانات بنجاح.';
- }catch(error){
-  document.getElementById('dashboardStatus').textContent=error.message;
- }
-}
-
-async function loadUsers(){
- const status=document.getElementById('usersStatus');
- const body=document.getElementById('usersTableBody');
- if(!status||!body)return;
-
- status.textContent='جاري تحميل المستخدمين...';
- body.replaceChildren();
-
- try{
-  const data=await apiRequest('/admin/users');
-  if(!Array.isArray(data.users)){
-   throw new Error('استجابة قائمة المستخدمين غير صحيحة.');
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  if(data.users.length===0){
-   status.textContent='مفيش مستخدمين مسجلين لحد دلوقتي.';
-   return;
-  }
-
-  data.users.forEach(function(user){
-   const tr=document.createElement('tr');
-   tr.style.borderBottom='1px solid var(--border)';
-
-   const values=[
-    user.id||'—',
-    user.email||'—',
-    user.phone||'—',
-    user.role||'USER',
-    user.isActive?'نشط':'موقوف',
-    user.createdAt?
-     new Date(user.createdAt).toLocaleString('ar-EG'):'—'
-   ];
-
-   values.forEach(function(value){
-    const td=document.createElement('td');
-    td.style.padding='12px';
-    td.textContent=String(value);
-    tr.appendChild(td);
-   });
-
-   body.appendChild(tr);
+  const response = await fetch(API_BASE + path, {
+    ...options,
+    headers
   });
 
-  status.textContent=
-   'تم تحميل '+data.users.length+' مستخدم (آخر 50 مستخدم).';
+  const data = await response.json().catch(() => ({}));
 
- }catch(error){
-  status.textContent=error.message;
- }
-}
+  if (!response.ok) {
+    const message = Array.isArray(data.message)
+      ? data.message.join(' - ')
+      : data.message || 'حصل خطأ في الاتصال بالسيرفر';
 
-async function loadAgents(type){
- const host=type==='HOST';
- const status=document.getElementById(host?'hostsStatus':'agentsStatus');
- const body=document.getElementById(host?'hostsTableBody':'agentsTableBody');
- if(!status||!body)return;
-
- status.textContent='جاري تحميل البيانات...';
- body.replaceChildren();
-
- try{
-  const data=await apiRequest('/agents');
-  const all=Array.isArray(data)?data:data.agents;
-
-  if(!Array.isArray(all)){
-   throw new Error('استجابة قائمة الوكلاء غير صحيحة.');
+    throw new Error(message);
   }
 
-  const list=all.filter(a=>a.type===type);
+  return data;
+}
 
-  if(!list.length){
-   status.textContent='مفيش سجلات في القسم ده حاليًا.';
-   return;
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  })[char]);
+}
+
+function showSection(sectionId) {
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.toggle('active', page.id === sectionId);
+  });
+
+  document.querySelectorAll('[data-section]').forEach(button => {
+    button.classList.toggle(
+      'active',
+      button.dataset.section === sectionId
+    );
+  });
+
+  if (sectionId === 'rooms') loadRooms();
+  if (sectionId === 'users') loadUsers();
+  if (sectionId === 'agents') loadAgents();
+}
+
+document.addEventListener('click', event => {
+  const nav = event.target.closest('[data-section]');
+  if (nav) {
+    showSection(nav.dataset.section);
+    return;
   }
 
-  list.forEach(agent=>{
-   const tr=document.createElement('tr');
-   tr.style.borderBottom='1px solid var(--border)';
-
-   [
-    agent.userId||'—',
-    agent.status||'—',
-    agent.commissionRate??0,
-    agent.createdAt?
-     new Date(agent.createdAt).toLocaleString('ar-EG'):'—'
-   ].forEach(value=>{
-    const td=document.createElement('td');
-    td.style.padding='12px';
-    td.textContent=String(value);
-    tr.appendChild(td);
-   });
-
-   const td=document.createElement('td');
-   td.style.padding='12px';
-
-   const select=document.createElement('select');
-   select.style.cssText=
-    'padding:7px;margin:4px;background:#100d16;color:white;border:1px solid var(--border);border-radius:6px';
-
-   ['PENDING','ACTIVE','SUSPENDED'].forEach(value=>{
-    const option=document.createElement('option');
-    option.value=value;
-    option.textContent=value;
-    option.selected=agent.status===value;
-    select.appendChild(option);
-   });
-
-   const saveStatus=document.createElement('button');
-   saveStatus.className='btn';
-   saveStatus.textContent='حفظ الحالة';
-   saveStatus.onclick=()=>{
-    updateAgentStatus(agent.id,select.value,type);
-   };
-
-   const rate=document.createElement('input');
-   rate.type='number';
-   rate.min='0';
-   rate.max='100';
-   rate.step='0.01';
-   rate.value=agent.commissionRate??0;
-   rate.style.cssText=
-    'width:75px;padding:7px;margin:4px;background:#100d16;color:white;border:1px solid var(--border);border-radius:6px';
-
-   const saveRate=document.createElement('button');
-   saveRate.className='btn';
-   saveRate.textContent='حفظ العمولة';
-   saveRate.onclick=()=>{
-    updateAgentCommission(agent.id,rate.value,type);
-   };
-
-   td.append(select,saveStatus,rate,saveRate);
-   tr.appendChild(td);
-   body.appendChild(tr);
-  });
-
-  status.textContent='تم تحميل '+list.length+' سجل.';
-
- }catch(error){
-  status.textContent=error.message;
- }
-}
-
-async function createAgent(type){
- const host=type==='HOST';
-
- const userId=document.getElementById(
-  host?'newHostUserId':'newRechargeUserId'
- ).value.trim();
-
- const commissionRate=Number(document.getElementById(
-  host?'newHostCommission':'newRechargeCommission'
- ).value);
-
- if(!userId){
-  alert('اكتب UUID المستخدم أولاً.');
-  return;
- }
-
- if(!Number.isFinite(commissionRate)||
-    commissionRate<0||commissionRate>100){
-  alert('نسبة العمولة لازم تكون من 0 إلى 100.');
-  return;
- }
-
- try{
-  await apiRequest(
-   type==='HOST'?'/agents/hosts':'/agents/recharge',
-   {
-    method:'POST',
-    body:JSON.stringify({userId,commissionRate})
-   }
-  );
-
-  alert('تمت الإضافة بنجاح.');
-  loadAgents(type);
-
- }catch(error){
-  alert(error.message);
- }
-}
-
-async function updateAgentStatus(id,status,type){
- try{
-  await apiRequest('/agents/'+id+'/status',{
-   method:'PATCH',
-   body:JSON.stringify({status})
-  });
-
-  alert('تم تحديث الحالة.');
-  loadAgents(type);
-
- }catch(error){
-  alert(error.message);
- }
-}
-
-async function updateAgentCommission(id,commissionRate,type){
- const rate=Number(commissionRate);
-
- if(!Number.isFinite(rate)||rate<0||rate>100){
-  alert('العمولة لازم تكون من 0 إلى 100.');
-  return;
- }
-
- try{
-  await apiRequest('/agents/'+id+'/commission',{
-   method:'PATCH',
-   body:JSON.stringify({commissionRate:rate})
-  });
-
-  alert('تم تحديث العمولة.');
-  loadAgents(type);
-
- }catch(error){
-  alert(error.message);
- }
-}
-
-function showSection(id,button){
- document.querySelectorAll('.section').forEach(function(section){
-  section.classList.remove('active');
- });
-
- const selected=document.getElementById(id);
- if(selected)selected.classList.add('active');
-
- document.querySelectorAll('.menu-btn').forEach(function(btn){
-  btn.classList.remove('active');
- });
-
- if(button)button.classList.add('active');
-
- const titles={
-  dashboard:'لوحة التحكم',
-  users:'المستخدمون',
-  rooms:'الغرف الصوتية',
-  hosts:'المضيفون',
-  agencies:'الوكالات',
-  agents:'الوكلاء',
-  wallets:'المحافظ والعملات',
-  recharge:'عمليات الشحن',
-  earnings:'أرباح المضيفين',
-  withdrawals:'طلبات السحب',
-  gifts:'الهدايا',
-  reports:'البلاغات',
-  audit:'سجل العمليات',
-  settings:'الإعدادات'
- };
-
- document.getElementById('pageTitle').textContent=
-  titles[id]||'KOKI PARTY';
-
- closeMenu();
-
- if(id==='users')loadUsers();
- if(id==='hosts')loadAgents('HOST');
- if(id==='agents')loadAgents('RECHARGE');
-}
-
-function toggleMenu(){
- document.getElementById('sidebar').classList.toggle('open');
- document.getElementById('overlay').classList.toggle('show');
-}
-
-function closeMenu(){
- document.getElementById('sidebar').classList.remove('open');
- document.getElementById('overlay').classList.remove('show');
-}
-
-function logout(){
- sessionStorage.removeItem(TOKEN_KEY);
- location.reload();
-}
-
-document.getElementById('loginForm').addEventListener('submit',async function(event){
- event.preventDefault();
-
- const button=document.getElementById('loginButton');
- const message=document.getElementById('loginMessage');
- const identifier=document.getElementById('identifier').value.trim();
- const password=document.getElementById('password').value;
-
- button.disabled=true;
- button.textContent='جاري تسجيل الدخول...';
- message.textContent='';
-
- try{
-  const data=await apiRequest('/auth/login',{
-   method:'POST',
-   body:JSON.stringify({identifier,password})
-  });
-
-  if(!data.access_token||!data.user){
-   throw new Error('بيانات تسجيل الدخول غير مكتملة.');
+  const roomButton = event.target.closest('[data-room-id]');
+  if (roomButton) {
+    const roomId = roomButton.dataset.roomId;
+    const roomName = roomButton.dataset.roomName || 'الغرفة';
+    loadRoomSeats(roomId, roomName);
   }
 
-  if(data.user.role!=='OWNER'){
-   throw new Error('الحساب ده مش حساب المالك الأساسي.');
+  const menuButton = event.target.closest('[data-menu-toggle]');
+  if (menuButton) {
+    document.body.classList.toggle('menu-open');
   }
-
-  sessionStorage.setItem(TOKEN_KEY,data.access_token);
-  document.getElementById('loginScreen').style.display='none';
-  await loadDashboard();
-
- }catch(error){
-  message.textContent=error.message;
- }finally{
-  button.disabled=false;
-  button.textContent='تسجيل الدخول';
- }
 });
 
-async function startAdmin(){
- const token=getToken();
+async function loadRooms() {
+  const container = document.getElementById('roomsList');
+  if (!container) return;
 
- if(!token)return;
+  container.textContent = 'جاري تحميل الغرف...';
 
- document.getElementById('loginScreen').style.display='none';
- await loadDashboard();
+  try {
+    const rooms = await apiRequest('/rooms');
+    const list = Array.isArray(rooms) ? rooms : rooms.data || [];
+
+    if (!list.length) {
+      container.innerHTML = '<p>مفيش غرف لسه. أنشئ أول غرفة.</p>';
+      return;
+    }
+
+    container.innerHTML = list.map(room => `
+      <div class="room-card">
+        <div>
+          <strong>${escapeHTML(room.name)}</strong>
+          <p>${escapeHTML(room.description || 'بدون وصف')}</p>
+          <small>المقاعد: ${escapeHTML(room.maxSeats || 8)}</small>
+        </div>
+        <button class="btn secondary"
+          data-room-id="${escapeHTML(room.id)}"
+          data-room-name="${escapeHTML(room.name)}">
+          عرض المقاعد
+        </button>
+      </div>
+    `).join('');
+
+    const total = document.getElementById('totalRooms');
+    if (total) total.textContent = list.length;
+
+  } catch (error) {
+    container.textContent = error.message;
+  }
 }
 
-startAdmin();
+async function loadRoomSeats(roomId, roomName) {
+  currentRoomId = roomId;
+
+  const title = document.getElementById('selectedRoomName');
+  const container = document.getElementById('roomSeats');
+
+  if (title) title.textContent = roomName;
+  if (!container) return;
+
+  container.textContent = 'جاري تحميل المقاعد...';
+
+  try {
+    const seats = await apiRequest(`/rooms/${roomId}/seats`);
+    const list = Array.isArray(seats) ? seats : seats.data || [];
+
+    container.innerHTML = Array.from({ length: 8 }, (_, index) => {
+      const number = index + 1;
+      const seat = list.find(item => Number(item.seatNumber) === number);
+      const occupied = Boolean(seat && seat.userId);
+
+      return `
+        <div class="seat ${occupied ? 'occupied' : 'available'}">
+          <strong>مقعد ${number}</strong>
+          <span>${occupied ? 'مشغول' : 'فارغ'}</span>
+          <small>${occupied ? escapeHTML(seat.userId) : 'متاح'}</small>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    container.textContent = error.message;
+  }
+}
+
+async function loadUsers() {
+  const container = document.getElementById('usersTable');
+  if (!container) return;
+
+  container.innerHTML = '<tr><td colspan="4">جاري التحميل...</td></tr>';
+
+  try {
+    const result = await apiRequest('/users');
+    const users = Array.isArray(result) ? result : result.data || [];
+
+    if (!users.length) {
+      container.innerHTML = '<tr><td colspan="4">مفيش مستخدمين ظاهرين</td></tr>';
+      return;
+    }
+
+    container.innerHTML = users.map(user => `
+      <tr>
+        <td>${escapeHTML(user.name || user.username || 'بدون اسم')}</td>
+        <td>${escapeHTML(user.email || user.phone || '-')}</td>
+        <td>${escapeHTML(user.role || '-')}</td>
+        <td>${user.isActive === false ? 'غير نشط' : 'نشط'}</td>
+      </tr>
+    `).join('');
+
+    const total = document.getElementById('totalUsers');
+    if (total) total.textContent = users.length;
+
+    const hostsTable = document.getElementById('hostsTable');
+    if (hostsTable) {
+      const hosts = users.filter(user =>
+        String(user.role || '').toUpperCase().includes('HOST')
+      );
+
+      hostsTable.innerHTML = hosts.length
+        ? hosts.map(user => `
+          <tr>
+            <td>${escapeHTML(user.name || user.username || '-')}</td>
+            <td>${escapeHTML(user.id || '-')}</td>
+            <td>${escapeHTML(user.role || '-')}</td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="3">مفيش مضيفين ظاهرين</td></tr>';
+    }
+
+    const hostTotal = document.getElementById('totalHosts');
+    if (hostTotal) {
+      hostTotal.textContent = users.filter(user =>
+        String(user.role || '').toUpperCase().includes('HOST')
+      ).length;
+    }
+
+  } catch (error) {
+    container.innerHTML =
+      `<tr><td colspan="4">${escapeHTML(error.message)}</td></tr>`;
+  }
+}
+
+async function loadAgents() {
+  const container = document.getElementById('agentsList');
+  if (!container) return;
+
+  container.textContent = 'جاري تحميل الوكلاء...';
+
+  try {
+    const result = await apiRequest('/agents');
+    const agents = Array.isArray(result) ? result : result.data || [];
+
+    if (!agents.length) {
+      container.innerHTML = '<p>مفيش وكلاء مسجلين حالياً.</p>';
+      return;
+    }
+
+    container.innerHTML = agents.map(agent => `
+      <div class="room-card">
+        <div>
+          <strong>${escapeHTML(agent.user?.name || agent.userId || 'وكيل')}</strong>
+          <p>النوع: ${escapeHTML(agent.type || '-')}</p>
+          <p>العمولة: ${escapeHTML(agent.commissionRate ?? 0)}%</p>
+          <small>الحالة: ${escapeHTML(agent.status || '-')}</small>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (error) {
+    container.textContent = error.message;
+  }
+}
+
+const createRoomForm = document.getElementById('createRoomForm');
+
+if (createRoomForm) {
+  createRoomForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const name = document.getElementById('roomName').value.trim();
+    const description = document.getElementById('roomDescription').value.trim();
+
+    if (!name) {
+      showMessage('roomMessage', 'اكتب اسم الغرفة الأول.', true);
+      return;
+    }
+
+    try {
+      await apiRequest('/rooms', {
+        method: 'POST',
+        body: JSON.stringify({ name, description })
+      });
+
+      createRoomForm.reset();
+      showMessage('roomMessage', 'تم إنشاء الغرفة بنجاح 👑');
+      await loadRooms();
+
+    } catch (error) {
+      showMessage('roomMessage', error.message, true);
+    }
+  });
+}
+
+const createAgentForm = document.getElementById('createAgentForm');
+
+if (createAgentForm) {
+  createAgentForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const userId = document.getElementById('agentUserId').value.trim();
+
+    if (!userId) {
+      showMessage('agentMessage', 'اكتب معرّف المستخدم.', true);
+      return;
+    }
+
+    try {
+      await apiRequest('/agents/recharge', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId,
+          commissionRate: 0
+        })
+      });
+
+      createAgentForm.reset();
+      showMessage('agentMessage', 'تمت إضافة وكيل الشحن بنجاح.');
+      await loadAgents();
+
+    } catch (error) {
+      showMessage('agentMessage', error.message, true);
+    }
+  });
+}
+
+function logout() {
+  sessionStorage.removeItem('koki_access_token');
+  accessToken = '';
+  location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (accessToken) {
+    loadRooms();
+  }
+});
 </script>
 </body>
 </html>
