@@ -185,10 +185,26 @@ class _RoomScreenState extends State<RoomScreen> {
     }
   }
 
-  Future<void> leaveSeat() async {
+    Future<void> leaveSeat() async {
     if (busy) return;
 
     setState(() => busy = true);
+
+    try {
+      await apiRequest(
+        'DELETE',
+        '/api/rooms/${widget.roomId}/seats/leave',
+      );
+
+      await loadRoomData();
+      showMessage('تم ترك المقعد');
+    } catch (e) {
+      showMessage(e.toString());
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   Future<void> toggleMic() async {
     if (busy) return;
 
@@ -232,21 +248,6 @@ class _RoomScreenState extends State<RoomScreen> {
       if (mounted) setState(() => busy = false);
     }
   }
-    try {
-      await apiRequest(
-        'DELETE',
-        '/api/rooms/${widget.roomId}/seats/leave',
-      );
-
-      await loadRoomData();
-      showMessage('تم ترك المقعد');
-    } catch (e) {
-      showMessage(e.toString());
-    } finally {
-      if (mounted) setState(() => busy = false);
-    }
-  }
-
   Future<void> changeSeatCount(int count) async {
     if (busy) return;
 
