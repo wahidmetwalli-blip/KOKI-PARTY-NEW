@@ -1,11 +1,18 @@
+
 import {
   Injectable,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Repository,
+  IsNull,
+  MoreThan,
+} from 'typeorm';
 
 import { Room } from './room.entity';
 import { RoomSeat } from './room-seat.entity';
@@ -102,39 +109,128 @@ export class RoomsService {
       name?: string;
       description?: string;
       coverUrl?: string;
+      maxSeats?: number;
     },
   ) {
-    const room = await this.roomsRepository.findOne({
-      where: { id },
-    });
+    return this.roomsRepository.manager.transaction(
+      async (manager) => {
+        const roomsRepository = manager.getRepository(Room);
+        const seatsRepository = manager.getRepository(RoomSeat);
 
-    if (!room) {
-      throw new NotFoundException('Room not found');
-    }
+        const room = await roomsRepository.findOne({
+          where: { id },
+          lock: { mode: 'pessimistic_write' },
+        });
 
-    if (room.ownerUserId !== userId) {
-      throw new ForbiddenException('Room owner only');
-    }
+        if (!room) {
+          throw new NotFoundException('Room not found');
+        }
 
-    if (data.name !== undefined) {
-      const name = data.name.trim();
+        if (room.ownerUserId !== userId) {
+          throw new ForbiddenException('Room owner only');
+        }
 
-      if (!name || name.length > 120) {
-        throw new BadRequestException('Invalid room name');
-      }
+        if (data.name !== undefined) {
+          const name = data.name.trim();
 
-      room.name = name;
-    }
+          if (!name || name.length > 120) {
+            throw new BadRequestException('Invalid room name');
+          }
 
-    if (data.description !== undefined) {
-      room.description = data.description.trim() || null;
-    }
+          room.name = name;
+        }
 
-    if (data.coverUrl !== undefined) {
-      room.coverUrl = data.coverUrl.trim() || null;
-    }
+        if (data.description !== undefined) {
+          room.description = data.description.trim() || null;
+        }
 
-    return this.roomsRepository.save(room);
+        if (data.coverUrl !== undefined) {
+          room.coverUrl = data.coverUrl.trim() || null;
+        }
+
+        if (data.maxSeats !== undefined) {
+          const allowedSeatCounts = [10, 12, 15, 20];
+
+          if (!allowedSeatCounts.includes(data.maxSeats)) {
+            throw new BadRequestException(
+              'Seat count must be 10, 12, 15 or 20',
+            );
+          }
+
+          const occupiedSeatsAboveLimit = await seatsRepository.count({
+            where: {
+              roomId: id,
+              seatNumber: MoreThan(data.maxSeats),
+              userId: null,
+            },
+          });
+
+          const occupiedSeats = await seatsRepository
+            .createQueryBuilder('seat')
+            .where('seat.roomId = :roomId', { roomId: id })
+            .andWhere('seat.seatNumber > :maxSeats', {
+              maxSeats: data.maxSeats,
+            })
+            .andWhere('seat.userId IS NOT NULL')
+            .getCount();
+
+          if (occupiedSeats > 0) {
+            throw new ConflictException(
+              'Cannot reduce seats while higher-numbered seats are occupied',
+            );
+          }
+
+          room.maxSeats = data.maxSeats;
+
+          await seatsRepository.delete({
+            roomId: id,
+            seatNumber: MoreThan(data.maxSeats),
+            userId: IsNull(),
+          });
+
+          const existingSeats = await seatsRepository.find({
+            where: { roomId: id },
+            select: ['seatNumber'],
+          });
+
+          const existingNumbers = new Set(
+            existingSeats.map((seat) => seat.seatNumber),
+          );
+
+          const missingSeats: RoomSeat[] = [];
+
+          for (let number = 1; number <= data.maxSeats; number++) {
+            if (!existingNumbers.has(number)) {
+              missingSeats.push(
+                seatsRepository.create({
+                  roomId: id,
+                  seatNumber: number,
+                  userId: null,
+                  isMuted: true,
+                  occupiedAt: null,
+                }),
+              );
+            }
+          }
+
+          if (missingSeats.length > 0) {
+            await seatsRepository.save(missingSeats);
+          }
+        }
+
+        const savedRoom = await roomsRepository.save(room);
+
+        const seats = await seatsRepository.find({
+          where: { roomId: id },
+          order: { seatNumber: 'ASC' },
+        });
+
+        return {
+          ...savedRoom,
+          seats,
+        };
+      },
+    );
   }
 
   async close(id: string, userId: string) {
@@ -154,4 +250,5 @@ export class RoomsService {
 
     return this.roomsRepository.save(room);
   }
-}
+    }
+              
