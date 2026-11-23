@@ -1,4 +1,3 @@
-
 import {
   Body,
   Controller,
@@ -10,12 +9,15 @@ import {
   ParseUUIDPipe,
   Req,
   UseGuards,
+} from '@nestjs/common';
+
+import {
   IsString,
   IsOptional,
   MaxLength,
   IsUrl,
-} from '@nestjs/common';
-import { IsNotEmpty } from 'class-validator';
+  IsNotEmpty,
+} from 'class-validator';
 
 import { RoomsService } from './rooms.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
