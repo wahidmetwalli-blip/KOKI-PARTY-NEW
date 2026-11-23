@@ -736,7 +736,53 @@ if (createAgentForm) {
     }
   });
 }
+const loginForm = document.getElementById('loginForm');
 
+if (loginForm) {
+  loginForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const identifier = document.getElementById('identifier').value.trim();
+    const password = document.getElementById('password').value;
+    const button = document.getElementById('loginButton');
+
+    button.disabled = true;
+    showMessage('loginMessage', 'جاري تسجيل الدخول...');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ identifier, password })
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || 'بيانات الدخول غير صحيحة');
+      }
+
+      if (!data.access_token) {
+        throw new Error('السيرفر لم يرجع رمز الدخول');
+      }
+
+      accessToken = data.access_token;
+      sessionStorage.setItem('koki_access_token', accessToken);
+
+      document.getElementById('loginScreen').style.display = 'none';
+
+      showSection('dashboard');
+      loadRooms();
+
+    } catch (error) {
+      showMessage('loginMessage', error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+       }
 function logout() {
   sessionStorage.removeItem('koki_access_token');
   accessToken = '';
