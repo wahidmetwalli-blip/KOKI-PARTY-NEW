@@ -7,6 +7,7 @@ import { CreateAgentCommissions1763857000000 } from './migrations/1763857000000-
 import { CreateAuditLogs1763857100000 } from './migrations/1763857100000-CreateAuditLogs';
 import { CreateRooms1763857200000 } from './migrations/1763857200000-CreateRooms';
 import { CreateRoomSeats1763857300000 } from './migrations/1763857300000-CreateRoomSeats';
+import { ExpandRoomSeatLimit1763930000000 } from './migrations/1763930000000-ExpandRoomSeatLimit';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CreateRoomSeats1763857300000 } from './migrations/1763857300000-CreateR
         CreateAuditLogs1763857100000,
         CreateRooms1763857200000,
         CreateRoomSeats1763857300000,
+        ExpandRoomSeatLimit1763930000000,
       ],
     }),
   ],
