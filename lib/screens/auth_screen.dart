@@ -1,5 +1,14 @@
+
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+
+class AuthSession {
+  static String? accessToken;
+  static Map<String, dynamic>? user;
+}
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -14,10 +23,16 @@ class _AuthScreenState extends State<AuthScreen> {
   static const Color gold = Color(0xFFFFD36A);
   static const Color purple = Color(0xFF8957F5);
 
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  static const String apiUrl =
+      'https://koki-party-new.onrender.com/api/auth/login';
+
+  final TextEditingController emailController =
+      TextEditingController();
+  final TextEditingController passwordController =
+      TextEditingController();
 
   bool hidePassword = true;
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -26,11 +41,97 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void login() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const HomeScreen(),
+  Future<void> login() async {
+    final identifier = emailController.text.trim();
+    final password = passwordController.text;
+
+    if (identifier.isEmpty || password.isEmpty) {
+      showMessage('اكتب البريد أو رقم الهاتف وكلمة المرور.');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    HttpClient? client;
+
+    try {
+      client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 20);
+
+      final request = await client.postUrl(Uri.parse(apiUrl));
+
+      request.headers.contentType = ContentType.json;
+      request.write(jsonEncode({
+        'identifier': identifier,
+        'password': password,
+      }));
+
+      final response = await request.close().timeout(
+        const Duration(seconds: 30),
+      );
+
+      final responseText = await response
+          .transform(utf8.decoder)
+          .join();
+
+      final dynamic decoded = jsonDecode(responseText);
+
+      if (response.statusCode == 200 &&
+          decoded is Map<String, dynamic> &&
+          decoded['access_token'] != null) {
+        AuthSession.accessToken =
+            decoded['access_token'].toString();
+
+        AuthSession.user =
+            decoded['user'] is Map<String, dynamic>
+                ? decoded['user']
+                : null;
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const HomeScreen(),
+          ),
+        );
+      } else {
+        String message = 'بيانات الدخول غير صحيحة.';
+
+        if (decoded is Map && decoded['message'] != null) {
+          final serverMessage = decoded['message'];
+
+          if (serverMessage is String) {
+            message = serverMessage;
+          } else if (serverMessage is List) {
+            message = serverMessage.join('\n');
+          }
+        }
+
+        showMessage(message);
+      }
+    } on SocketException {
+      showMessage('تعذر الاتصال بالسيرفر. حاول مرة تانية.');
+    } on FormatException {
+      showMessage('السيرفر أرسل استجابة غير مفهومة.');
+    } catch (e) {
+      showMessage('حصل خطأ أثناء تسجيل الدخول.');
+    } finally {
+      client?.close(force: true);
+
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  void showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF38204F),
       ),
     );
   }
@@ -121,7 +222,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'البريد الإلكتروني أو رقم الهاتف',
-                        hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
+                        hintStyle: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 14,
+                        ),
                         prefixIcon: const Icon(
                           Icons.person_outline,
                           color: gold,
@@ -151,7 +255,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'كلمة المرور',
-                        hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
+                        hintStyle: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 14,
+                        ),
                         prefixIcon: const Icon(
                           Icons.lock_outline,
                           color: gold,
@@ -188,56 +295,37 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     const SizedBox(height: 26),
-                    Container(
+                    SizedBox(
                       width: double.infinity,
                       height: 55,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFE082), gold, Color(0xFFFFB300)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: gold.withValues(alpha: 0.28),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
                       child: ElevatedButton(
-                        onPressed: login,
+                        onPressed: isLoading ? null : login,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
+                          backgroundColor: gold,
                           foregroundColor: bg,
+                          disabledBackgroundColor:
+                              gold.withValues(alpha: 0.5),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        child: const Text(
-                          'دخول إلى KOKI PARTY',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: bg,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'دخول إلى KOKI PARTY',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'أو تسجيل الدخول باستخدام',
-                      style: TextStyle(color: Colors.white60, fontSize: 13),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _socialButton(Icons.g_mobiledata, 'Google'),
-                        const SizedBox(width: 14),
-                        _socialButton(Icons.facebook, 'Facebook'),
-                        const SizedBox(width: 14),
-                        _socialButton(Icons.phone_android, 'الهاتف'),
-                      ],
                     ),
                     const SizedBox(height: 28),
                     const Text(
@@ -253,38 +341,6 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _socialButton(IconData icon, String label) {
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تسجيل $label هيتم ربطه بخدمة الدخول لاحقاً'),
-          ),
-        );
-      },
-      child: Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: panel,
-          border: Border.all(color: gold.withValues(alpha: 0.65)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: gold, size: 24),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(color: gold, fontSize: 10),
-            ),
-          ],
         ),
       ),
     );
