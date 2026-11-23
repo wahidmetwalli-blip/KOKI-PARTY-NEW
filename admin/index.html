@@ -580,13 +580,31 @@ td { color:var(--text); }
     </section>
 
     <section class="page" id="withdrawals">
-      <div class="page-heading">
-        <h2>طلبات السحب</h2>
-        <p>متابعة طلبات سحب الأرباح بالدولار الأمريكي USD</p>
-      </div>
-      <div class="panel">
-        <p>طلبات السحب ومراجعتها من خلال الإدارة.</p>
-      </div>
+  <div class="page-heading">
+    <h2>طلبات السحب</h2>
+    <p>مراجعة وسداد أرباح المضيفين بالدولار الأمريكي USD</p>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:15px;">
+      <select id="withdrawalStatusFilter" style="flex:1;min-width:150px;padding:12px;border-radius:8px;">
+        <option value="">كل الطلبات</option>
+        <option value="PENDING">قيد المراجعة</option>
+        <option value="APPROVED">تمت الموافقة</option>
+        <option value="REJECTED">مرفوضة</option>
+        <option value="PAID">تم الدفع</option>
+        <option value="CANCELLED">ملغاة</option>
+      </select>
+
+      <button type="button" onclick="loadWithdrawals()">
+        تحديث الطلبات
+      </button>
+    </div>
+
+    <div id="withdrawalsList">
+      <p>اضغط على تحديث الطلبات لعرض طلبات السحب.</p>
+    </div>
+  </div>
     </section>
 
     <section class="page" id="gifts">
