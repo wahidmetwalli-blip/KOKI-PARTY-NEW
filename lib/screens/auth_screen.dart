@@ -1,14 +1,9 @@
-
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../services/auth_session.dart';
 import 'home_screen.dart';
-
-class AuthSession {
-  static String? accessToken;
-  static Map<String, dynamic>? user;
-}
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
