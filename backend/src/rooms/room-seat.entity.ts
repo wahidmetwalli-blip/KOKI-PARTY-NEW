@@ -1,3 +1,4 @@
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,7 +10,7 @@ import {
 @Entity('room_seats')
 @Unique('uq_room_seats_room_number', ['roomId', 'seatNumber'])
 @Unique('uq_room_seats_room_user', ['roomId', 'userId'])
-@Check('chk_room_seats_number', '"seat_number" BETWEEN 1 AND 8')
+@Check('chk_room_seats_number', '"seat_number" BETWEEN 1 AND 20')
 export class RoomSeat {
   @PrimaryGeneratedColumn('uuid')
   id: string;
