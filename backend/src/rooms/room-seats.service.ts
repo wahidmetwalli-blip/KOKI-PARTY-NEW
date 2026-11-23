@@ -1,9 +1,11 @@
+
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 
@@ -25,19 +27,30 @@ export class RoomSeatsService {
   ) {}
 
   async findAll(roomId: string) {
-    await this.ensureRoom(roomId);
+    const room = await this.ensureRoom(roomId);
 
     return this.seatsRepository.find({
       where: { roomId },
       order: { seatNumber: 'ASC' },
+      take: room.maxSeats,
     });
   }
 
-  async take(roomId: string, seatNumber: number, userId: string) {
-    await this.ensureRoom(roomId);
+  async take(
+    roomId: string,
+    seatNumber: number,
+    userId: string,
+  ) {
+    const room = await this.ensureRoom(roomId);
 
-    if (seatNumber < 1 || seatNumber > 8) {
-      throw new BadRequestException('Invalid seat number');
+    if (
+      !Number.isInteger(seatNumber) ||
+      seatNumber < 1 ||
+      seatNumber > room.maxSeats
+    ) {
+      throw new BadRequestException(
+        'Invalid seat number for this room',
+      );
     }
 
     const user = await this.usersRepository.findOne({
@@ -45,7 +58,9 @@ export class RoomSeatsService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found or inactive');
+      throw new NotFoundException(
+        'User not found or inactive',
+      );
     }
 
     const existingSeat = await this.seatsRepository.findOne({
@@ -53,11 +68,17 @@ export class RoomSeatsService {
     });
 
     if (existingSeat) {
-      throw new ConflictException('You are already seated in this room');
+      throw new ConflictException(
+        'You are already seated in this room',
+      );
     }
 
     const result = await this.seatsRepository.update(
-      { roomId, seatNumber, userId: IsNull() },
+      {
+        roomId,
+        seatNumber,
+        userId: IsNull(),
+      },
       {
         userId,
         isMuted: true,
@@ -74,7 +95,9 @@ export class RoomSeatsService {
         throw new NotFoundException('Seat not found');
       }
 
-      throw new ConflictException('Seat is already occupied');
+      throw new ConflictException(
+        'Seat is already occupied',
+      );
     }
 
     return this.seatsRepository.findOne({
@@ -95,10 +118,15 @@ export class RoomSeatsService {
     );
 
     if (!result.affected) {
-      throw new NotFoundException('You are not seated in this room');
+      throw new NotFoundException(
+        'You are not seated in this room',
+      );
     }
 
-    return { success: true, message: 'You left the seat' };
+    return {
+      success: true,
+      message: 'You left the seat',
+    };
   }
 
   async setMute(
@@ -107,15 +135,31 @@ export class RoomSeatsService {
     userId: string,
     isMuted: boolean,
   ) {
-    await this.ensureRoom(roomId);
+    const room = await this.ensureRoom(roomId);
+
+    if (
+      !Number.isInteger(seatNumber) ||
+      seatNumber < 1 ||
+      seatNumber > room.maxSeats
+    ) {
+      throw new BadRequestException(
+        'Invalid seat number for this room',
+      );
+    }
 
     const result = await this.seatsRepository.update(
-      { roomId, seatNumber, userId },
+      {
+        roomId,
+        seatNumber,
+        userId,
+      },
       { isMuted },
     );
 
     if (!result.affected) {
-      throw new NotFoundException('Your seat was not found');
+      throw new NotFoundException(
+        'Your seat was not found',
+      );
     }
 
     return this.seatsRepository.findOne({
@@ -123,13 +167,22 @@ export class RoomSeatsService {
     });
   }
 
-  private async ensureRoom(roomId: string) {
+  private async ensureRoom(
+    roomId: string,
+  ): Promise<Room> {
     const room = await this.roomsRepository.findOne({
-      where: { id: roomId, isActive: true },
+      where: {
+        id: roomId,
+        isActive: true,
+      },
     });
 
     if (!room) {
-      throw new NotFoundException('Room not found or inactive');
+      throw new NotFoundException(
+        'Room not found or inactive',
+      );
     }
+
+    return room;
   }
-       }
+        }
