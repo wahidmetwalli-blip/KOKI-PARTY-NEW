@@ -5,430 +5,634 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0b0910">
 <title>KOKI PARTY | لوحة المالك</title>
+
 <style>
-:root{
- --bg:#0b0910;--panel:#15111c;--panel2:#21192b;
- --gold:#d6ad62;--gold2:#f3d99b;--text:#f5f0e8;
- --muted:#a79bad;--border:#34283e;
+:root {
+  --bg:#0b0910;
+  --panel:#15111c;
+  --panel2:#21192b;
+  --gold:#d6ad62;
+  --gold2:#f3d99b;
+  --text:#f5f0e8;
+  --muted:#a79bad;
+  --border:#34283e;
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Tahoma,sans-serif}
-button,input{font:inherit}
-.sidebar{
- position:fixed;right:0;top:0;bottom:0;width:260px;padding:18px 13px;
- background:#100d16;border-left:1px solid var(--border);overflow:auto;z-index:10
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Tahoma,sans-serif;
 }
-.brand{padding:12px 10px 20px;border-bottom:1px solid var(--border);margin-bottom:15px}
-.logo{font-size:22px;font-weight:900;color:var(--gold2)}
-.brand small{display:block;color:var(--muted);margin-top:7px}
-.menu-title{font-size:11px;color:#84788e;margin:19px 10px 7px}
-.menu-btn{
- display:flex;gap:10px;align-items:center;width:100%;padding:11px 12px;
- margin:3px 0;border:0;border-radius:9px;background:transparent;
- color:#d0c6d5;text-align:right;cursor:pointer
+button,input,select { font:inherit; }
+.sidebar {
+  position:fixed;
+  right:0;
+  top:0;
+  bottom:0;
+  width:260px;
+  padding:18px 13px;
+  background:#100d16;
+  border-left:1px solid var(--border);
+  overflow:auto;
+  z-index:10;
 }
-.menu-btn:hover,.menu-btn.active{background:#2a2033;color:var(--gold2)}
-.menu-btn.active{border-right:3px solid var(--gold)}
-.main{margin-right:260px;padding:24px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
-.topbar h2{font-size:21px;margin:0}
-.admin-pill{display:flex;align-items:center;gap:10px;padding:9px 13px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--gold2);font-size:13px}
-.menu-toggle{display:none}
-.welcome{
- padding:23px;border:1px solid #59452d;border-radius:15px;
- background:linear-gradient(115deg,#261a32,#17101f 65%,#33251b);margin-bottom:18px
+.brand {
+  padding:12px 10px 20px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:15px;
 }
-.welcome h1{margin:0 0 9px;color:var(--gold2);font-size:24px}
-.welcome p{margin:0;color:#d0c3d3;line-height:1.8}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
-.stat,.panel{background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:17px}
-.stat .label{font-size:13px;color:var(--muted)}
-.stat .number{font-size:25px;color:var(--gold2);font-weight:bold;margin-top:12px}
-.stat .note{font-size:11px;color:var(--muted);margin-top:6px}
-.section{display:none}
-.section.active{display:block}
-.panel{margin-top:16px}
-.panel h3{margin:0 0 15px;color:var(--gold2)}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
-.section-head h2{margin:0;font-size:21px}
-.muted{color:var(--muted);font-size:13px;line-height:1.8}
-.empty{padding:25px;text-align:center;color:var(--muted);line-height:1.8}
-.notice{padding:13px;border:1px solid #59452d;background:#211a20;border-radius:9px;color:#e6d2a7;font-size:13px;line-height:1.8}
-.btn{padding:9px 13px;border:0;border-radius:8px;background:var(--gold);color:#171019;font-weight:bold;cursor:pointer}
-.btn:disabled{opacity:.6;cursor:wait}
-.field{
- width:100%;padding:13px;margin:8px 0;
- background:#100d16;color:white;border:1px solid var(--border);
- border-radius:8px;outline:none
+.logo {
+  font-size:22px;
+  font-weight:900;
+  color:var(--gold2);
 }
-.field:focus{border-color:var(--gold)}
-.room-card{
- background:#21192b;border:1px solid var(--border);
- border-radius:12px;padding:15px;margin:12px 0
+.brand small {
+  display:block;
+  color:var(--muted);
+  margin-top:7px;
 }
-.room-card h3{margin:0 0 8px;color:var(--gold2)}
-.room-meta{font-size:12px;color:var(--muted);line-height:1.8;overflow-wrap:anywhere}
-.seats-grid{
- display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
- gap:8px;margin-top:14px
+.menu-title {
+  font-size:11px;
+  color:#84788e;
+  margin:19px 10px 7px;
 }
-.seat{
- border:1px solid #59452d;border-radius:9px;
- background:#15111c;padding:12px 5px;text-align:center;
- min-height:75px;font-size:12px;overflow-wrap:anywhere
+.menu-btn {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  width:100%;
+  padding:11px 12px;
+  margin:3px 0;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:#d0c6d5;
+  text-align:right;
+  cursor:pointer;
 }
-.seat strong{display:block;color:var(--gold2);font-size:17px;margin-bottom:5px}
-.seat.occupied{border-color:#8d7040;background:#302338}
-#loginScreen{
- position:fixed;inset:0;z-index:100;background:#0b0910;
- display:flex;align-items:center;justify-content:center;padding:18px
+.menu-btn:hover,.menu-btn.active {
+  background:#2a2033;
+  color:var(--gold2);
 }
-.login-card{
- width:100%;max-width:420px;background:var(--panel);
- border:1px solid #8e7138;border-radius:17px;padding:25px
+.menu-btn.active {
+  border-right:3px solid var(--gold);
 }
-.login-card h1{text-align:center;color:var(--gold2);margin:0 0 8px}
-.login-card p{text-align:center;color:var(--muted);line-height:1.7}
-.login-card label{display:block;color:var(--gold2);margin:16px 0 7px}
-.login-card input{
- width:100%;min-width:0;padding:13px;border-radius:9px;
- border:1px solid var(--border);background:#0e0b13;color:white;outline:none
+.main {
+  margin-right:260px;
+  padding:24px;
 }
-.login-card input:focus{border-color:var(--gold)}
-.login-card button{width:100%;margin-top:20px;padding:13px}
-#loginMessage{color:#f0b3a8;font-size:13px;line-height:1.7;margin-top:12px;text-align:center}
-#loginMessage.success{color:#a8d9a8}
-.overlay{display:none}
-@media(max-width:900px){
- .sidebar{transform:translateX(100%);transition:transform .25s}
- .sidebar.open{transform:translateX(0)}
- .main{margin-right:0;padding:15px}
- .menu-toggle{display:inline-block}
- .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
- .overlay.show{display:block;position:fixed;inset:0;background:#0009;z-index:9}
+.topbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:24px;
 }
-@media(max-width:480px){
- .grid{grid-template-columns:1fr 1fr;gap:8px}
- .stat{padding:12px}
- .stat .number{font-size:20px}
- .welcome h1{font-size:20px}
- .admin-pill{font-size:11px}
- .seats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.topbar h2 {
+  font-size:21px;
+  margin:0;
+}
+.admin-pill {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 13px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:var(--panel);
+  color:var(--gold2);
+  font-size:13px;
+}
+.menu-toggle { display:none; }
+.page { display:none; width:100%; }
+.page.active { display:block; }
+.page-heading {
+  color:#d8b45a;
+  margin-bottom:20px;
+}
+.page-heading h2 { margin-bottom:7px; }
+.page-heading p {
+  color:var(--muted);
+  margin:0;
+}
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:13px;
+  margin-bottom:20px;
+}
+.stat-card,.panel {
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:17px;
+}
+.stat-card span {
+  display:block;
+  color:var(--muted);
+  font-size:13px;
+}
+.stat-card strong {
+  display:block;
+  color:var(--gold2);
+  font-size:25px;
+  margin-top:12px;
+}
+.panel { margin-top:16px; }
+.panel h3 {
+  margin:0 0 15px;
+  color:var(--gold2);
+}
+.section-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+.btn {
+  padding:10px 14px;
+  border:0;
+  border-radius:8px;
+  background:var(--gold);
+  color:#171019;
+  font-weight:bold;
+  cursor:pointer;
+}
+.btn.secondary {
+  background:#493653;
+  color:#fff;
+}
+.btn.danger {
+  background:#7b3038;
+  color:#fff;
+}
+.btn:disabled {
+  opacity:.6;
+  cursor:wait;
+}
+.field {
+  display:block;
+  width:100%;
+  padding:13px;
+  margin:8px 0 14px;
+  background:#100d16;
+  color:white;
+  border:1px solid var(--border);
+  border-radius:8px;
+  outline:none;
+}
+.field:focus { border-color:var(--gold); }
+label {
+  display:block;
+  color:var(--gold2);
+  margin-top:10px;
+}
+.room-card {
+  background:#21192b;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:15px;
+  margin:12px 0;
+  overflow-wrap:anywhere;
+}
+.room-card strong { color:var(--gold2); }
+.room-meta {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.8;
+}
+.seats-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin-top:14px;
+}
+.seat {
+  border:1px solid #59452d;
+  border-radius:9px;
+  background:#15111c;
+  padding:12px 5px;
+  text-align:center;
+  min-height:75px;
+  font-size:12px;
+  overflow-wrap:anywhere;
+}
+.seat strong {
+  display:block;
+  color:var(--gold2);
+  font-size:16px;
+  margin-bottom:5px;
+}
+.seat.occupied {
+  border-color:#8d7040;
+  background:#302338;
+}
+.table-wrap { overflow-x:auto; }
+table {
+  width:100%;
+  border-collapse:collapse;
+  min-width:500px;
+}
+th,td {
+  padding:12px;
+  border-bottom:1px solid var(--border);
+  text-align:right;
+  font-size:13px;
+}
+th { color:var(--gold2); }
+td { color:var(--text); }
+.empty {
+  padding:22px;
+  text-align:center;
+  color:var(--muted);
+}
+.message {
+  margin-top:12px;
+  color:var(--gold2);
+  font-size:13px;
+}
+#loginScreen {
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:#0b0910;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.login-card {
+  width:100%;
+  max-width:420px;
+  background:var(--panel);
+  border:1px solid #8e7138;
+  border-radius:17px;
+  padding:25px;
+}
+.login-card h1 {
+  text-align:center;
+  color:var(--gold2);
+  margin:0 0 8px;
+}
+.login-card p {
+  text-align:center;
+  color:var(--muted);
+  line-height:1.7;
+}
+.login-card input {
+  width:100%;
+  padding:13px;
+  border-radius:9px;
+  border:1px solid var(--border);
+  background:#0e0b13;
+  color:white;
+}
+.login-card button {
+  width:100%;
+  margin-top:20px;
+}
+#loginMessage {
+  color:#f0b3a8;
+  font-size:13px;
+  margin-top:12px;
+  text-align:center;
+}
+.overlay { display:none; }
+@media(max-width:900px) {
+  .sidebar {
+    transform:translateX(100%);
+    transition:transform .25s;
+  }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-right:0; padding:15px; }
+  .menu-toggle { display:inline-block; }
+  .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .overlay.show {
+    display:block;
+    position:fixed;
+    inset:0;
+    background:#0009;
+    z-index:9;
+  }
+}
+@media(max-width:480px) {
+  .stats-grid { gap:8px; }
+  .stat-card { padding:12px; }
+  .stat-card strong { font-size:20px; }
+  .seats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .admin-pill { font-size:11px; }
 }
 </style>
 </head>
 <body>
 
 <div id="loginScreen">
- <div class="login-card">
-  <h1>👑 KOKI PARTY</h1>
-  <p>تسجيل دخول المالك الأساسي</p>
-  <form id="loginForm">
-   <label for="identifier">البريد الإلكتروني أو رقم الهاتف</label>
-   <input id="identifier" type="text" autocomplete="username" required>
-   <label for="password">كلمة المرور</label>
-   <input id="password" type="password" autocomplete="current-password" required>
-   <button class="btn" id="loginButton" type="submit">تسجيل الدخول</button>
-  </form>
-  <div id="loginMessage" role="status"></div>
- </div>
+  <div class="login-card">
+    <h1>👑 KOKI PARTY</h1>
+    <p>تسجيل دخول المالك الأساسي</p>
+    <form id="loginForm">
+      <label for="identifier">البريد الإلكتروني أو رقم الهاتف</label>
+      <input id="identifier" type="text" autocomplete="username" required>
+      <label for="password">كلمة المرور</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button class="btn" id="loginButton" type="submit">تسجيل الدخول</button>
+    </form>
+    <div id="loginMessage" role="status"></div>
+  </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <aside class="sidebar" id="sidebar">
- <div class="brand">
-  <div class="logo">👑 KOKI PARTY</div>
-  <small>THE ROYAL WORLD · لوحة المالك</small>
- </div>
- <div class="menu-title">الرئيسية</div>
- <button class="menu-btn active" onclick="showSection('dashboard',this)">🏠 لوحة التحكم</button>
- <div class="menu-title">إدارة التطبيق</div>
- <button class="menu-btn" onclick="showSection('users',this)">👥 المستخدمون</button>
- <button class="menu-btn" onclick="showSection('rooms',this)">🎙️ الغرف الصوتية</button>
- <button class="menu-btn" onclick="showSection('hosts',this)">🎤 المضيفون</button>
- <button class="menu-btn" onclick="showSection('agencies',this)">🏢 الوكالات</button>
- <button class="menu-btn" onclick="showSection('agents',this)">🤝 الوكلاء</button>
- <div class="menu-title">الأموال والأرباح</div>
- <button class="menu-btn" onclick="showSection('wallets',this)">🪙 المحافظ والعملات</button>
- <button class="menu-btn" onclick="showSection('recharge',this)">💳 عمليات الشحن</button>
- <button class="menu-btn" onclick="showSection('earnings',this)">💰 أرباح المضيفين</button>
- <button class="menu-btn" onclick="showSection('withdrawals',this)">💸 طلبات السحب</button>
- <div class="menu-title">النظام</div>
- <button class="menu-btn" onclick="showSection('gifts',this)">🎁 الهدايا</button>
- <button class="menu-btn" onclick="showSection('reports',this)">🚨 البلاغات</button>
- <button class="menu-btn" onclick="showSection('audit',this)">📋 سجل العمليات</button>
- <button class="menu-btn" onclick="showSection('settings',this)">⚙️ الإعدادات</button>
+  <div class="brand">
+    <div class="logo">👑 KOKI PARTY</div>
+    <small>THE ROYAL WORLD · لوحة المالك</small>
+  </div>
+
+  <div class="menu-title">الرئيسية</div>
+  <button class="menu-btn active" onclick="showSection('dashboard',this)">🏠 لوحة التحكم</button>
+
+  <div class="menu-title">إدارة التطبيق</div>
+  <button class="menu-btn" onclick="showSection('users',this)">👥 المستخدمون</button>
+  <button class="menu-btn" onclick="showSection('rooms',this)">🎙️ الغرف الصوتية</button>
+  <button class="menu-btn" onclick="showSection('hosts',this)">🎤 المضيفون</button>
+  <button class="menu-btn" onclick="showSection('agencies',this)">🏢 الوكالات</button>
+  <button class="menu-btn" onclick="showSection('agents',this)">🤝 الوكلاء</button>
+
+  <div class="menu-title">الأموال والأرباح</div>
+  <button class="menu-btn" onclick="showSection('wallets',this)">🪙 المحافظ والعملات</button>
+  <button class="menu-btn" onclick="showSection('recharge',this)">💳 عمليات الشحن</button>
+  <button class="menu-btn" onclick="showSection('earnings',this)">💰 أرباح المضيفين</button>
+  <button class="menu-btn" onclick="showSection('withdrawals',this)">💸 طلبات السحب</button>
+
+  <div class="menu-title">النظام</div>
+  <button class="menu-btn" onclick="showSection('gifts',this)">🎁 الهدايا</button>
+  <button class="menu-btn" onclick="showSection('reports',this)">🚨 البلاغات</button>
+  <button class="menu-btn" onclick="showSection('audit',this)">📋 سجل العمليات</button>
+  <button class="menu-btn" onclick="showSection('settings',this)">⚙️ الإعدادات</button>
 </aside>
 
 <main class="main">
- <header class="topbar">
-  <div style="display:flex;align-items:center;gap:12px">
-   <button class="btn menu-toggle" onclick="toggleMenu()">☰</button>
-   <h2 id="pageTitle">لوحة التحكم</h2>
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn menu-toggle" onclick="toggleMenu()">☰</button>
+      <h2 id="pageTitle">لوحة التحكم</h2>
+    </div>
+    <div class="admin-pill">
+      👑 المالك الأساسي
+      <button class="btn" onclick="logout()">خروج</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <section class="page active" id="dashboard">
+      <div class="page-heading">
+        <h2>لوحة التحكم</h2>
+        <p>نظرة عامة على KOKI PARTY</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><span>👥 المستخدمون</span><strong id="totalUsers">0</strong></div>
+        <div class="stat-card"><span>🎙️ الغرف</span><strong id="totalRooms">0</strong></div>
+        <div class="stat-card"><span>🎤 المضيفون</span><strong id="totalHosts">0</strong></div>
+        <div class="stat-card"><span>🪙 العملات</span><strong id="totalCoins">0</strong></div>
+      </div>
+      <div class="panel">
+        <h3>مرحباً بك في لوحة المالك 👑</h3>
+        <p>من هنا تقدر تدير المستخدمين والغرف والمضيفين والوكلاء والأموال.</p>
+      </div>
+    </section>
+
+    <section class="page" id="users">
+      <div class="page-heading">
+        <h2>إدارة المستخدمين</h2>
+        <p>عرض ومتابعة حسابات المستخدمين</p>
+      </div>
+      <div class="panel">
+        <button class="btn" onclick="loadUsers()">تحديث المستخدمين</button>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>المستخدم</th><th>البريد الإلكتروني</th><th>الدور</th><th>الحالة</th></tr></thead>
+            <tbody id="usersTable"><tr><td colspan="4">اضغط تحديث المستخدمين</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="rooms">
+      <div class="page-heading">
+        <h2>الغرف الصوتية</h2>
+        <p>إنشاء الغرف ومتابعة المقاعد</p>
+      </div>
+      <div class="panel">
+        <h3>إنشاء غرفة جديدة</h3>
+        <form id="createRoomForm">
+          <label>اسم الغرفة</label>
+          <input class="field" id="roomName" type="text" placeholder="مثال: غرفة الملوك" required>
+          <label>وصف الغرفة</label>
+          <input class="field" id="roomDescription" type="text" placeholder="اكتب وصف الغرفة">
+          <button class="btn" type="submit">إنشاء الغرفة</button>
+        </form>
+        <p id="roomMessage" class="message"></p>
+      </div>
+      <div class="panel">
+        <div class="section-head">
+          <h3>قائمة الغرف</h3>
+          <button class="btn secondary" onclick="loadRooms()">تحديث</button>
+        </div>
+        <div id="roomsList">جاري تحميل الغرف...</div>
+      </div>
+      <div class="panel">
+        <h3>مقاعد الغرفة</h3>
+        <p id="selectedRoomName">اختار غرفة لعرض المقاعد</p>
+        <div id="roomSeats" class="seats-grid">
+          <div class="seat">1</div><div class="seat">2</div>
+          <div class="seat">3</div><div class="seat">4</div>
+          <div class="seat">5</div><div class="seat">6</div>
+          <div class="seat">7</div><div class="seat">8</div>
+        </div>
+      </div>
+    </section>
+        <section class="page" id="hosts">
+      <div class="page-heading">
+        <h2>إدارة المضيفين</h2>
+        <p>متابعة حسابات المضيفين</p>
+      </div>
+      <div class="panel">
+        <button class="btn" onclick="loadUsers()">تحديث البيانات</button>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>المضيف</th>
+                <th>معرّف الحساب</th>
+                <th>الدور</th>
+              </tr>
+            </thead>
+            <tbody id="hostsTable">
+              <tr><td colspan="3">لا توجد بيانات محملة</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="agencies">
+      <div class="page-heading">
+        <h2>الوكالات</h2>
+        <p>إدارة وكالات المضيفين</p>
+      </div>
+      <div class="panel">
+        <p>قسم إدارة الوكالات هيتربط بواجهات الخادم في مرحلة إدارة الوكالات.</p>
+      </div>
+    </section>
+
+    <!-- AGENTS -->
+    <section class="page" id="agents">
+      <div class="page-heading">
+        <h2>إدارة الوكلاء</h2>
+        <p>إدارة وكلاء المضيفين ووكلاء الشحن والعمولات</p>
+      </div>
+
+      <div class="panel">
+        <h3>إضافة وكيل جديد</h3>
+
+        <form id="createAgentForm">
+          <label for="agentUserId">معرّف المستخدم UUID</label>
+          <input
+            class="field"
+            id="agentUserId"
+            type="text"
+            placeholder="أدخل معرّف المستخدم"
+            required
+          >
+
+          <label for="agentType">نوع الوكيل</label>
+          <select class="field" id="agentType" required>
+            <option value="RECHARGE">وكيل شحن</option>
+            <option value="HOST">وكيل مضيفين</option>
+          </select>
+
+          <label for="agentCommission">نسبة العمولة (%)</label>
+          <input
+            class="field"
+            id="agentCommission"
+            type="number"
+            min="0"
+            max="100"
+            step="0.01"
+            value="0"
+            required
+          >
+
+          <button class="btn" id="addAgentButton" type="submit">
+            إضافة الوكيل
+          </button>
+        </form>
+
+        <p id="agentMessage" class="message" role="status"></p>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <h3>الوكلاء المسجلون</h3>
+          <button class="btn secondary" onclick="loadAgents()">
+            تحديث القائمة
+          </button>
+        </div>
+        <div id="agentsList">
+          لا توجد بيانات محملة
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="wallets">
+      <div class="page-heading">
+        <h2>المحافظ والعملات</h2>
+        <p>متابعة أرصدة المستخدمين</p>
+      </div>
+      <div class="panel">
+        <p>إدارة أرصدة العملات والمحافظ هتتربط بواجهات المحفظة.</p>
+      </div>
+    </section>
+
+    <section class="page" id="recharge">
+      <div class="page-heading">
+        <h2>عمليات الشحن</h2>
+        <p>متابعة طلبات شحن العملات</p>
+      </div>
+      <div class="panel">
+        <p>قسم عمليات الشحن.</p>
+      </div>
+    </section>
+
+    <section class="page" id="earnings">
+      <div class="page-heading">
+        <h2>أرباح المضيفين</h2>
+        <p>متابعة مستحقات ورواتب المضيفين بالدولار الأمريكي USD</p>
+      </div>
+      <div class="panel">
+        <p>قسم حساب أرباح المضيفين.</p>
+      </div>
+    </section>
+
+    <section class="page" id="withdrawals">
+      <div class="page-heading">
+        <h2>طلبات السحب</h2>
+        <p>متابعة طلبات سحب الأرباح بالدولار الأمريكي USD</p>
+      </div>
+      <div class="panel">
+        <p>طلبات السحب ومراجعتها من خلال الإدارة.</p>
+      </div>
+    </section>
+
+    <section class="page" id="gifts">
+      <div class="page-heading">
+        <h2>الهدايا</h2>
+        <p>إدارة هدايا KOKI PARTY</p>
+      </div>
+      <div class="panel">
+        <p>قسم إدارة الهدايا.</p>
+      </div>
+    </section>
+
+    <section class="page" id="reports">
+      <div class="page-heading">
+        <h2>البلاغات</h2>
+        <p>متابعة بلاغات المستخدمين</p>
+      </div>
+      <div class="panel">
+        <p>قسم البلاغات والمراجعة.</p>
+      </div>
+    </section>
+
+    <section class="page" id="audit">
+      <div class="page-heading">
+        <h2>سجل العمليات</h2>
+        <p>متابعة العمليات الإدارية</p>
+      </div>
+      <div class="panel">
+        <p>سجل عمليات الإدارة.</p>
+      </div>
+    </section>
+
+    <section class="page" id="settings">
+      <div class="page-heading">
+        <h2>الإعدادات</h2>
+        <p>إعدادات لوحة المالك</p>
+      </div>
+      <div class="panel">
+        <p>إعدادات التطبيق والإدارة.</p>
+      </div>
+    </section>
+
   </div>
-  <div class="admin-pill">
-   👑 المالك الأساسي
-   <button class="btn" onclick="logout()">خروج</button>
-  </div>
- </header>
- 
-<div class="content">
-
-  <!-- DASHBOARD -->
-  <section class="page active" id="dashboard">
-    <div class="page-heading">
-      <h2>لوحة التحكم</h2>
-      <p>نظرة عامة على KOKI PARTY</p>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <span>👥 المستخدمون</span>
-        <strong id="totalUsers">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>🎙️ الغرف</span>
-        <strong id="totalRooms">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>🎤 المضيفون</span>
-        <strong id="totalHosts">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>🪙 العملات</span>
-        <strong id="totalCoins">0</strong>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h3>مرحباً بك في لوحة المالك 👑</h3>
-      <p>من هنا تقدر تدير المستخدمين والغرف والمضيفين والوكلاء والأموال.</p>
-    </div>
-  </section>
-
-  <!-- USERS -->
-  <section class="page" id="users">
-    <div class="page-heading">
-      <h2>إدارة المستخدمين</h2>
-      <p>عرض ومتابعة حسابات المستخدمين</p>
-    </div>
-    <div class="panel">
-      <button class="btn" onclick="loadUsers()">تحديث المستخدمين</button>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>المستخدم</th>
-              <th>البريد الإلكتروني</th>
-              <th>الدور</th>
-              <th>الحالة</th>
-            </tr>
-          </thead>
-          <tbody id="usersTable">
-            <tr><td colspan="4">اضغط تحديث المستخدمين</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ROOMS -->
-  <section class="page" id="rooms">
-    <div class="page-heading">
-      <h2>الغرف الصوتية</h2>
-      <p>إنشاء الغرف ومتابعة المقاعد</p>
-    </div>
-
-    <div class="panel">
-      <h3>إنشاء غرفة جديدة</h3>
-      <form id="createRoomForm">
-        <label>اسم الغرفة</label>
-        <input id="roomName" type="text" placeholder="مثال: غرفة الملوك" required>
-
-        <label>وصف الغرفة</label>
-        <input id="roomDescription" type="text" placeholder="اكتب وصف الغرفة">
-
-        <button class="btn" type="submit">إنشاء الغرفة</button>
-      </form>
-      <p id="roomMessage"></p>
-    </div>
-
-    <div class="panel">
-      <div class="panel-heading">
-        <h3>قائمة الغرف</h3>
-        <button class="btn secondary" onclick="loadRooms()">تحديث</button>
-      </div>
-      <div id="roomsList">جاري تحميل الغرف...</div>
-    </div>
-
-    <div class="panel">
-      <h3>مقاعد الغرفة</h3>
-      <p id="selectedRoomName">اختار غرفة لعرض المقاعد</p>
-      <div id="roomSeats" class="seats-grid">
-        <div class="seat">1</div>
-        <div class="seat">2</div>
-        <div class="seat">3</div>
-        <div class="seat">4</div>
-        <div class="seat">5</div>
-        <div class="seat">6</div>
-        <div class="seat">7</div>
-        <div class="seat">8</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOSTS -->
-  <section class="page" id="hosts">
-    <div class="page-heading">
-      <h2>إدارة المضيفين</h2>
-      <p>متابعة المضيفين وحساباتهم</p>
-    </div>
-    <div class="panel">
-      <button class="btn" onclick="loadUsers()">تحديث البيانات</button>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>المضيف</th>
-              <th>معرّف الحساب</th>
-              <th>الدور</th>
-            </tr>
-          </thead>
-          <tbody id="hostsTable">
-            <tr><td colspan="3">لا توجد بيانات محملة</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- AGENCIES -->
-  <section class="page" id="agencies">
-    <div class="page-heading">
-      <h2>الوكالات</h2>
-      <p>إدارة وكالات المضيفين</p>
-    </div>
-    <div class="panel">
-      <p>قسم إدارة الوكالات جاهز لإضافة وظائف الإدارة وربطه بواجهة الخادم.</p>
-    </div>
-  </section>
-
-  <!-- AGENTS -->
-  <section class="page" id="agents">
-    <div class="page-heading">
-      <h2>وكلاء الشحن</h2>
-      <p>إدارة وكلاء شحن العملات</p>
-    </div>
-    <div class="panel">
-      <h3>إضافة وكيل شحن</h3>
-      <form id="createAgentForm">
-        <label>معرّف المستخدم</label>
-        <input id="agentUserId" type="text" placeholder="أدخل معرّف المستخدم" required>
-        <button class="btn" type="submit">إضافة الوكيل</button>
-      </form>
-      <p id="agentMessage"></p>
-    </div>
-    <div class="panel">
-      <h3>الوكلاء المسجلون</h3>
-      <button class="btn secondary" onclick="loadAgents()">تحديث</button>
-      <div id="agentsList">لا توجد بيانات محملة</div>
-    </div>
-  </section>
-
-  <!-- WALLETS -->
-  <section class="page" id="wallets">
-    <div class="page-heading">
-      <h2>المحافظ والعملات</h2>
-      <p>متابعة أرصدة المستخدمين</p>
-    </div>
-    <div class="panel">
-      <p>إدارة أرصدة العملات والمحافظ هتظهر هنا بعد ربط واجهات المحفظة.</p>
-    </div>
-  </section>
-
-  <!-- RECHARGE -->
-  <section class="page" id="recharge">
-    <div class="page-heading">
-      <h2>عمليات الشحن</h2>
-      <p>متابعة طلبات شحن العملات</p>
-    </div>
-    <div class="panel">
-      <p>قسم عمليات الشحن.</p>
-    </div>
-  </section>
-
-  <!-- EARNINGS -->
-  <section class="page" id="earnings">
-    <div class="page-heading">
-      <h2>أرباح المضيفين</h2>
-      <p>متابعة مستحقات ورواتب المضيفين بالدولار الأمريكي</p>
-    </div>
-    <div class="panel">
-      <p>قسم حساب أرباح المضيفين.</p>
-    </div>
-  </section>
-
-  <!-- WITHDRAWALS -->
-  <section class="page" id="withdrawals">
-    <div class="page-heading">
-      <h2>طلبات السحب</h2>
-      <p>متابعة طلبات سحب الأرباح بالدولار الأمريكي</p>
-    </div>
-    <div class="panel">
-      <p>طلبات السحب ومراجعتها من خلال الإدارة.</p>
-    </div>
-  </section>
-
-  <!-- GIFTS -->
-  <section class="page" id="gifts">
-    <div class="page-heading">
-      <h2>الهدايا</h2>
-      <p>إدارة هدايا KOKI PARTY</p>
-    </div>
-    <div class="panel">
-      <p>قسم إدارة الهدايا.</p>
-    </div>
-  </section>
-
-  <!-- REPORTS -->
-  <section class="page" id="reports">
-    <div class="page-heading">
-      <h2>البلاغات</h2>
-      <p>متابعة بلاغات المستخدمين</p>
-    </div>
-    <div class="panel">
-      <p>قسم البلاغات والمراجعة.</p>
-    </div>
-  </section>
-
-  <!-- AUDIT -->
-  <section class="page" id="audit">
-    <div class="page-heading">
-      <h2>سجل العمليات</h2>
-      <p>متابعة العمليات الإدارية</p>
-    </div>
-    <div class="panel">
-      <p>سجل عمليات الإدارة.</p>
-    </div>
-  </section>
-
-  <!-- SETTINGS -->
-  <section class="page" id="settings">
-    <div class="page-heading">
-      <h2>الإعدادات</h2>
-      <p>إعدادات لوحة المالك</p>
-    </div>
-    <div class="panel">
-      <p>إعدادات التطبيق والإدارة.</p>
-    </div>
-  </section>
-
-</div>
 </main>
 
 <script>
- 
 const API_BASE = '/api';
 let accessToken = sessionStorage.getItem('koki_access_token') || '';
 let currentRoomId = null;
@@ -436,6 +640,7 @@ let currentRoomId = null;
 function showMessage(elementId, message, isError = false) {
   const element = document.getElementById(elementId);
   if (!element) return;
+
   element.textContent = message;
   element.style.color = isError ? '#ff7777' : '#e7c66e';
 }
@@ -498,7 +703,7 @@ function showSection(sectionId, button) {
     rooms: 'الغرف الصوتية',
     hosts: 'المضيفون',
     agencies: 'الوكالات',
-    agents: 'وكلاء الشحن',
+    agents: 'إدارة الوكلاء',
     wallets: 'المحافظ والعملات',
     recharge: 'عمليات الشحن',
     earnings: 'أرباح المضيفين',
@@ -513,7 +718,7 @@ function showSection(sectionId, button) {
     titles[sectionId] || 'KOKI PARTY';
 
   if (sectionId === 'rooms') loadRooms();
-  if (sectionId === 'users') loadUsers();
+  if (sectionId === 'users' || sectionId === 'hosts') loadUsers();
   if (sectionId === 'agents') loadAgents();
 
   document.getElementById('sidebar').classList.remove('open');
@@ -523,255 +728,8 @@ function showSection(sectionId, button) {
 function toggleMenu() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');
-   }
-
-document.addEventListener('click', event => {
-  const nav = event.target.closest('[data-section]');
-  if (nav) {
-    showSection(nav.dataset.section);
-    return;
-  }
-
-  const roomButton = event.target.closest('[data-room-id]');
-  if (roomButton) {
-    const roomId = roomButton.dataset.roomId;
-    const roomName = roomButton.dataset.roomName || 'الغرفة';
-    loadRoomSeats(roomId, roomName);
-  }
-
-  const menuButton = event.target.closest('[data-menu-toggle]');
-  if (menuButton) {
-    document.body.classList.toggle('menu-open');
-  }
-});
-
-async function loadRooms() {
-  const container = document.getElementById('roomsList');
-  if (!container) return;
-
-  container.textContent = 'جاري تحميل الغرف...';
-
-  try {
-    const rooms = await apiRequest('/rooms');
-    const list = Array.isArray(rooms) ? rooms : rooms.data || [];
-
-    if (!list.length) {
-      container.innerHTML = '<p>مفيش غرف لسه. أنشئ أول غرفة.</p>';
-      return;
-    }
-
-    container.innerHTML = list.map(room => `
-      <div class="room-card">
-        <div>
-          <strong>${escapeHTML(room.name)}</strong>
-          <p>${escapeHTML(room.description || 'بدون وصف')}</p>
-          <small>المقاعد: ${escapeHTML(room.maxSeats || 8)}</small>
-        </div>
-        <button class="btn secondary"
-          data-room-id="${escapeHTML(room.id)}"
-          data-room-name="${escapeHTML(room.name)}">
-          عرض المقاعد
-        </button>
-      </div>
-    `).join('');
-
-    const total = document.getElementById('totalRooms');
-    if (total) total.textContent = list.length;
-
-  } catch (error) {
-    container.textContent = error.message;
-  }
 }
-
-async function loadRoomSeats(roomId, roomName) {
-  currentRoomId = roomId;
-
-  const title = document.getElementById('selectedRoomName');
-  const container = document.getElementById('roomSeats');
-
-  if (title) title.textContent = roomName;
-  if (!container) return;
-
-  container.textContent = 'جاري تحميل المقاعد...';
-
-  try {
-    const seats = await apiRequest(`/rooms/${roomId}/seats`);
-    const list = Array.isArray(seats) ? seats : seats.data || [];
-
-    container.innerHTML = Array.from({ length: 8 }, (_, index) => {
-      const number = index + 1;
-      const seat = list.find(item => Number(item.seatNumber) === number);
-      const occupied = Boolean(seat && seat.userId);
-
-      return `
-        <div class="seat ${occupied ? 'occupied' : 'available'}">
-          <strong>مقعد ${number}</strong>
-          <span>${occupied ? 'مشغول' : 'فارغ'}</span>
-          <small>${occupied ? escapeHTML(seat.userId) : 'متاح'}</small>
-        </div>
-      `;
-    }).join('');
-
-  } catch (error) {
-    container.textContent = error.message;
-  }
-}
-
-async function loadUsers() {
-  const container = document.getElementById('usersTable');
-  if (!container) return;
-
-  container.innerHTML = '<tr><td colspan="4">جاري التحميل...</td></tr>';
-
-  try {
-    const result = await apiRequest('/admin/users');
-    const users = Array.isArray(result)
-  ? result
-  : Array.isArray(result.users)
-    ? result.users
-    : Array.isArray(result.data)
-      ? result.data
-      : [];
-
-    if (!users.length) {
-      container.innerHTML = '<tr><td colspan="4">مفيش مستخدمين ظاهرين</td></tr>';
-      return;
-    }
-
-    container.innerHTML = users.map(user => `
-      <tr>
-        <td>${escapeHTML(user.name || user.username || 'بدون اسم')}</td>
-        <td>${escapeHTML(user.email || user.phone || '-')}</td>
-        <td>${escapeHTML(user.role || '-')}</td>
-        <td>${user.isActive === false ? 'غير نشط' : 'نشط'}</td>
-      </tr>
-    `).join('');
-
-    const total = document.getElementById('totalUsers');
-    if (total) total.textContent = users.length;
-
-    const hostsTable = document.getElementById('hostsTable');
-    if (hostsTable) {
-      const hosts = users.filter(user =>
-        String(user.role || '').toUpperCase().includes('HOST')
-      );
-
-      hostsTable.innerHTML = hosts.length
-        ? hosts.map(user => `
-          <tr>
-            <td>${escapeHTML(user.name || user.username || '-')}</td>
-            <td>${escapeHTML(user.id || '-')}</td>
-            <td>${escapeHTML(user.role || '-')}</td>
-          </tr>
-        `).join('')
-        : '<tr><td colspan="3">مفيش مضيفين ظاهرين</td></tr>';
-    }
-
-    const hostTotal = document.getElementById('totalHosts');
-    if (hostTotal) {
-      hostTotal.textContent = users.filter(user =>
-        String(user.role || '').toUpperCase().includes('HOST')
-      ).length;
-    }
-
-  } catch (error) {
-    container.innerHTML =
-      `<tr><td colspan="4">${escapeHTML(error.message)}</td></tr>`;
-  }
-}
-
-async function loadAgents() {
-  const container = document.getElementById('agentsList');
-  if (!container) return;
-
-  container.textContent = 'جاري تحميل الوكلاء...';
-
-  try {
-    const result = await apiRequest('/agents');
-    const agents = Array.isArray(result) ? result : result.data || [];
-
-    if (!agents.length) {
-      container.innerHTML = '<p>مفيش وكلاء مسجلين حالياً.</p>';
-      return;
-    }
-
-    container.innerHTML = agents.map(agent => `
-      <div class="room-card">
-        <div>
-          <strong>${escapeHTML(agent.user?.name || agent.userId || 'وكيل')}</strong>
-          <p>النوع: ${escapeHTML(agent.type || '-')}</p>
-          <p>العمولة: ${escapeHTML(agent.commissionRate ?? 0)}%</p>
-          <small>الحالة: ${escapeHTML(agent.status || '-')}</small>
-        </div>
-      </div>
-    `).join('');
-
-  } catch (error) {
-    container.textContent = error.message;
-  }
-}
-
-const createRoomForm = document.getElementById('createRoomForm');
-
-if (createRoomForm) {
-  createRoomForm.addEventListener('submit', async event => {
-    event.preventDefault();
-
-    const name = document.getElementById('roomName').value.trim();
-    const description = document.getElementById('roomDescription').value.trim();
-
-    if (!name) {
-      showMessage('roomMessage', 'اكتب اسم الغرفة الأول.', true);
-      return;
-    }
-
-    try {
-      await apiRequest('/rooms', {
-        method: 'POST',
-        body: JSON.stringify({ name, description })
-      });
-
-      createRoomForm.reset();
-      showMessage('roomMessage', 'تم إنشاء الغرفة بنجاح 👑');
-      await loadRooms();
-
-    } catch (error) {
-      showMessage('roomMessage', error.message, true);
-    }
-  });
-}
-
-const createAgentForm = document.getElementById('createAgentForm');
-
-if (createAgentForm) {
-  createAgentForm.addEventListener('submit', async event => {
-    event.preventDefault();
-
-    const userId = document.getElementById('agentUserId').value.trim();
-
-    if (!userId) {
-      showMessage('agentMessage', 'اكتب معرّف المستخدم.', true);
-      return;
-    }
-
-    try {
-      await apiRequest('/agents/recharge', {
-        method: 'POST',
-        body: JSON.stringify({
-          userId,
-          commissionRate: 0
-        })
-      });
-
-      createAgentForm.reset();
-      showMessage('agentMessage', 'تمت إضافة وكيل الشحن بنجاح.');
-      await loadAgents();
-
-    } catch (error) {
-      showMessage('agentMessage', error.message, true);
-    }
-  });
-}
+ // تسجيل دخول المالك
 const loginForm = document.getElementById('loginForm');
 
 if (loginForm) {
@@ -786,22 +744,16 @@ if (loginForm) {
     showMessage('loginMessage', 'جاري تسجيل الدخول...');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(API_BASE + '/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password })
       });
 
       const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(data.message || 'بيانات الدخول غير صحيحة');
-      }
-
-      if (!data.access_token) {
-        throw new Error('السيرفر لم يرجع رمز الدخول');
+      if (!response.ok || !data.access_token) {
+        throw new Error(data.message || 'بيانات تسجيل الدخول غير صحيحة');
       }
 
       accessToken = data.access_token;
@@ -809,8 +761,8 @@ if (loginForm) {
 
       document.getElementById('loginScreen').style.display = 'none';
 
-      showSection('dashboard');
-      loadRooms();
+      await loadUsers();
+      await loadRooms();
 
     } catch (error) {
       showMessage('loginMessage', error.message, true);
@@ -818,62 +770,344 @@ if (loginForm) {
       button.disabled = false;
     }
   });
-       }
+}
+
 function logout() {
-  sessionStorage.removeItem('koki_access_token');
   accessToken = '';
+  sessionStorage.removeItem('koki_access_token');
   location.reload();
 }
 
- document.addEventListener('DOMContentLoaded', () => {
-  if (accessToken) {
-    document.getElementById('loginScreen').style.display = 'none';
-    showSection('dashboard');
-    loadRooms();
+// تحميل المستخدمين
+async function loadUsers() {
+  const table = document.getElementById('usersTable');
+  const hostsTable = document.getElementById('hostsTable');
+
+  try {
+    const result = await apiRequest('/users');
+    const users = Array.isArray(result) ? result : result.data || [];
+
+    document.getElementById('totalUsers').textContent = users.length;
+
+    if (table) {
+      table.innerHTML = users.map(user => `
+        <tr>
+          <td>${escapeHTML(user.name || user.username || '-')}</td>
+          <td>${escapeHTML(user.email || '-')}</td>
+          <td>${escapeHTML(user.role || 'USER')}</td>
+          <td>${escapeHTML(user.status || 'ACTIVE')}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="4">لا يوجد مستخدمون</td></tr>';
+    }
+
+    if (hostsTable) {
+      const hosts = users.filter(user =>
+        ['HOST', 'ANCHOR'].includes(String(user.role || '').toUpperCase())
+      );
+
+      hostsTable.innerHTML = hosts.map(user => `
+        <tr>
+          <td>${escapeHTML(user.name || user.username || '-')}</td>
+          <td>${escapeHTML(user.id || '-')}</td>
+          <td>${escapeHTML(user.role || '-')}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="3">لا يوجد مضيفون</td></tr>';
+
+      document.getElementById('totalHosts').textContent = hosts.length;
+    }
+
+  } catch (error) {
+    if (table) table.innerHTML =
+      `<tr><td colspan="4">${escapeHTML(error.message)}</td></tr>`;
+
+    if (hostsTable) hostsTable.innerHTML =
+      `<tr><td colspan="3">${escapeHTML(error.message)}</td></tr>`;
   }
-});
+}
+
+// تحميل الغرف
+async function loadRooms() {
+  const container = document.getElementById('roomsList');
+  if (!container) return;
+
+  container.textContent = 'جاري تحميل الغرف...';
+
+  try {
+    const result = await apiRequest('/rooms');
+    const rooms = Array.isArray(result) ? result : result.data || [];
+
+    document.getElementById('totalRooms').textContent = rooms.length;
+
+    if (!rooms.length) {
+      container.innerHTML = '<div class="empty">لا توجد غرف حالياً</div>';
+      return;
+    }
+
+    container.innerHTML = rooms.map(room => `
+      <div class="room-card">
+        <strong>${escapeHTML(room.name || 'غرفة بدون اسم')}</strong>
+        <p class="room-meta">
+          ${escapeHTML(room.description || '')}
+        </p>
+        <p class="room-meta">
+          عدد المقاعد: ${escapeHTML(room.maxSeats || 8)}
+        </p>
+        <button class="btn" onclick="selectRoom('${escapeHTML(room.id)}','${escapeHTML(room.name || '')}')">
+          عرض المقاعد
+        </button>
+      </div>
+    `).join('');
+
+  } catch (error) {
+    container.textContent = error.message;
+  }
+}
+
+// اختيار غرفة وعرض مقاعدها
+async function selectRoom(roomId, roomName) {
+  currentRoomId = roomId;
+
+  document.getElementById('selectedRoomName').textContent =
+    'الغرفة: ' + roomName;
+
+  const container = document.getElementById('roomSeats');
+  container.innerHTML = '<div class="empty">جاري تحميل المقاعد...</div>';
+
+  try {
+    const result = await apiRequest(`/rooms/${roomId}/seats`);
+    const seats = Array.isArray(result) ? result : result.data || [];
+
+    container.innerHTML = seats.map(seat => `
+      <div class="seat ${seat.userId ? 'occupied' : ''}">
+        <strong>${escapeHTML(seat.seatNumber)}</strong>
+        ${seat.userId ? 'مشغول' : 'فارغ'}
+      </div>
+    `).join('') || '<div class="empty">لا توجد مقاعد</div>';
+
+  } catch (error) {
+    container.textContent = error.message;
+  }
+}
+
+// عرض الوكلاء
+async function loadAgents() {
+  const container = document.getElementById('agentsList');
+  if (!container) return;
+
+  container.textContent = 'جاري تحميل الوكلاء...';
+
+  try {
+    const result = await apiRequest('/agents');
+    const agents = Array.isArray(result) ? result : result.data || [];
+
+    if (!agents.length) {
+      container.innerHTML = '<div class="empty">لا يوجد وكلاء مسجلون حالياً</div>';
+      return;
+    }
+
+    container.innerHTML = agents.map(agent => {
+      const typeName = agent.type === 'HOST'
+        ? 'وكيل مضيفين'
+        : 'وكيل شحن';
+
+      const statusName = {
+        PENDING: 'في انتظار التفعيل',
+        ACTIVE: 'نشط',
+        SUSPENDED: 'موقوف'
+      }[agent.status] || agent.status;
+
+      const nextStatus = agent.status === 'ACTIVE'
+        ? 'SUSPENDED'
+        : 'ACTIVE';
+
+      const statusButton = agent.status === 'ACTIVE'
+        ? 'إيقاف الوكيل'
+        : 'تفعيل الوكيل';
+
+      return `
+        <div class="room-card">
+          <strong>${escapeHTML(typeName)}</strong>
+          <p>معرّف المستخدم:</p>
+          <small>${escapeHTML(agent.userId || '-')}</small>
+          <p>العمولة: ${escapeHTML(agent.commissionRate ?? 0)}%</p>
+          <p>الحالة: ${escapeHTML(statusName)}</p>
+
+          <label>تعديل العمولة (%)</label>
+          <input
+            class="field"
+            type="number"
+            id="commission-${escapeHTML(agent.id)}"
+            min="0"
+            max="100"
+            step="0.01"
+            value="${escapeHTML(agent.commissionRate ?? 0)}"
+          >
+
+          <button class="btn" onclick="updateAgentCommission('${escapeHTML(agent.id)}')">
+            حفظ العمولة
+          </button>
+
+          <button class="btn secondary" onclick="updateAgentStatus('${escapeHTML(agent.id)}','${nextStatus}')">
+            ${statusButton}
+          </button>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    container.textContent = error.message;
+  }
+}
+
+// تعديل عمولة الوكيل
+async function updateAgentCommission(agentId) {
+  const input = document.getElementById(`commission-${agentId}`);
+  if (!input) return;
+
+  const commissionRate = Number(input.value);
+
+  if (!Number.isFinite(commissionRate) ||
+      commissionRate < 0 ||
+      commissionRate > 100) {
+    alert('العمولة لازم تكون من 0 إلى 100%.');
+    return;
+  }
+
+  try {
+    await apiRequest(`/agents/${agentId}/commission`, {
+      method: 'PATCH',
+      body: JSON.stringify({ commissionRate })
+    });
+
+    alert('تم تحديث العمولة بنجاح.');
+    await loadAgents();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// تفعيل أو إيقاف الوكيل
+async function updateAgentStatus(agentId, status) {
+  const question = status === 'ACTIVE'
+    ? 'هل تريد تفعيل الوكيل؟'
+    : 'هل تريد إيقاف الوكيل؟';
+
+  if (!confirm(question)) return;
+
+  try {
+    await apiRequest(`/agents/${agentId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+
+    alert('تم تحديث حالة الوكيل.');
+    await loadAgents();
+
+  } catch (error) {
+    alert(error.message);
+  }
+       }
+ // إنشاء غرفة جديدة
+const createRoomForm = document.getElementById('createRoomForm');
+
+if (createRoomForm) {
+  createRoomForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const name = document.getElementById('roomName').value.trim();
+    const description = document.getElementById('roomDescription').value.trim();
+
+    if (!name) {
+      showMessage('roomMessage', 'اكتب اسم الغرفة.', true);
+      return;
+    }
+
+    try {
+      await apiRequest('/rooms', {
+        method: 'POST',
+        body: JSON.stringify({ name, description })
+      });
+
+      createRoomForm.reset();
+      showMessage('roomMessage', 'تم إنشاء الغرفة بنجاح.');
+      await loadRooms();
+
+    } catch (error) {
+      showMessage('roomMessage', error.message, true);
+    }
+  });
+}
+
+// إضافة وكيل مضيفين أو وكيل شحن
+const createAgentForm = document.getElementById('createAgentForm');
+
+if (createAgentForm) {
+  createAgentForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const userId = document.getElementById('agentUserId').value.trim();
+    const type = document.getElementById('agentType').value;
+    const commissionRate = Number(
+      document.getElementById('agentCommission').value
+    );
+
+    if (!userId) {
+      showMessage('agentMessage', 'اكتب معرّف المستخدم.', true);
+      return;
+    }
+
+    if (!Number.isFinite(commissionRate) ||
+        commissionRate < 0 ||
+        commissionRate > 100) {
+      showMessage('agentMessage', 'العمولة لازم تكون من 0 إلى 100%.', true);
+      return;
+    }
+
+    const endpoint = type === 'HOST'
+      ? '/agents/hosts'
+      : '/agents/recharge';
+
+    const button = document.getElementById('addAgentButton');
+    button.disabled = true;
+
+    try {
+      await apiRequest(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({
+          userId,
+          commissionRate
+        })
+      });
+
+      createAgentForm.reset();
+      document.getElementById('agentCommission').value = '0';
+
+      showMessage('agentMessage', 'تمت إضافة الوكيل بنجاح.');
+      await loadAgents();
+
+    } catch (error) {
+      showMessage('agentMessage', error.message, true);
+
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+// تحميل البيانات عند فتح لوحة المالك
+async function initializeDashboard() {
+  if (!accessToken) return;
+
+  document.getElementById('loginScreen').style.display = 'none';
+
+  await loadUsers();
+  await loadRooms();
+}
+
+// تشغيل اللوحة
+initializeDashboard();
 </script>
- <style>
-/* KOKI PARTY - Admin Dashboard Fix */
-.page {
-  display: none;
-  width: 100%;
-}
 
-.page.active {
-  display: block;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: #21172f;
-  border: 1px solid #49345f;
-  border-radius: 14px;
-  padding: 18px;
-  color: #fff;
-}
-
-.page-heading {
-  color: #d8b45a;
-  margin-bottom: 20px;
-}
-
-.content {
-  width: 100%;
-  min-width: 0;
-}
-
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
- </style>
 </body>
 </html>
