@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import '../services/auth_session.dart';
 
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({super.key});
@@ -9,6 +13,9 @@ class CreateRoomScreen extends StatefulWidget {
 }
 
 class _CreateRoomScreenState extends State<CreateRoomScreen> {
+  static const String apiUrl =
+      'https://koki-party-new.onrender.com/api/rooms';
+
   static const Color bg = Color(0xFF090711);
   static const Color panel = Color(0xFF191529);
   static const Color gold = Color(0xFFFFD36A);
@@ -16,53 +23,102 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
 
   final TextEditingController nameController =
       TextEditingController();
+
   final TextEditingController descriptionController =
       TextEditingController();
-  final TextEditingController passwordController =
-      TextEditingController();
 
-  bool isPrivate = false;
-  bool hasPassword = false;
-  bool allowRequests = true;
+  bool isCreating = false;
 
   @override
   void dispose() {
     nameController.dispose();
     descriptionController.dispose();
-    passwordController.dispose();
     super.dispose();
   }
 
-  void createRoom() {
+  Future<void> createRoom() async {
     final name = nameController.text.trim();
+    final description = descriptionController.text.trim();
+    final token = AuthSession.accessToken;
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('اكتب اسم الغرفة الأول'),
-        ),
-      );
+      showMessage('اكتب اسم الغرفة الأول');
       return;
     }
 
-    if (hasPassword && passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('اكتب كلمة مرور الغرفة'),
-        ),
-      );
+    if (token == null || token.isEmpty) {
+      showMessage('سجّل دخولك الأول قبل إنشاء الغرفة');
       return;
     }
 
-    Navigator.pop(context, {
-      'name': name,
-      'description': descriptionController.text.trim(),
-      'owner': 'KOKI USER',
-      'isPrivate': isPrivate,
-      'hasPassword': hasPassword,
-      'password': passwordController.text.trim(),
-      'allowRequests': allowRequests,
-    });
+    setState(() => isCreating = true);
+
+    HttpClient? client;
+
+    try {
+      client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 25);
+
+      final request =
+          await client.postUrl(Uri.parse(apiUrl));
+
+      request.headers.set(
+        HttpHeaders.contentTypeHeader,
+        'application/json',
+      );
+
+      request.headers.set(
+        HttpHeaders.authorizationHeader,
+        'Bearer $token',
+      );
+
+      request.write(jsonEncode({
+        'name': name,
+        'description': description,
+      }));
+
+      final response = await request.close().timeout(
+        const Duration(seconds: 35),
+      );
+
+      final responseText =
+          await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 201 ||
+          response.statusCode == 200) {
+        if (!mounted) return;
+
+        Navigator.pop(context, true);
+        return;
+      }
+
+      String message = 'فشل إنشاء الغرفة';
+
+      try {
+        final decoded = jsonDecode(responseText);
+        if (decoded is Map && decoded['message'] != null) {
+          message = decoded['message'].toString();
+        }
+      } catch (_) {}
+
+      showMessage(message);
+    } catch (e) {
+      showMessage('حصل خطأ في الاتصال بالسيرفر. حاول تاني.');
+    } finally {
+      client?.close(force: true);
+
+      if (mounted) {
+        setState(() => isCreating = false);
+      }
+    }
+  }
+
+  void showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -97,138 +153,6 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               buildField(
                 controller: descriptionController,
                 label: 'وصف الغرفة',
-                hint: 'اكتب وصفًا للغرفة',
+                hint: 'اكتب وصف الغرفة',
                 maxLines: 3,
               ),
-              const SizedBox(height: 18),
-              buildSwitch(
-                'غرفة خاصة',
-                'إظهار أن الغرفة خاصة',
-                isPrivate,
-                (value) => setState(() => isPrivate = value),
-              ),
-              buildSwitch(
-                'حماية بكلمة مرور',
-                'تجربة إعداد كلمة مرور',
-                hasPassword,
-                (value) => setState(() => hasPassword = value),
-              ),
-              if (hasPassword) ...[
-                const SizedBox(height: 12),
-                buildField(
-                  controller: passwordController,
-                  label: 'كلمة المرور',
-                  hint: 'اكتب كلمة المرور',
-                ),
-              ],
-              buildSwitch(
-                'السماح بطلب المايك',
-                'السماح للأعضاء بطلب الصعود للمقاعد',
-                allowRequests,
-                (value) =>
-                    setState(() => allowRequests = value),
-              ),
-              const SizedBox(height: 25),
-              ElevatedButton(
-                onPressed: createRoom,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: gold,
-                  foregroundColor: bg,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'إنشاء الغرفة',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  
-  Widget buildField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: gold,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Colors.white38),
-            filled: true,
-            fillColor: panel,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(13),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(13),
-              borderSide: BorderSide(color: Colors.white12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(13),
-              borderSide: const BorderSide(color: gold),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildSwitch(
-    String title,
-    String subtitle,
-    bool value,
-    ValueChanged<bool> onChanged,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      decoration: BoxDecoration(
-        color: panel,
-        borderRadius: BorderRadius.circular(13),
-      ),
-      child: SwitchListTile(
-        value: value,
-        onChanged: onChanged,
-        activeColor: gold,
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 11,
-          ),
-        ),
-      ),
-    );
-  }
-}
