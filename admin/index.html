@@ -1008,9 +1008,11 @@ async function updateAgentStatus(agentId, status) {
     alert('تم تحديث حالة الوكيل.');
     await loadAgents();
 
-  } catch (error) {
+    } catch (error) {
     alert(error.message);
   }
+
+ // إنشاء غرفة جديدة
   
  // إنشاء غرفة جديدة
 const createRoomForm = document.getElementById('createRoomForm');
