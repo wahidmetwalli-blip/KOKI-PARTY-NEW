@@ -1,10 +1,10 @@
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { RoomsModule } from './rooms/rooms.module';
 import { AgentsModule } from './agents/agents.module';
 import { WalletModule } from './wallet/wallet.module';
 import { EarningsModule } from './earnings/earnings.module';
@@ -14,12 +14,11 @@ import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     AuthModule,
     UsersModule,
+    RoomsModule,
     AgentsModule,
     WalletModule,
     EarningsModule,
