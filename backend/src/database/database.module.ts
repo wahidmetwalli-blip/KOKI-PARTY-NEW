@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -22,7 +21,7 @@ import { CreateRooms1763857200000 } from './migrations/1763857200000-CreateRooms
       },
       autoLoadEntities: true,
       synchronize: false,
-      migrationsRun: false,
+      migrationsRun: process.env.RUN_MIGRATIONS === 'true',
       migrations: [
         CreateCorePlatformTables1763855900000,
         AddUsdCurrencyFields1763856000000,
