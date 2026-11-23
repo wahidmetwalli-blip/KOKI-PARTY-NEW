@@ -145,9 +145,17 @@ class _RoomScreenState extends State<RoomScreen> {
 
       if (!mounted) return;
 
+            final loadedSeats = List<dynamic>.from(results[1]);
+
+      final mySeat = loadedSeats.where(
+        (seat) => seat['userId']?.toString() == currentUserId,
+      ).toList();
+
       setState(() {
         room = Map<String, dynamic>.from(results[0]);
-        seats = List<dynamic>.from(results[1]);
+        seats = loadedSeats;
+        isMicMuted = mySeat.isEmpty ||
+            mySeat.first['isMuted'] == true;
         loading = false;
       });
     } catch (e) {
