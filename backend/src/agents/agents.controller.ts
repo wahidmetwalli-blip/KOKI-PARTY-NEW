@@ -1,3 +1,4 @@
+
 import {
   Body,
   Controller,
@@ -35,9 +36,6 @@ import { Permission } from '../auth/permissions.enum';
 class CreateAgentDto {
   @IsUUID()
   userId: string;
-
-  @IsEnum(AgentType)
-  type: AgentType;
 
   @IsOptional()
   @IsNumber()
@@ -228,4 +226,5 @@ export class AgentsController {
       req.user.id,
     );
   }
-           }
+  }
+    
