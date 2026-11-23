@@ -64,13 +64,17 @@ export class RoomsService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found or inactive');
+      throw new NotFoundException(
+        'User not found or inactive',
+      );
     }
 
     const name = data.name?.trim();
 
     if (!name || name.length > 120) {
-      throw new BadRequestException('Invalid room name');
+      throw new BadRequestException(
+        'Invalid room name',
+      );
     }
 
     const room = this.roomsRepository.create({
@@ -82,16 +86,19 @@ export class RoomsService {
       isActive: true,
     });
 
-    const savedRoom = await this.roomsRepository.save(room);
+    const savedRoom =
+      await this.roomsRepository.save(room);
 
-    const seats = Array.from({ length: 8 }, (_, index) =>
-      this.roomSeatsRepository.create({
-        roomId: savedRoom.id,
-        seatNumber: index + 1,
-        userId: null,
-        isMuted: true,
-        occupiedAt: null,
-      }),
+    const seats = Array.from(
+      { length: 8 },
+      (_, index) =>
+        this.roomSeatsRepository.create({
+          roomId: savedRoom.id,
+          seatNumber: index + 1,
+          userId: null,
+          isMuted: true,
+          occupiedAt: null,
+        }),
     );
 
     await this.roomSeatsRepository.save(seats);
@@ -114,8 +121,11 @@ export class RoomsService {
   ) {
     return this.roomsRepository.manager.transaction(
       async (manager) => {
-        const roomsRepository = manager.getRepository(Room);
-        const seatsRepository = manager.getRepository(RoomSeat);
+        const roomsRepository =
+          manager.getRepository(Room);
+
+        const seatsRepository =
+          manager.getRepository(RoomSeat);
 
         const room = await roomsRepository.findOne({
           where: { id },
@@ -123,54 +133,66 @@ export class RoomsService {
         });
 
         if (!room) {
-          throw new NotFoundException('Room not found');
+          throw new NotFoundException(
+            'Room not found',
+          );
         }
 
         if (room.ownerUserId !== userId) {
-          throw new ForbiddenException('Room owner only');
+          throw new ForbiddenException(
+            'Room owner only',
+          );
         }
 
         if (data.name !== undefined) {
           const name = data.name.trim();
 
           if (!name || name.length > 120) {
-            throw new BadRequestException('Invalid room name');
+            throw new BadRequestException(
+              'Invalid room name',
+            );
           }
 
           room.name = name;
         }
 
         if (data.description !== undefined) {
-          room.description = data.description.trim() || null;
+          room.description =
+            data.description.trim() || null;
         }
 
         if (data.coverUrl !== undefined) {
-          room.coverUrl = data.coverUrl.trim() || null;
+          room.coverUrl =
+            data.coverUrl.trim() || null;
         }
 
         if (data.maxSeats !== undefined) {
-          const allowedSeatCounts = [10, 12, 15, 20];
+          const allowedSeatCounts = [
+            10,
+            12,
+            15,
+            20,
+          ];
 
-          if (!allowedSeatCounts.includes(data.maxSeats)) {
+          if (
+            !allowedSeatCounts.includes(
+              data.maxSeats,
+            )
+          ) {
             throw new BadRequestException(
               'Seat count must be 10, 12, 15 or 20',
             );
           }
 
-          const occupiedSeatsAboveLimit = await seatsRepository.count({
-            where: {
-              roomId: id,
-              seatNumber: MoreThan(data.maxSeats),
-              userId: null,
-            },
-          });
-
           const occupiedSeats = await seatsRepository
             .createQueryBuilder('seat')
-            .where('seat.roomId = :roomId', { roomId: id })
-            .andWhere('seat.seatNumber > :maxSeats', {
-              maxSeats: data.maxSeats,
+            .where('seat.roomId = :roomId', {
+              roomId: id,
             })
+            .andWhere(
+              'seat.seatNumber > :maxSeats',
+              { maxSeats: data.maxSeats },
+            )
             .andWhere('seat.userId IS NOT NULL')
             .getCount();
 
@@ -188,18 +210,25 @@ export class RoomsService {
             userId: IsNull(),
           });
 
-          const existingSeats = await seatsRepository.find({
-            where: { roomId: id },
-            select: ['seatNumber'],
-          });
+          const existingSeats =
+            await seatsRepository.find({
+              where: { roomId: id },
+              select: ['seatNumber'],
+            });
 
           const existingNumbers = new Set(
-            existingSeats.map((seat) => seat.seatNumber),
+            existingSeats.map(
+              (seat) => seat.seatNumber,
+            ),
           );
 
           const missingSeats: RoomSeat[] = [];
 
-          for (let number = 1; number <= data.maxSeats; number++) {
+          for (
+            let number = 1;
+            number <= data.maxSeats;
+            number++
+          ) {
             if (!existingNumbers.has(number)) {
               missingSeats.push(
                 seatsRepository.create({
@@ -214,11 +243,14 @@ export class RoomsService {
           }
 
           if (missingSeats.length > 0) {
-            await seatsRepository.save(missingSeats);
+            await seatsRepository.save(
+              missingSeats,
+            );
           }
         }
 
-        const savedRoom = await roomsRepository.save(room);
+        const savedRoom =
+          await roomsRepository.save(room);
 
         const seats = await seatsRepository.find({
           where: { roomId: id },
@@ -239,16 +271,19 @@ export class RoomsService {
     });
 
     if (!room) {
-      throw new NotFoundException('Room not found');
+      throw new NotFoundException(
+        'Room not found',
+      );
     }
 
     if (room.ownerUserId !== userId) {
-      throw new ForbiddenException('Room owner only');
+      throw new ForbiddenException(
+        'Room owner only',
+      );
     }
 
     room.isActive = false;
 
     return this.roomsRepository.save(room);
   }
-    }
-              
+  }
