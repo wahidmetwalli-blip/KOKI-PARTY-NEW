@@ -1,4 +1,3 @@
-
 import {
   Injectable,
   NotFoundException,
@@ -82,7 +81,7 @@ export class RoomsService {
       description: data.description?.trim() || null,
       coverUrl: data.coverUrl?.trim() || null,
       ownerUserId: userId,
-      maxSeats: 8,
+      maxSeats: 20,
       isActive: true,
     });
 
@@ -90,7 +89,7 @@ export class RoomsService {
       await this.roomsRepository.save(room);
 
     const seats = Array.from(
-      { length: 8 },
+      { length: 20 },
       (_, index) =>
         this.roomSeatsRepository.create({
           roomId: savedRoom.id,
@@ -286,4 +285,4 @@ export class RoomsService {
 
     return this.roomsRepository.save(room);
   }
-  }
+              }
