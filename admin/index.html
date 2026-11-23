@@ -1030,6 +1030,308 @@ async function updateAgentStatus(agentId, status) {
     alert(error.message);
   }
 }
+  // تنسيق المبلغ من السنت إلى الدولار
+function formatWithdrawalUSD(value) {
+  const cents = Math.round(Number(value || 0));
+  return (cents / 100).toFixed(2) + ' USD';
+}
+
+// أسماء الحالات بالعربي
+function withdrawalStatusName(status) {
+  const names = {
+    PENDING: 'قيد المراجعة',
+    APPROVED: 'تمت الموافقة',
+    REJECTED: 'مرفوض',
+    PAID: 'تم الدفع',
+    CANCELLED: 'ملغي'
+  };
+
+  return names[status] || status;
+}
+
+// أسماء طرق الدفع
+function withdrawalMethodName(method) {
+  const names = {
+    RECHARGE_AGENT: 'وكيل شحن',
+    BANK_TRANSFER: 'تحويل بنكي',
+    OTHER: 'طريقة أخرى'
+  };
+
+  return names[method] || method;
+}
+
+// تحميل طلبات السحب
+async function loadWithdrawals() {
+  const container = document.getElementById('withdrawalsList');
+  const filter = document.getElementById('withdrawalStatusFilter');
+
+  if (!container) return;
+
+  container.innerHTML = '<p>جاري تحميل طلبات السحب...</p>';
+
+  try {
+    const status = filter ? filter.value : '';
+    const query = status ? '?status=' + encodeURIComponent(status) : '';
+
+    const result = await apiRequest(
+      '/withdrawals/admin/all' + query
+    );
+
+    const requests = Array.isArray(result)
+      ? result
+      : (result.data || []);
+
+    let agents = [];
+
+    try {
+      const agentResult = await apiRequest('/agents');
+      agents = Array.isArray(agentResult)
+        ? agentResult
+        : (agentResult.data || []);
+    } catch (agentError) {
+      console.warn('تعذر تحميل الوكلاء:', agentError.message);
+    }
+
+    const rechargeAgents = agents.filter(agent =>
+      agent.type === 'RECHARGE' &&
+      agent.status === 'ACTIVE'
+    );
+
+    if (!requests.length) {
+      container.innerHTML = '<p>لا توجد طلبات سحب حالياً.</p>';
+      return;
+    }
+
+    container.innerHTML = requests.map(request => {
+      const id = escapeHTML(request.id);
+      const hostId = escapeHTML(request.hostUserId);
+      const amount = formatWithdrawalUSD(request.amount);
+      const statusName = escapeHTML(
+        withdrawalStatusName(request.status)
+      );
+      const methodName = escapeHTML(
+        withdrawalMethodName(request.method)
+      );
+
+      const assignedAgent = request.assignedAgentId
+        ? escapeHTML(request.assignedAgentId)
+        : 'لم يتم التعيين';
+
+      const paymentReference = request.paymentReference
+        ? escapeHTML(request.paymentReference)
+        : 'لا يوجد';
+
+      const createdAt = request.createdAt
+        ? escapeHTML(
+            new Date(request.createdAt).toLocaleString('ar-EG')
+          )
+        : 'غير معروف';
+
+      let actions = '';
+
+      if (request.status === 'PENDING') {
+        actions = `
+          <button type="button"
+            onclick="approveWithdrawal('${id}')">
+            موافقة
+          </button>
+
+          <button type="button"
+            onclick="rejectWithdrawal('${id}')">
+            رفض الطلب
+          </button>
+        `;
+      }
+
+      if (
+        request.status === 'APPROVED' &&
+        request.method === 'RECHARGE_AGENT' &&
+        !request.assignedAgentId
+      ) {
+        const options = rechargeAgents.map(agent => `
+          <option value="${escapeHTML(agent.id)}">
+            ${escapeHTML(agent.id)}
+          </option>
+        `).join('');
+
+        actions += `
+          <div style="margin-top:12px;">
+            <select id="withdrawAgent_${id}"
+              style="width:100%;padding:10px;margin-bottom:8px;">
+              <option value="">اختر وكيل الشحن</option>
+              ${options}
+            </select>
+
+            <button type="button"
+              onclick="assignWithdrawalAgent('${id}')">
+              تعيين الوكيل
+            </button>
+          </div>
+        `;
+      }
+
+      const canMarkPaid =
+        request.status === 'APPROVED' &&
+        (
+          request.method !== 'RECHARGE_AGENT' ||
+          request.assignedAgentId
+        );
+
+      if (canMarkPaid) {
+        actions += `
+          <button type="button"
+            onclick="markWithdrawalPaid('${id}')">
+            تأكيد الدفع
+          </button>
+        `;
+      }
+
+      return `
+        <div style="
+          border:1px solid #8d7540;
+          border-radius:12px;
+          padding:15px;
+          margin-bottom:12px;
+          background:rgba(255,255,255,0.03);
+        ">
+          <h3>طلب سحب: ${amount}</h3>
+
+          <p>معرّف الطلب: ${id}</p>
+          <p>معرّف المضيف: ${hostId}</p>
+          <p>الحالة: ${statusName}</p>
+          <p>طريقة الدفع: ${methodName}</p>
+          <p>وكيل الشحن: ${assignedAgent}</p>
+          <p>رقم الدفع: ${paymentReference}</p>
+          <p>تاريخ الطلب: ${createdAt}</p>
+
+          <div style="
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-top:12px;
+          ">
+            ${actions || '<span>لا توجد إجراءات متاحة لهذا الطلب.</span>'}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    container.innerHTML =
+      '<p style="color:#ff7777;">' +
+      escapeHTML(error.message) +
+      '</p>';
+  }
+}
+
+// الموافقة على طلب السحب
+async function approveWithdrawal(id) {
+  const note = prompt('اكتب ملاحظة الموافقة (اختياري):');
+
+  if (note === null) return;
+
+  try {
+    await apiRequest(
+      '/withdrawals/admin/' + encodeURIComponent(id) + '/approve',
+      {
+        method: 'POST',
+        body: JSON.stringify({ note })
+      }
+    );
+
+    alert('تمت الموافقة على طلب السحب.');
+    await loadWithdrawals();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// رفض طلب السحب
+async function rejectWithdrawal(id) {
+  const note = prompt('اكتب سبب رفض طلب السحب:');
+
+  if (note === null) return;
+
+  if (!note.trim()) {
+    alert('لازم تكتب سبب الرفض.');
+    return;
+  }
+
+  try {
+    await apiRequest(
+      '/withdrawals/admin/' + encodeURIComponent(id) + '/reject',
+      {
+        method: 'POST',
+        body: JSON.stringify({ note: note.trim() })
+      }
+    );
+
+    alert('تم رفض طلب السحب.');
+    await loadWithdrawals();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// تعيين وكيل الشحن
+async function assignWithdrawalAgent(id) {
+  const select = document.getElementById('withdrawAgent_' + id);
+
+  if (!select || !select.value) {
+    alert('اختار وكيل الشحن أولاً.');
+    return;
+  }
+
+  try {
+    await apiRequest(
+      '/withdrawals/admin/' + encodeURIComponent(id) + '/assign-agent',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          agentId: select.value
+        })
+      }
+    );
+
+    alert('تم تعيين وكيل الشحن بنجاح.');
+    await loadWithdrawals();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// تأكيد دفع طلب السحب
+async function markWithdrawalPaid(id) {
+  const reference = prompt('اكتب رقم أو مرجع عملية الدفع:');
+
+  if (reference === null) return;
+
+  if (!reference.trim()) {
+    alert('رقم الدفع مطلوب.');
+    return;
+  }
+
+  try {
+    await apiRequest(
+      '/withdrawals/admin/' + encodeURIComponent(id) + '/mark-paid',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          paymentReference: reference.trim()
+        })
+      }
+    );
+
+    alert('تم تسجيل الدفع بنجاح.');
+    await loadWithdrawals();
+
+  } catch (error) {
+    alert(error.message);
+  }
+      }
  // إنشاء غرفة جديدة
   
  // إنشاء غرفة جديدة
