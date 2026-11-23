@@ -942,11 +942,7 @@ class _RoomScreenState extends State<RoomScreen> {
                                           ? Colors.redAccent
                                           : Colors.white,
                                     ),
-                                    onPressed: () {
-                                      setState(() {
-                                        isMicMuted = !isMicMuted;
-                                      });
-                                    },
+                                    onPressed: toggleMic,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
