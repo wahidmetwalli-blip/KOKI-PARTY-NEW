@@ -36,7 +36,7 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
   String _selectedCategory = 'رائج';
   String _searchQuery = '';
 
-  List> _rooms = [];
+  List<Map<String, dynamic>> _rooms = [];
 
   String? get currentUserId => AuthSession.user?['id']?.toString();
 
