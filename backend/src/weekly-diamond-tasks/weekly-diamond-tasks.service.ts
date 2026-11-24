@@ -18,13 +18,11 @@ import {
 
 import { HostDiamondLedger } from '../host-diamonds/host-diamond-ledger.entity';
 
-import {
-  PoliciesService,
-} from '../policies/policies.service';
+import { PoliciesService } from '../policies/policies.service';
+import { PolicyCategory } from '../policies/policy.entity';
 
-import {
-  PolicyCategory,
-} from '../policies/policy.entity';
+import { WalletService } from '../wallet/wallet.service';
+import { WalletTransactionType } from '../wallet/wallet.entity';
 
 interface DiamondTaskLevel {
   level: number;
@@ -45,6 +43,8 @@ export class WeeklyDiamondTasksService {
     private readonly ledgerRepository: Repository<HostDiamondLedger>,
 
     private readonly policiesService: PoliciesService,
+
+    private readonly walletService: WalletService,
   ) {}
 
   private getPreviousWeekRange(now: Date) {
@@ -87,8 +87,13 @@ export class WeeklyDiamondTasksService {
     };
   }
 
-  private getTaskLevels(rules: Record<string, any>): DiamondTaskLevel[] {
-    if (!Array.isArray(rules.levels) || rules.levels.length === 0) {
+  private getTaskLevels(
+    rules: Record<string, any>,
+  ): DiamondTaskLevel[] {
+    if (
+      !Array.isArray(rules.levels) ||
+      rules.levels.length === 0
+    ) {
       throw new BadRequestException(
         'DIAMOND_TASKS policy must contain a non-empty levels array',
       );
@@ -148,7 +153,9 @@ export class WeeklyDiamondTasksService {
       where: { periodStart },
     });
 
-    if (period?.status === WeeklyDiamondPeriodStatus.COMPLETED) {
+    if (
+      period?.status === WeeklyDiamondPeriodStatus.COMPLETED
+    ) {
       return {
         message: 'This weekly period is already completed',
         period,
@@ -179,7 +186,9 @@ export class WeeklyDiamondTasksService {
       }
     }
 
-    if (period.status === WeeklyDiamondPeriodStatus.PROCESSING) {
+    if (
+      period.status === WeeklyDiamondPeriodStatus.PROCESSING
+    ) {
       throw new ConflictException(
         'This weekly period is already being processed',
       );
@@ -283,6 +292,114 @@ export class WeeklyDiamondTasksService {
     }
   }
 
+  async payPeriodRewards(periodId: string) {
+    const period = await this.periodsRepository.findOne({
+      where: { id: periodId },
+    });
+
+    if (!period) {
+      throw new NotFoundException(
+        'Weekly diamond task period not found',
+      );
+    }
+
+    if (
+      period.status === WeeklyDiamondPeriodStatus.COMPLETED
+    ) {
+      return {
+        message: 'This period has already been paid',
+        period,
+      };
+    }
+
+    period.status = WeeklyDiamondPeriodStatus.PROCESSING;
+    period.settlementAttempts += 1;
+
+    await this.periodsRepository.save(period);
+
+    const rewards = await this.rewardsRepository
+      .createQueryBuilder('reward')
+      .where('reward.periodId = :periodId', { periodId })
+      .andWhere('reward.status IN (:...statuses)', {
+        statuses: [
+          WeeklyDiamondRewardStatus.PENDING,
+          WeeklyDiamondRewardStatus.FAILED,
+        ],
+      })
+      .orderBy('reward.createdAt', 'ASC')
+      .getMany();
+
+    let paidCount = 0;
+    let failedCount = 0;
+
+    for (const reward of rewards) {
+      try {
+        const transaction =
+          await this.walletService.adjustBalance(
+            reward.hostUserId,
+            WalletTransactionType.CREDIT,
+            reward.rewardCoins,
+            `Weekly diamond task reward - Level ${reward.taskLevel}`,
+            reward.idempotencyKey,
+            `weekly-task:${reward.id}`,
+          );
+
+        reward.status = WeeklyDiamondRewardStatus.PAID;
+        reward.walletTransactionId = transaction.id;
+        reward.paidAt = new Date();
+        reward.failureReason = null;
+
+        await this.rewardsRepository.save(reward);
+
+        paidCount++;
+      } catch (error) {
+        reward.status = WeeklyDiamondRewardStatus.FAILED;
+        reward.failureReason =
+          error instanceof Error
+            ? error.message.substring(0, 1000)
+            : 'Unknown wallet payment error';
+
+        await this.rewardsRepository.save(reward);
+
+        failedCount++;
+      }
+    }
+
+    const remaining = await this.rewardsRepository
+      .createQueryBuilder('reward')
+      .where('reward.periodId = :periodId', { periodId })
+      .andWhere('reward.status != :paid', {
+        paid: WeeklyDiamondRewardStatus.PAID,
+      })
+      .getCount();
+
+    period.status =
+      remaining === 0
+        ? WeeklyDiamondPeriodStatus.COMPLETED
+        : WeeklyDiamondPeriodStatus.FAILED;
+
+    period.lastError =
+      remaining === 0
+        ? null
+        : `${remaining} rewards still need payment`;
+
+    period.settledAt =
+      remaining === 0 ? new Date() : null;
+
+    await this.periodsRepository.save(period);
+
+    return {
+      message:
+        remaining === 0
+          ? 'All weekly rewards have been paid'
+          : 'Some rewards failed and can be retried',
+      paidCount,
+      failedCount,
+      remaining,
+      period,
+    };
+  }
+
   async getPeriodRewards(periodId: string) {
     const period = await this.periodsRepository.findOne({
       where: { id: periodId },
@@ -318,4 +435,4 @@ export class WeeklyDiamondTasksService {
       take: 100,
     });
   }
-         }
+  }
