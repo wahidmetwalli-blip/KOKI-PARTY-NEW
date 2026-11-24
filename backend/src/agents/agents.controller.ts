@@ -1,4 +1,3 @@
-
 import {
   Body,
   Controller,
@@ -186,6 +185,14 @@ export class AgentsController {
     return this.agentsService.getCommissionStatistics();
   }
 
+  // Admin: list all agent payout requests
+  @Get('payouts')
+  @UseGuards(PermissionsGuard)
+  @RequirePermissions(Permission.RECHARGE_MANAGE)
+  getAllAgentPayouts() {
+    return this.agentsService.getAllAgentPayouts();
+  }
+
   @Get(':id/commissions')
   @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.DASHBOARD_VIEW)
@@ -309,4 +316,4 @@ export class AgentsController {
       req.user.id,
     );
   }
-  }
+    }
