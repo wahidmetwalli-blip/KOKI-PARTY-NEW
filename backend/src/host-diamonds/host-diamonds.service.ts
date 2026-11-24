@@ -1,4 +1,3 @@
-
 import {
   Injectable,
   BadRequestException,
@@ -10,6 +9,10 @@ import { DataSource, QueryFailedError } from 'typeorm';
 
 import { HostDiamondLedger } from './host-diamond-ledger.entity';
 import { UsersService } from '../users/users.service';
+import { User } from '../users/user.entity';
+
+import { Room } from '../rooms/room.entity';
+import { RoomSeat } from '../rooms/room-seat.entity';
 
 import {
   Wallet,
@@ -55,6 +58,8 @@ export class HostDiamondsService {
     hostUserId: string,
     giftCoinAmount: string,
     reference: string,
+    roomId: string,
+    seatNumber: number,
     description?: string,
   ) {
     if (
@@ -64,6 +69,25 @@ export class HostDiamondsService {
     ) {
       throw new BadRequestException(
         'Invalid sender or host account',
+      );
+    }
+
+    if (
+      typeof roomId !== 'string' ||
+      !roomId.trim()
+    ) {
+      throw new BadRequestException(
+        'A valid room ID is required',
+      );
+    }
+
+    if (
+      !Number.isInteger(seatNumber) ||
+      seatNumber < 1 ||
+      seatNumber > 20
+    ) {
+      throw new BadRequestException(
+        'A valid occupied seat number is required',
       );
     }
 
@@ -87,18 +111,8 @@ export class HostDiamondsService {
     }
 
     const normalizedReference = reference.trim();
+    const normalizedRoomId = roomId.trim();
     const debitKey = `gift:${normalizedReference}:debit`;
-
-    const sender = await this.usersService.findById(senderUserId);
-    const host = await this.usersService.findById(hostUserId);
-
-    if (!sender || !sender.isActive) {
-      throw new NotFoundException('Active sender not found');
-    }
-
-    if (!host || !host.isActive) {
-      throw new NotFoundException('Active host not found');
-    }
 
     try {
       return await this.dataSource.transaction(async (manager) => {
@@ -107,7 +121,15 @@ export class HostDiamondsService {
           manager.getRepository(WalletTransaction);
         const ledgerRepository =
           manager.getRepository(HostDiamondLedger);
+        const roomRepository = manager.getRepository(Room);
+        const seatRepository = manager.getRepository(RoomSeat);
+        const userRepository = manager.getRepository(User);
 
+        /*
+         * منع إعادة تنفيذ نفس الهدية:
+         * لو المرجع اتعالج قبل كده بنفس البيانات، نرجع النتيجة
+         * القديمة من غير خصم جديد أو تسجيل ألماس جديد.
+         */
         const existingLedger = await ledgerRepository.findOne({
           where: { reference: normalizedReference },
         });
@@ -117,14 +139,13 @@ export class HostDiamondsService {
             where: { idempotencyKey: debitKey },
           });
 
-        // إعادة الطلب القديم بنفس المرجع لا تعيد الخصم،
-        // ولا تعيد حساب الألماس باستخدام سياسة جديدة.
         if (existingLedger && existingTransaction) {
           if (
             existingLedger.hostUserId !== hostUserId ||
             existingTransaction.amount !== giftCoinAmount ||
             existingTransaction.type !== WalletTransactionType.DEBIT ||
-            existingTransaction.reference !== `gift:${normalizedReference}`
+            existingTransaction.reference !==
+              `gift:${normalizedReference}`
           ) {
             throw new ConflictException(
               'Gift reference was already used with different data',
@@ -146,7 +167,90 @@ export class HostDiamondsService {
           );
         }
 
-        // نقرأ سياسة التحويل للعملية الجديدة فقط.
+        /*
+         * التحقق من الغرفة والمقعد داخل نفس معاملة قاعدة البيانات.
+         * بنقفل سجل المقعد أثناء العملية لمنع تغييره بالتزامن
+         * مع تنفيذ إرسال الهدية.
+         */
+        const room = await roomRepository.findOne({
+          where: {
+            id: normalizedRoomId,
+            isActive: true,
+          },
+          lock: {
+            mode: 'pessimistic_write',
+          },
+        });
+
+        if (!room) {
+          throw new NotFoundException(
+            'الغرفة غير موجودة أو غير نشطة',
+          );
+        }
+
+        if (seatNumber > room.maxSeats) {
+          throw new BadRequestException(
+            'رقم المقعد خارج مقاعد الغرفة الحالية',
+          );
+        }
+
+        const selectedSeat = await seatRepository
+          .createQueryBuilder('seat')
+          .setLock('pessimistic_write')
+          .where('seat.roomId = :roomId', {
+            roomId: normalizedRoomId,
+          })
+          .andWhere('seat.seatNumber = :seatNumber', {
+            seatNumber,
+          })
+          .getOne();
+
+        if (!selectedSeat) {
+          throw new NotFoundException(
+            'المقعد المختار غير موجود في الغرفة',
+          );
+        }
+
+        if (
+          !selectedSeat.userId ||
+          selectedSeat.userId !== hostUserId
+        ) {
+          throw new ConflictException(
+            'المضيف المختار لم يعد جالساً على المقعد المحدد. لم يتم خصم أي عملات',
+          );
+        }
+
+        const sender = await userRepository.findOne({
+          where: {
+            id: senderUserId,
+            isActive: true,
+          },
+        });
+
+        if (!sender) {
+          throw new NotFoundException(
+            'Active sender not found',
+          );
+        }
+
+        const host = await userRepository.findOne({
+          where: {
+            id: hostUserId,
+            isActive: true,
+          },
+        });
+
+        if (!host) {
+          throw new NotFoundException(
+            'Active host not found',
+          );
+        }
+
+        /*
+         * قراءة سياسة التحويل للعملية الجديدة فقط.
+         * القيمة الافتراضية ليست مفترضة هنا؛ لازم تكون السياسة
+         * النشطة مضبوطة من لوحة المالك.
+         */
         const conversion = await this.getGiftDiamondConversion();
 
         const coinAmount = BigInt(giftCoinAmount);
@@ -158,6 +262,9 @@ export class HostDiamondsService {
           coinAmount * diamondsPerCoin
         ).toString();
 
+        /*
+         * قفل محفظة المرسل قبل قراءة الرصيد وخصم العملات.
+         */
         const wallet = await walletRepository
           .createQueryBuilder('wallet')
           .setLock('pessimistic_write')
@@ -167,7 +274,9 @@ export class HostDiamondsService {
           .getOne();
 
         if (!wallet) {
-          throw new NotFoundException('Sender wallet not found');
+          throw new NotFoundException(
+            'Sender wallet not found',
+          );
         }
 
         const balanceBefore = BigInt(wallet.coinBalance);
@@ -183,6 +292,9 @@ export class HostDiamondsService {
         wallet.coinBalance = balanceAfter.toString();
         await walletRepository.save(wallet);
 
+        /*
+         * تسجيل خصم العملات في سجل معاملات المحفظة.
+         */
         const walletTransaction =
           transactionRepository.create({
             walletId: wallet.id,
@@ -194,12 +306,16 @@ export class HostDiamondsService {
             idempotencyKey: debitKey,
             description:
               description?.trim() ||
-              `Gift sent to host ${hostUserId}`,
+              `Gift sent to seated host ${hostUserId}`,
           });
 
         const savedTransaction =
           await transactionRepository.save(walletTransaction);
 
+        /*
+         * تسجيل الألماس للمضيف المختار من المقعد نفسه،
+         * وليس لصاحب الغرفة تلقائياً.
+         */
         const diamondRecord = ledgerRepository.create({
           hostUserId,
           amount: diamondAmount,
@@ -208,6 +324,7 @@ export class HostDiamondsService {
           description:
             `Gift ${giftCoinAmount} coins; ` +
             `${conversion.diamondsPerCoin} diamonds per coin; ` +
+            `room ${normalizedRoomId}; seat ${seatNumber}; ` +
             `policy version ${conversion.policyVersion}`,
         });
 
@@ -220,6 +337,11 @@ export class HostDiamondsService {
           diamondRecord: savedDiamondRecord,
           coinsDebited: giftCoinAmount,
           diamondsEarned: diamondAmount,
+          recipient: {
+            hostUserId,
+            roomId: normalizedRoomId,
+            seatNumber,
+          },
           conversion: {
             diamondsPerCoin: conversion.diamondsPerCoin,
             policyVersion: conversion.policyVersion,
@@ -272,7 +394,9 @@ export class HostDiamondsService {
       !source.trim() ||
       source.trim().length > 50
     ) {
-      throw new BadRequestException('Invalid source');
+      throw new BadRequestException(
+        'Invalid source',
+      );
     }
 
     const host = await this.usersService.findById(hostUserId);
@@ -290,7 +414,9 @@ export class HostDiamondsService {
     const normalizedReference = reference.trim();
 
     const existing = await repository.findOne({
-      where: { reference: normalizedReference },
+      where: {
+        reference: normalizedReference,
+      },
     });
 
     if (existing) {
@@ -327,8 +453,12 @@ export class HostDiamondsService {
     return this.dataSource
       .getRepository(HostDiamondLedger)
       .find({
-        where: { hostUserId },
-        order: { createdAt: 'DESC' },
+        where: {
+          hostUserId,
+        },
+        order: {
+          createdAt: 'DESC',
+        },
         take: 100,
       });
   }
@@ -351,4 +481,4 @@ export class HostDiamondsService {
       totalDiamonds: String(result?.total ?? '0'),
     };
   }
-    }
+            }
