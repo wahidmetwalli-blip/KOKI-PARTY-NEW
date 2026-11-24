@@ -610,7 +610,27 @@ td { color:var(--text); }
       <div class="page-heading">
         <h2>أرباح المضيفين</h2>
         <p>متابعة مستحقات ورواتب المضيفين بالدولار الأمريكي USD</p>
-      </div>
+      </div> 
+<section class="page" id="weeklyTasks">
+  <div class="page-heading">
+    <h2>💎 السياسات والمهام الأسبوعية</h2>
+    <p>إدارة ومراجعة مكافآت مهام الألماس للمضيفين</p>
+  </div>
+
+  <div class="panel">
+    <h3>سياسة مهام الألماس</h3>
+    <p id="weeklyPolicyStatus">اضغط على تحديث السياسة للتحقق من حالتها.</p>
+    <button class="menu-btn" onclick="loadWeeklyPolicy()">تحديث السياسة</button>
+  </div>
+
+  <div class="panel">
+    <h3>تجهيز مكافآت الأسبوع السابق</h3>
+    <p>تجهيز المكافآت للمراجعة قبل الصرف.</p>
+    <button class="menu-btn" onclick="prepareWeeklyRewards()">تجهيز المكافآت</button>
+    <p id="weeklyPrepareStatus"></p>
+  </div>
+</section>
+
       <div class="panel">
         <p>قسم حساب أرباح المضيفين.</p>
       </div>
