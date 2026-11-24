@@ -87,6 +87,7 @@ export class HostDiamondsService {
     }
 
     const normalizedReference = reference.trim();
+    const debitKey = `gift:${normalizedReference}:debit`;
 
     const sender = await this.usersService.findById(senderUserId);
     const host = await this.usersService.findById(hostUserId);
@@ -98,19 +99,6 @@ export class HostDiamondsService {
     if (!host || !host.isActive) {
       throw new NotFoundException('Active host not found');
     }
-
-    const conversion = await this.getGiftDiamondConversion();
-
-    const coinAmount = BigInt(giftCoinAmount);
-    const diamondsPerCoin = BigInt(
-      conversion.diamondsPerCoin,
-    );
-
-    const diamondAmount = (
-      coinAmount * diamondsPerCoin
-    ).toString();
-
-    const debitKey = `gift:${normalizedReference}:debit`;
 
     try {
       return await this.dataSource.transaction(async (manager) => {
@@ -129,12 +117,14 @@ export class HostDiamondsService {
             where: { idempotencyKey: debitKey },
           });
 
+        // إعادة الطلب القديم بنفس المرجع لا تعيد الخصم،
+        // ولا تعيد حساب الألماس باستخدام سياسة جديدة.
         if (existingLedger && existingTransaction) {
           if (
             existingLedger.hostUserId !== hostUserId ||
-            existingLedger.amount !== diamondAmount ||
             existingTransaction.amount !== giftCoinAmount ||
-            existingTransaction.type !== WalletTransactionType.DEBIT
+            existingTransaction.type !== WalletTransactionType.DEBIT ||
+            existingTransaction.reference !== `gift:${normalizedReference}`
           ) {
             throw new ConflictException(
               'Gift reference was already used with different data',
@@ -155,6 +145,18 @@ export class HostDiamondsService {
             'Incomplete previous gift transaction',
           );
         }
+
+        // نقرأ سياسة التحويل للعملية الجديدة فقط.
+        const conversion = await this.getGiftDiamondConversion();
+
+        const coinAmount = BigInt(giftCoinAmount);
+        const diamondsPerCoin = BigInt(
+          conversion.diamondsPerCoin,
+        );
+
+        const diamondAmount = (
+          coinAmount * diamondsPerCoin
+        ).toString();
 
         const wallet = await walletRepository
           .createQueryBuilder('wallet')
@@ -349,5 +351,4 @@ export class HostDiamondsService {
       totalDiamonds: String(result?.total ?? '0'),
     };
   }
-      }
-                                               
+    }
