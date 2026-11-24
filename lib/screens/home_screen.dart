@@ -328,7 +328,27 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-  }
+  }          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AgentPayoutScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.account_balance_wallet),
+              label: const Text('أرباح وكيل الشحن وطلبات السحب'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFD54F),
+                foregroundColor: const Color(0xFF120826),
+              ),
+            ),
+          ),
 
   Widget _buildHomeBody() {
     return RefreshIndicator(
