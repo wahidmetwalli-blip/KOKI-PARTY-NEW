@@ -723,7 +723,10 @@ td { color:var(--text); }
     <p id="weeklyPolicyStatus">اضغط على تحديث السياسة للتحقق من حالتها.</p>
     <button class="menu-btn" onclick="loadWeeklyPolicy()">تحديث السياسة</button>
   </div>
-
+<button class="menu-btn" onclick="createAndActivateDiamondPolicy()">
+  إنشاء وتفعيل سياسة مهام الألماس
+</button>
+  
   <div class="panel">
     <h3>تجهيز مكافآت الأسبوع السابق</h3>
     <p>تجهيز المكافآت للمراجعة قبل الصرف.</p>
@@ -1916,6 +1919,59 @@ async function prepareWeeklyRewards() {
     );
   }
 }
+  async function createAndActivateDiamondPolicy() {
+  if (!confirm('تأكيد إنشاء وتفعيل سياسة مهام الألماس بالمستويات الثمانية؟')) {
+    return;
+  }
+
+  const rules = {
+    levels: [
+      { level: 1, requiredDiamonds: '300000', rewardCoins: '9000' },
+      { level: 2, requiredDiamonds: '500000', rewardCoins: '12000' },
+      { level: 3, requiredDiamonds: '800000', rewardCoins: '12000' },
+      { level: 4, requiredDiamonds: '1000000', rewardCoins: '10000' },
+      { level: 5, requiredDiamonds: '3000000', rewardCoins: '45000' },
+      { level: 6, requiredDiamonds: '5000000', rewardCoins: '75000' },
+      { level: 7, requiredDiamonds: '8000000', rewardCoins: '80000' },
+      { level: 8, requiredDiamonds: '15000000', rewardCoins: '150000' }
+    ]
+  };
+
+  showMessage('weeklyPolicyStatus', 'جاري إنشاء السياسة...');
+
+  try {
+    const draft = await apiRequest('/policies', {
+      method: 'POST',
+      body: JSON.stringify({
+        category: 'DIAMOND_TASKS',
+        rules,
+        description: 'سياسة مهام الألماس الأسبوعية - 8 مستويات'
+      })
+    });
+
+    const active = await apiRequest(
+      `/policies/${encodeURIComponent(draft.id)}/approve`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          effectiveFrom: new Date().toISOString()
+        })
+      }
+    );
+
+    showMessage(
+      'weeklyPolicyStatus',
+      `تم تفعيل السياسة بنجاح ✅ الإصدار: ${active.version}`
+    );
+
+  } catch (error) {
+    showMessage(
+      'weeklyPolicyStatus',
+      'تعذّر إنشاء أو تفعيل السياسة: ' + error.message,
+      true
+    );
+  }
+       }
 // تحميل البيانات عند فتح لوحة المالك
 async function initializeDashboard() {
   if (!accessToken) return;
