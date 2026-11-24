@@ -1,9 +1,10 @@
+
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-name = 'CreateHostDiamondLedger1764100000000';
+export class CreateHostDiamondLedger1764100000000
   implements MigrationInterface
 {
-  name = 'CreateHostDiamondLedger1764100000';
+  name = 'CreateHostDiamondLedger1764100000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
