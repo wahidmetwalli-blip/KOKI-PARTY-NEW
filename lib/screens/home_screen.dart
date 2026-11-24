@@ -148,33 +148,37 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
   }
 
   List> get _filteredRooms {
-    return _rooms.where((roomItem) {
-      if (_topFeedTab == 0) {
-        final ownerId = roomItem['ownerUserId']?.toString() ??
-            roomItem['hostUserId']?.toString();
-        if (currentUserId == null || ownerId != currentUserId) {
-          return false;
-        }
+  return _rooms.where((roomItem) {
+    if (_topFeedTab == 0) {
+      final ownerId = roomItem['ownerUserId']?.toString() ??
+          roomItem['hostUserId']?.toString();
+      if (currentUserId == null || ownerId != currentUserId) {
+        return false;
       }
+    }
 
-      if (_selectedRegion != 'ALL') {
-        final country = (roomItem['country'] ??
-                roomItem['region'] ??
-                roomItem['countryCode'] ??
-                '')
-            .toString()
-            .toUpperCase();
-        if (country.isNotEmpty && country != _selectedRegion) {
-          return false;
-        }
+    if (_selectedRegion != 'ALL') {
+      final country = (roomItem['country'] ??
+              roomItem['region'] ??
+              roomItem['countryCode'] ??
+              '')
+          .toString()
+          .toUpperCase();
+      if (country.isNotEmpty && country != _selectedRegion) {
+        return false;
       }
+    }
 
-      if (_selectedCategory == 'VIP') {
-        final isVip = roomItem['isVip'] == true ||
-            (roomItem['vipLevel'] is num && (roomItem['vipLevel'] as num) > 0);
-        if (!isVip) return false;
-      }
+    if (_selectedCategory == 'VIP') {
+      final isVip = roomItem['isVip'] == true ||
+          (roomItem['vipLevel'] is num && (roomItem['vipLevel'] as num) > 0);
+      if (!isVip) return false;
+    }
 
+    return true;
+  }).toList();
+  }
+  
       if (_searchQuery.trim().isNotEmpty) {
         final q = _searchQuery.trim().toLowerCase();
         final title = (roomItem['title'] ?? '').toString().toLowerCase();
