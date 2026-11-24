@@ -5,130 +5,111 @@ import 'package:flutter/material.dart';
 import '../services/auth_session.dart';
 import 'home_screen.dart';
 
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+class LuxuryAuthScreen extends StatefulWidget {
+  const LuxuryAuthScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  State<LuxuryAuthScreen> createState() => _LuxuryAuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
-  static const Color bg = Color(0xFF090711);
-  static const Color panel = Color(0xFF191529);
-  static const Color gold = Color(0xFFFFD36A);
-  static const Color purple = Color(0xFF8957F5);
+class _LuxuryAuthScreenState extends State<LuxuryAuthScreen> {
+  static const String apiUrl = 'https://koki-party-new.onrender.com';
 
-  static const String apiUrl =
-      'https://koki-party-new.onrender.com/api/auth/login';
+  // لوحة ألوان KOKI PARTY الفاخرة
+  static const Color luxuryVoid = Color(0xFF070312);
+  static const Color luxuryObsidian = Color(0xFF130829);
+  static const Color luxuryPanel = Color(0xFF1E0D40);
+  static const Color luxurySurface = Color(0xFF2B135C);
+  static const Color champagneGold = Color(0xFFFFF0B3);
+  static const Color pureGold = Color(0xFFFFC93C);
+  static const Color antiqueGold = Color(0xFFB87914);
 
-  final TextEditingController emailController =
-      TextEditingController();
-  final TextEditingController passwordController =
-      TextEditingController();
+  final TextEditingController _identifierController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  bool hidePassword = true;
-  bool isLoading = false;
+  bool _isRegisterMode = false;
+  bool _submitting = false;
+  bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
+    _identifierController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> login() async {
-    final identifier = emailController.text.trim();
-    final password = passwordController.text;
+  Future<void> _submitAuth() async {
+    final identifier = _identifierController.text.trim();
+    final password = _passwordController.text;
 
     if (identifier.isEmpty || password.isEmpty) {
-      showMessage('اكتب البريد أو رقم الهاتف وكلمة المرور.');
+      setState(() {
+        _errorMessage = 'يرجى إدخال بيانات الحساب وكلمة المرور.';
+      });
       return;
     }
 
-    setState(() => isLoading = true);
+    setState(() {
+      _submitting = true;
+      _errorMessage = null;
+    });
 
-    HttpClient? client;
-
+    final client = HttpClient();
     try {
-      client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 20);
+      final endpoint = _isRegisterMode ? '/api/auth/register' : '/api/auth/login';
+      final uri = Uri.parse('$apiUrl$endpoint');
+      final request = await client.openUrl('POST', uri);
+      request.headers.set('Accept', 'application/json');
+      request.headers.set('Content-Type', 'application/json');
 
-      final request = await client.postUrl(Uri.parse(apiUrl));
-
-      request.headers.contentType = ContentType.json;
-      request.write(jsonEncode({
+      final body = <String, dynamic>{
         'identifier': identifier,
+        'emailOrPhone': identifier,
         'password': password,
-      }));
+      };
+      request.write(jsonEncode(body));
 
-      final response = await request.close().timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await request.close();
+      final responseText = await response.transform(utf8.decoder).join();
 
-      final responseText = await response
-          .transform(utf8.decoder)
-          .join();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception('تعذر إتمام العملية (${response.statusCode}): $responseText');
+      }
 
-      final dynamic decoded = jsonDecode(responseText);
+      if (responseText.isNotEmpty) {
+        final decoded = jsonDecode(responseText);
+        if (decoded is Map) {
+          final token = decoded['accessToken'] ??
+              decoded['token'] ??
+              (decoded['data'] is Map ? decoded['data']['accessToken'] : null);
+          if (token != null && token.toString().isNotEmpty) {
+            AuthSession.accessToken = token.toString();
+          }
 
-      if (response.statusCode == 200 &&
-          decoded is Map<String, dynamic> &&
-          decoded['access_token'] != null) {
-        AuthSession.accessToken =
-            decoded['access_token'].toString();
-
-        AuthSession.user =
-            decoded['user'] is Map<String, dynamic>
-                ? decoded['user']
-                : null;
-
-        if (!mounted) return;
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const HomeScreen(),
-          ),
-        );
-      } else {
-        String message = 'بيانات الدخول غير صحيحة.';
-
-        if (decoded is Map && decoded['message'] != null) {
-          final serverMessage = decoded['message'];
-
-          if (serverMessage is String) {
-            message = serverMessage;
-          } else if (serverMessage is List) {
-            message = serverMessage.join('\n');
+          final userObj = decoded['user'] ??
+              (decoded['data'] is Map ? decoded['data']['user'] : null);
+          if (userObj is Map) {
+            AuthSession.user = Map<String, dynamic>.from(userObj);
           }
         }
-
-        showMessage(message);
       }
-    } on SocketException {
-      showMessage('تعذر الاتصال بالسيرفر. حاول مرة تانية.');
-    } on FormatException {
-      showMessage('السيرفر أرسل استجابة غير مفهومة.');
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const LuxuryHomeScreen(),
+        ),
+      );
     } catch (e) {
-      showMessage('حصل خطأ أثناء تسجيل الدخول.');
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _errorMessage = e.toString();
+      });
     } finally {
-      client?.close(force: true);
-
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      client.close();
     }
-  }
-
-  void showMessage(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFF38204F),
-      ),
-    );
   }
 
   @override
@@ -136,202 +117,173 @@ class _AuthScreenState extends State<AuthScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: bg,
+        backgroundColor: luxuryVoid,
         body: Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0, -0.45),
-              radius: 1.1,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
               colors: [
-                purple.withValues(alpha: 0.22),
-                bg,
-                const Color(0xFF05040A),
+                Color(0xFF06020F),
+                Color(0xFF1A0B3B),
+                Color(0xFF0C051F),
               ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
           child: SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: panel,
-                        border: Border.all(
-                          color: gold.withValues(alpha: 0.55),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: gold.withValues(alpha: 0.2),
-                            blurRadius: 24,
-                            spreadRadius: 2,
+                padding: const EdgeInsets.all(20),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [luxurySurface, luxuryPanel],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: pureGold.withOpacity(0.6), width: 1.3),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        width: 68,
+                        height: 68,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [champagneGold, pureGold, antiqueGold],
                           ),
-                        ],
+                        ),
+                        child: const Icon(
+                          Icons.workspace_premium_rounded,
+                          color: luxuryVoid,
+                          size: 36,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.workspace_premium,
-                        color: gold,
-                        size: 64,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'KOKI PARTY',
-                      style: TextStyle(
-                        color: gold,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'THE ROYAL WORLD',
-                      style: TextStyle(
-                        color: Colors.white60,
-                        fontSize: 12,
-                        letterSpacing: 3,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    const Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        'تسجيل الدخول',
+                      const Text(
+                        'KOKI PARTY',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: gold,
+                          color: champagneGold,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'البريد الإلكتروني أو رقم الهاتف',
-                        hintStyle: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 14,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.person_outline,
-                          color: gold,
-                        ),
-                        filled: true,
-                        fillColor: panel,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(
-                            color: purple.withValues(alpha: 0.25),
+                      const SizedBox(height: 4),
+                      Text(
+                        _isRegisterMode
+                            ? 'إنشاء حساب جديد في العالم الملكي'
+                            : 'تسجيل الدخول إلى صالونات KOKI PARTY',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _identifierController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'البريد الإلكتروني أو اسم المستخدم',
+                          labelStyle: const TextStyle(color: champagneGold),
+                          filled: true,
+                          fillColor: luxuryObsidian,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: pureGold.withOpacity(0.4)),
                           ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: const BorderSide(color: gold),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: champagneGold, width: 1.5),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: passwordController,
-                      obscureText: hidePassword,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'كلمة المرور',
-                        hintStyle: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 14,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.lock_outline,
-                          color: gold,
-                        ),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              hidePassword = !hidePassword;
-                            });
-                          },
-                          icon: Icon(
-                            hidePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: gold,
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'كلمة المرور',
+                          labelStyle: const TextStyle(color: champagneGold),
+                          filled: true,
+                          fillColor: luxuryObsidian,
+                          suffixIcon: IconButton(
+                            onPressed: () =>
+                                setState(() => _obscurePassword = !_obscurePassword),
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                              color: pureGold,
+                            ),
                           ),
-                        ),
-                        filled: true,
-                        fillColor: panel,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(
-                            color: purple.withValues(alpha: 0.25),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: pureGold.withOpacity(0.4)),
                           ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: const BorderSide(color: gold),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: champagneGold, width: 1.5),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 26),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: isLoading ? null : login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: gold,
-                          foregroundColor: bg,
-                          disabledBackgroundColor:
-                              gold.withValues(alpha: 0.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.redAccent, fontSize: 12),
                         ),
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  color: bg,
-                                  strokeWidth: 2.5,
+                      ],
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: pureGold,
+                            foregroundColor: luxuryVoid,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: _submitting ? null : _submitAuth,
+                          child: _submitting
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: luxuryVoid,
+                                  ),
+                                )
+                              : Text(
+                                  _isRegisterMode ? 'إنشاء الحساب' : 'دخول',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                'دخول إلى KOKI PARTY',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 28),
-                    const Text(
-                      'THE ROYAL WORLD 👑',
-                      style: TextStyle(
-                        color: gold,
-                        fontSize: 12,
-                        letterSpacing: 2,
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _isRegisterMode = !_isRegisterMode;
+                          _errorMessage = null;
+                        }),
+                        child: Text(
+                          _isRegisterMode
+                              ? 'لديك حساب بالفعل؟ سجل الدخول'
+                              : 'ليس لديك حساب؟ أنشئ حسابًا جديدًا',
+                          style: const TextStyle(color: champagneGold),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
