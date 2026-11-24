@@ -616,7 +616,34 @@ td { color:var(--text); }
         <p>قسم إدارة الهدايا.</p>
       </div>
     </section>
+<section class="page" id="agentPayouts">
+  <div class="page-heading">
+    <h2>سحب أرباح الوكلاء</h2>
+    <p>مراجعة وسداد مستحقات وكلاء الشحن بالدولار الأمريكي USD</p>
+  </div>
 
+  <div class="panel">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:15px;">
+      <select id="agentPayoutStatusFilter"
+        onchange="loadAgentPayouts()"
+        style="flex:1;min-width:150px;padding:12px;border-radius:8px;">
+        <option value="">كل الطلبات</option>
+        <option value="PENDING">قيد المراجعة</option>
+        <option value="APPROVED">تمت الموافقة</option>
+        <option value="REJECTED">مرفوضة</option>
+        <option value="PAID">تم الدفع</option>
+      </select>
+
+      <button type="button" onclick="loadAgentPayouts()">
+        تحديث الطلبات
+      </button>
+    </div>
+
+    <div id="agentPayoutsList">
+      <p>اضغط على تحديث الطلبات لعرض طلبات السحب.</p>
+    </div>
+  </div>
+</section>
     <section class="page" id="reports">
       <div class="page-heading">
         <h2>البلاغات</h2>
