@@ -53,7 +53,7 @@ class _RoomScreenState extends State<RoomScreen>
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
 
-    final List> _messages = [
+    final List> _messages = [];
     {
       'user': 'النظام الفاخر',
       'text': 'أهلًا بك في صالون KOKI PARTY الفاخر ✨ استمتع بأجواء راقية.',
@@ -1573,7 +1573,6 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 }
-
 class _LuxuryAuraPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
