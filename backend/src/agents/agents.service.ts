@@ -264,6 +264,14 @@ export class AgentsService {
     });
   }
 
+  // جلب كل طلبات سحب الوكلاء للمالك
+  async getAllAgentPayouts() {
+    return this.payoutsRepository.find({
+      order: { createdAt: 'DESC' },
+      take: 500,
+    });
+  }
+
   async getAgentFinancialSummary(agentId: string) {
     await this.findById(agentId);
 
