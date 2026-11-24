@@ -712,25 +712,6 @@ td { color:var(--text); }
       </div>
     </section>
 
-  </div>
-</main>
-
-<script>
-const API_BASE = 'https://koki-party-new.onrender.com/api';
-let accessToken = sessionStorage.getItem('koki_access_token') || '';
-let currentRoomId = null;
-
-function showMessage(elementId, message, isError = false) {
-  const element = document.getElementById(elementId);
-  if (!element) return;
-
-  element.textContent = message;
-  element.style.color = isError ? '#ff7777' : '#e7c66e';
-}
-
-async function apiRequest(path, options = {}) {
-  const headers = {
-    
 <section class="page" id="weeklyTasks">
   <div class="page-heading">
     <h2>💎 السياسات والمهام الأسبوعية</h2>
@@ -751,7 +732,25 @@ async function apiRequest(path, options = {}) {
   </div>
 </section>
 
-    'Content-Type': 'application/json',
+  </div>
+</main>
+
+<script>
+const API_BASE = 'https://koki-party-new.onrender.com/api';
+let accessToken = sessionStorage.getItem('koki_access_token') || '';
+let currentRoomId = null;
+
+function showMessage(elementId, message, isError = false) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+
+  element.textContent = message;
+  element.style.color = isError ? '#ff7777' : '#e7c66e';
+}
+
+async function apiRequest(path, options = {}) {
+  const headers = {
+  'Content-Type': 'application/json',
     ...(options.headers || {})
   };
 
