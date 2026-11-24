@@ -53,7 +53,7 @@ class _RoomScreenState extends State<RoomScreen>
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
 
-    final List> _messages = [];
+    final List<Map<String, dynamic>> _messages = [];
     {
       'user': 'النظام الفاخر',
       'text': 'أهلًا بك في صالون KOKI PARTY الفاخر ✨ استمتع بأجواء راقية.',
