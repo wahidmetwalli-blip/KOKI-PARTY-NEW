@@ -753,6 +753,7 @@ function showSection(sectionId, button) {
     recharge: 'عمليات الشحن',
     earnings: 'أرباح المضيفين',
     withdrawals: 'طلبات السحب',
+    agentPayouts: 'سحب أرباح الوكلاء',
     gifts: 'الهدايا',
     reports: 'البلاغات',
     audit: 'سجل العمليات',
@@ -765,11 +766,12 @@ function showSection(sectionId, button) {
   if (sectionId === 'rooms') loadRooms();
   if (sectionId === 'users' || sectionId === 'hosts') loadUsers();
   if (sectionId === 'agents') loadAgents();
+  if (sectionId === 'agentPayouts') loadAgentPayouts();
 
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('show');
-}
-
+  }
+  
 function toggleMenu() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');
