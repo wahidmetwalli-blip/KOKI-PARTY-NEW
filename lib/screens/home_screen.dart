@@ -187,23 +187,7 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
     }).toList();
       }
   
-      if (_searchQuery.trim().isNotEmpty) {
-        final q = _searchQuery.trim().toLowerCase();
-        final title = (roomItem['title'] ?? '').toString().toLowerCase();
-        final roomIdStr = (roomItem['id'] ?? '').toString().toLowerCase();
-        final shortCode = formatShortId(roomItem['id']?.toString()).toLowerCase();
-        final hostLabel = _formatHostLabel(roomItem).toLowerCase();
-
-        final matches = title.contains(q) ||
-            roomIdStr.contains(q) ||
-            shortCode.contains(q) ||
-            hostLabel.contains(q);
-        if (!matches) return false;
-      }
-
-      return true;
-    }).toList();
-  }
+      
 
   void _openRoom(Map<String, dynamic> roomItem) {
     final roomId = roomItem['id']?.toString() ?? '';
