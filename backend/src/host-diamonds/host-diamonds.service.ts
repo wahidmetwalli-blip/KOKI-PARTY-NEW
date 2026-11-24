@@ -125,6 +125,16 @@ export class HostDiamondsService {
         const seatRepository = manager.getRepository(RoomSeat);
         const userRepository = manager.getRepository(User);
       const giftRepository = manager.getRepository(Gift);
+     const gift = await giftRepository.findOne({
+  where: {
+    id: giftCoinAmount,
+    isActive: true,
+  },
+});
+
+if (!gift) {
+  throw new NotFoundException('Gift not found or inactive');
+} 
         /*
          * منع إعادة تنفيذ نفس الهدية:
          * لو المرجع اتعالج قبل كده بنفس البيانات، نرجع النتيجة
