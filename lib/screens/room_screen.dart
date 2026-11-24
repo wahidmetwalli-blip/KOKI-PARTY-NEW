@@ -30,6 +30,7 @@ class _RoomScreenState extends State<RoomScreen> {
   bool loading = true;
   bool busy = false;
   bool isMicMuted = true;
+  bool giftsLoading = false;
 
   Map<String, dynamic>? room;
   List<dynamic> seats = [];
@@ -47,14 +48,8 @@ class _RoomScreenState extends State<RoomScreen> {
     },
   ];
 
-  final List<Map<String, dynamic>> _gifts = [
-    {'name': 'قلب ملكي', 'icon': '💖', 'price': 10},
-    {'name': 'تاج الذهب', 'icon': '👑', 'price': 100},
-    {'name': 'سيارة فاخرة', 'icon': '🏎️', 'price': 500},
-    {'name': 'حصان مجنح', 'icon': '🦄', 'price': 1000},
-    {'name': 'قلعة الأحلام', 'icon': '🏰', 'price': 2500},
-    {'name': 'صاروخ VIP', 'icon': '🚀', 'price': 5000},
-  ];
+  // الهدايا بتيجي من السيرفر، مش من أسعار ثابتة داخل التطبيق.
+  List<Map<String, dynamic>> _gifts = [];
 
   String? get currentUserId =>
       AuthSession.user?['id']?.toString();
@@ -68,6 +63,7 @@ class _RoomScreenState extends State<RoomScreen> {
 
   Map<String, String> get headers {
     final token = AuthSession.accessToken;
+
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
@@ -96,6 +92,7 @@ class _RoomScreenState extends State<RoomScreen> {
       }
 
       final response = await request.close();
+
       final responseText =
           await response.transform(utf8.decoder).join();
 
@@ -118,12 +115,56 @@ class _RoomScreenState extends State<RoomScreen> {
   void initState() {
     super.initState();
     loadRoomData();
+    loadGifts();
   }
 
   @override
   void dispose() {
     _chatController.dispose();
     super.dispose();
+  }
+
+  Future<void> loadGifts() async {
+    if (giftsLoading) return;
+
+    if (mounted) {
+      setState(() {
+        giftsLoading = true;
+      });
+    }
+
+    try {
+      final response = await apiRequest(
+        'GET',
+        '/api/gifts',
+      );
+
+      final data = response['data'];
+
+      if (data is! List) {
+        throw Exception('قائمة الهدايا غير صحيحة');
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _gifts = data
+            .map<Map<String, dynamic>>(
+              (gift) => Map<String, dynamic>.from(gift),
+            )
+            .toList();
+      });
+    } catch (e) {
+      if (mounted) {
+        showMessage('تعذر تحميل الهدايا: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          giftsLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> loadRoomData() async {
@@ -136,7 +177,10 @@ class _RoomScreenState extends State<RoomScreen> {
 
     try {
       final results = await Future.wait([
-        apiRequest('GET', '/api/rooms/${widget.roomId}'),
+        apiRequest(
+          'GET',
+          '/api/rooms/${widget.roomId}',
+        ),
         apiRequest(
           'GET',
           '/api/rooms/${widget.roomId}/seats',
@@ -145,10 +189,12 @@ class _RoomScreenState extends State<RoomScreen> {
 
       if (!mounted) return;
 
-            final loadedSeats = List<dynamic>.from(results[1]);
+      final loadedSeats =
+          List<dynamic>.from(results[1]);
 
       final mySeat = loadedSeats.where(
-        (seat) => seat['userId']?.toString() == currentUserId,
+        (seat) =>
+            seat['userId']?.toString() == currentUserId,
       ).toList();
 
       setState(() {
@@ -167,15 +213,8 @@ class _RoomScreenState extends State<RoomScreen> {
       });
     }
   }
-
-  Future<void> takeSeat(int seatNumber) async {
+    Future<void> takeSeat(int seatNumber) async {
     if (busy) return;
-
-    if (AuthSession.accessToken == null) {
-      showMessage('سجّل الدخول الأول علشان تحجز مقعد');
-      return;
-    }
-
     setState(() => busy = true);
 
     try {
@@ -183,19 +222,17 @@ class _RoomScreenState extends State<RoomScreen> {
         'POST',
         '/api/rooms/${widget.roomId}/seats/$seatNumber/take',
       );
-
       await loadRoomData();
-      showMessage('تم حجز المقعد رقم $seatNumber');
+      showMessage('تم حجز المقعد بنجاح 🎤');
     } catch (e) {
-      showMessage(e.toString());
+      showMessage('تعذر حجز المقعد: $e');
     } finally {
       if (mounted) setState(() => busy = false);
     }
   }
 
-    Future<void> leaveSeat() async {
+  Future<void> leaveSeat() async {
     if (busy) return;
-
     setState(() => busy = true);
 
     try {
@@ -203,34 +240,29 @@ class _RoomScreenState extends State<RoomScreen> {
         'DELETE',
         '/api/rooms/${widget.roomId}/seats/leave',
       );
-
       await loadRoomData();
-      showMessage('تم ترك المقعد');
+      showMessage('تم مغادرة المقعد');
     } catch (e) {
-      showMessage(e.toString());
+      showMessage('تعذر مغادرة المقعد: $e');
     } finally {
       if (mounted) setState(() => busy = false);
     }
   }
 
   Future<void> toggleMic() async {
-    if (busy) return;
-
-    final mySeat = seats.where(
-      (seat) => seat['userId']?.toString() == currentUserId,
+    final mySeats = seats.where(
+      (seat) =>
+          seat['userId']?.toString() == currentUserId,
     ).toList();
 
-    if (mySeat.isEmpty) {
-      showMessage('لازم تحجز مقعد الأول علشان تستخدم المايك');
+    if (mySeats.isEmpty) {
+      showMessage('احجز مقعد الأول علشان تفتح المايك');
       return;
     }
 
     final seatNumber =
-        (mySeat.first['seatNumber'] as num).toInt();
-
+        (mySeats.first['seatNumber'] as num).toInt();
     final newMuteState = !isMicMuted;
-
-    setState(() => busy = true);
 
     try {
       await apiRequest(
@@ -240,25 +272,15 @@ class _RoomScreenState extends State<RoomScreen> {
       );
 
       if (!mounted) return;
-
-      setState(() {
-        isMicMuted = newMuteState;
-      });
-
+      setState(() => isMicMuted = newMuteState);
       await loadRoomData();
-
-      showMessage(
-        newMuteState ? 'تم كتم المايك' : 'تم فتح المايك',
-      );
     } catch (e) {
-      showMessage(e.toString());
-    } finally {
-      if (mounted) setState(() => busy = false);
+      showMessage('تعذر تغيير حالة المايك: $e');
     }
   }
-  Future<void> changeSeatCount(int count) async {
-    if (busy) return;
 
+  Future<void> changeSeatCount(int count) async {
+    if (!isRoomOwner || busy) return;
     setState(() => busy = true);
 
     try {
@@ -267,11 +289,10 @@ class _RoomScreenState extends State<RoomScreen> {
         '/api/rooms/${widget.roomId}',
         body: {'maxSeats': count},
       );
-
       await loadRoomData();
       showMessage('تم تحديث عدد المقاعد');
     } catch (e) {
-      showMessage(e.toString());
+      showMessage('تعذر تحديث المقاعد: $e');
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -279,78 +300,53 @@ class _RoomScreenState extends State<RoomScreen> {
 
   void showMessage(String message) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: purple,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
+
   void openSeatSettings() {
     if (!isRoomOwner) return;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: purple,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
-      ),
-      builder: (ctx) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
+      builder: (sheetContext) {
+        return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'إعدادات مقاعد الغرفة 👑',
+                  'إعدادات مقاعد الغرفة',
                   style: TextStyle(
                     color: gold,
-                    fontSize: 18,
+                    fontSize: 19,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 18),
-                const Text(
-                  'اختار عدد المقاعد الجديد',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  alignment: WrapAlignment.center,
-                  children: [10, 12, 15, 20].map((count) {
-                    final selected = count == maxSeats;
-
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            selected ? gold : const Color(0xFF302052),
-                        foregroundColor:
-                            selected ? purple : Colors.white,
-                      ),
-                      onPressed: busy
-                          ? null
-                          : () {
-                              Navigator.pop(ctx);
-                              changeSeatCount(count);
-                            },
-                      child: Text('$count مقعد'),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'مش هتقدر تقلل العدد لو فيه أعضاء قاعدين في المقاعد اللي هتتشال.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 11,
+                ...[8, 10, 12, 15, 20].map(
+                  (count) => ListTile(
+                    title: Text(
+                      '$count مقعد',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    trailing: count == maxSeats
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: gold,
+                          )
+                        : null,
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      changeSeatCount(count);
+                    },
                   ),
                 ),
               ],
@@ -360,64 +356,62 @@ class _RoomScreenState extends State<RoomScreen> {
       },
     );
   }
-
-  
-  Future<void> _sendGiftToSeat(
+    Future<void> _sendGiftToSeat(
     Map<String, dynamic> gift,
-    Map<String, dynamic> selectedSeat,
+    int seatNumber,
+    String hostUserId,
   ) async {
     if (busy) return;
 
     final senderId = currentUserId;
-    final hostUserId = selectedSeat['userId']?.toString();
-    final seatNumber =
-        (selectedSeat['seatNumber'] as num?)?.toInt();
 
     if (senderId == null || senderId.isEmpty) {
-      showMessage('سجّل الدخول الأول لإرسال هدية');
+      showMessage('سجل الدخول الأول');
       return;
     }
 
-    if (hostUserId == null ||
-        hostUserId.isEmpty ||
-        seatNumber == null ||
-        hostUserId == senderId) {
-      showMessage('اختار مقعد شخص تاني مشغول');
+    final giftId = gift['id']?.toString();
+    final giftName = gift['name']?.toString() ?? 'هدية';
+    final rawEmoji = gift['emoji']?.toString();
+    final giftEmoji =
+        rawEmoji == null || rawEmoji.isEmpty ? '🎁' : rawEmoji;
+    final giftPrice = gift['coinPrice']?.toString() ?? '0';
+
+    if (giftId == null || giftId.isEmpty) {
+      showMessage('الهدية غير صالحة');
+      return;
+    }
+
+    if (hostUserId.isEmpty || hostUserId == senderId) {
+      showMessage('اختار مضيف تاني لإرسال الهدية');
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: AlertDialog(
-            backgroundColor: purple,
-            title: const Text(
-              'تأكيد إرسال الهدية',
-              style: TextStyle(color: gold),
-            ),
-            content: Text(
-              'الهدية: ${gift['name']} ${gift['icon']}\n'
-              'المستلم: $hostUserId\n'
-              'المقعد: $seatNumber\n'
-              'التكلفة: ${gift['price']} عملة\n\n'
-              'هيتم خصم العملات من محفظتك عند نجاح العملية.',
-              style: const TextStyle(color: Colors.white),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () =>
-                    Navigator.pop(dialogContext, false),
-                child: const Text('إلغاء'),
-              ),
-              ElevatedButton(
-                onPressed: () =>
-                    Navigator.pop(dialogContext, true),
-                child: const Text('تأكيد الإرسال'),
-              ),
-            ],
+        return AlertDialog(
+          backgroundColor: purple,
+          title: const Text(
+            'تأكيد إرسال الهدية',
+            style: TextStyle(color: gold),
           ),
+          content: Text(
+            'إرسال $giftEmoji $giftName مقابل $giftPrice عملة؟',
+            style: const TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, false),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, true),
+              child: const Text('إرسال'),
+            ),
+          ],
         );
       },
     );
@@ -427,308 +421,298 @@ class _RoomScreenState extends State<RoomScreen> {
     setState(() => busy = true);
 
     try {
-      final latestResponse = await apiRequest(
+      final latestSeatsResponse = await apiRequest(
         'GET',
         '/api/rooms/${widget.roomId}/seats',
       );
 
-      final latestSeats = List<dynamic>.from(latestResponse);
-      final currentSeat = latestSeats.firstWhere(
+      final latestSeats =
+          List<dynamic>.from(latestSeatsResponse);
+
+      final recipientStillSeated = latestSeats.any(
         (seat) =>
-            (seat['seatNumber'] as num?)?.toInt() ==
-            seatNumber,
-        orElse: () => null,
+            seat['seatNumber']?.toString() ==
+                seatNumber.toString() &&
+            seat['userId']?.toString() == hostUserId,
       );
 
-      if (currentSeat == null ||
-          currentSeat['userId']?.toString() != hostUserId) {
-        throw Exception(
-          'المقعد اتغير أو الشخص خرج من الغرفة. لم يتم إرسال الهدية.',
-        );
+      if (!recipientStillSeated) {
+        throw Exception('المضيف غادر المقعد، اختار مقعد تاني');
       }
-
-      final reference =
-          'gift_${senderId}_${DateTime.now().microsecondsSinceEpoch}';
 
       await apiRequest(
         'POST',
         '/api/host-diamonds/send-gift',
         body: {
+          'giftId': giftId,
           'hostUserId': hostUserId,
-          'giftCoinAmount': gift['price'].toString(),
-          'reference': reference,
+          'reference':
+              'room-${widget.roomId}-seat-$seatNumber-${DateTime.now().millisecondsSinceEpoch}',
           'roomId': widget.roomId,
           'seatNumber': seatNumber,
-          'description':
-              'Gift ${gift['name']} in room ${widget.roomId}, seat $seatNumber',
+          'description': 'هدية $giftName داخل الغرفة',
         },
       );
 
       if (!mounted) return;
 
       setState(() {
-        activeGiftBanner =
-            '${gift['icon']} تم إرسال ${gift['name']} بنجاح!';
+        activeGiftBanner = '$giftEmoji $giftName';
       });
 
-      showMessage('تم إرسال الهدية وخصم قيمتها بنجاح');
+      showMessage('تم إرسال الهدية بنجاح 🎁');
       await loadRoomData();
     } catch (e) {
-      showMessage(
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      showMessage('تعذر إرسال الهدية: $e');
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
   void openGiftBox() {
+    if (giftsLoading) {
+      showMessage('جاري تحميل الهدايا...');
+      return;
+    }
+
+    if (_gifts.isEmpty) {
+      showMessage('مفيش هدايا متاحة حالياً');
+      loadGifts();
+      return;
+    }
+
+    final occupiedSeats = seats.where((seat) {
+      final userId = seat['userId']?.toString();
+      return userId != null &&
+          userId.isNotEmpty &&
+          userId != currentUserId;
+    }).toList();
+
+    if (occupiedSeats.isEmpty) {
+      showMessage('لازم يكون فيه مضيف على مقعد لإرسال هدية');
+      return;
+    }
+
     int selectedGiftIndex = 0;
     int? selectedSeatNumber;
 
-    final occupiedRecipients = seats.where((seat) {
-      final id = seat['userId']?.toString();
-      return id != null &&
-          id.isNotEmpty &&
-          id != currentUserId;
-    }).toList();
+    final firstSeat = occupiedSeats.first;
+    selectedSeatNumber =
+        (firstSeat['seatNumber'] as num?)?.toInt();
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: purple,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(26),
-        ),
-      ),
-      builder: (ctx) {
+      backgroundColor: purple,
+      builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            final selectedSeat = occupiedRecipients.firstWhere(
-              (seat) =>
-                  (seat['seatNumber'] as num?)?.toInt() ==
-                  selectedSeatNumber,
-              orElse: () => null,
-            );
-
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: SafeArea(
+          builder: (context, setSheetState) {
+            if (_gifts.isEmpty) {
+              return SafeArea(
                 child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 18,
-                    right: 18,
-                    top: 18,
-                    bottom:
-                        MediaQuery.of(ctx).viewInsets.bottom + 18,
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'مفيش هدايا متاحة',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await loadGifts();
+                          if (mounted) {
+                            setSheetState(() {});
+                          }
+                        },
+                        child: const Text('إعادة التحميل'),
+                      ),
+                    ],
                   ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'صندوق الهدايا الملكية 🎁',
-                          style: TextStyle(
-                            color: gold,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
+                ),
+              );
+            }
+
+            if (selectedGiftIndex >= _gifts.length) {
+              selectedGiftIndex = 0;
+            }
+
+            final selectedGift = _gifts[selectedGiftIndex];
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 20,
+                  bottom:
+                      MediaQuery.of(context).viewInsets.bottom + 20,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        '🎁 متجر الهدايا الملكي',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: gold,
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 14),
-                        const Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            '1) اختار الهدية',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'اختار المضيف',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      ...occupiedSeats.map((seat) {
+                        final number =
+                            (seat['seatNumber'] as num?)?.toInt();
+                        final userId =
+                            seat['userId']?.toString() ?? '';
+
+                        return RadioListTile<int>(
+                          value: number ?? -1,
+                          groupValue: selectedSeatNumber,
+                          activeColor: gold,
+                          title: Text(
+                            'المقعد ${number ?? '-'} · ${seat['userName'] ?? userId}',
+                            style: const TextStyle(
+                              color: Colors.white,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics:
-                              const NeverScrollableScrollPhysics(),
-                          itemCount: _gifts.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            childAspectRatio: 1.05,
-                          ),
-                          itemBuilder: (_, i) {
-                            final gift = _gifts[i];
-                            final selected =
-                                selectedGiftIndex == i;
-
-                            return GestureDetector(
-                              onTap: () => setModalState(
-                                () => selectedGiftIndex = i,
-                              ),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF221347),
-                                  borderRadius:
-                                      BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: selected
-                                        ? gold
-                                        : Colors.white12,
-                                    width: selected ? 2 : 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      gift['icon'].toString(),
-                                      style: const TextStyle(
-                                        fontSize: 30,
-                                      ),
-                                    ),
-                                    Text(
-                                      gift['name'].toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    Text(
-                                      '${gift['price']} عملة',
-                                      style: const TextStyle(
-                                        color: gold,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
+                          onChanged: (value) {
+                            setSheetState(() {
+                              selectedSeatNumber = value;
+                            });
                           },
+                        );
+                      }),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'اختار الهدية',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(height: 10),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics:
+                            const NeverScrollableScrollPhysics(),
+                        itemCount: _gifts.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.9,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
                         ),
-                        const SizedBox(height: 16),
-                        const Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            '2) اختار المستلم من المقاعد المشغولة',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        if (occupiedRecipients.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(14),
-                            child: Text(
-                              'مفيش أعضاء تانيين قاعدين على المقاعد دلوقتي.',
-                              style: TextStyle(
-                                color: Colors.white54,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          )
-                        else
-                          ...occupiedRecipients.map((seat) {
-                            final number =
-                                (seat['seatNumber'] as num).toInt();
-                            final userId =
-                                seat['userId'].toString();
-                            final selected =
-                                selectedSeatNumber == number;
+                        itemBuilder: (context, index) {
+                          final gift = _gifts[index];
+                          final emoji =
+                              gift['emoji']?.toString() ?? '🎁';
+                          final name =
+                              gift['name']?.toString() ?? 'هدية';
+                          final price =
+                              gift['coinPrice']?.toString() ?? '0';
+                          final selected =
+                              selectedGiftIndex == index;
 
-                            return Container(
-                              margin:
-                                  const EdgeInsets.only(bottom: 6),
+                          return InkWell(
+                            onTap: () {
+                              setSheetState(() {
+                                selectedGiftIndex = index;
+                              });
+                            },
+                            child: Container(
                               decoration: BoxDecoration(
-                                color: const Color(0xFF221347),
+                                color: selected
+                                    ? Colors.deepPurple
+                                    : Colors.black26,
                                 borderRadius:
                                     BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: selected
-                                      ? gold
-                                      : Colors.white12,
+                                  color: selected ? gold : Colors.white24,
+                                  width: selected ? 2 : 1,
                                 ),
                               ),
-                              child: ListTile(
-                                onTap: () => setModalState(
-                                  () => selectedSeatNumber = number,
-                                ),
-                                leading: const Icon(
-                                  Icons.person,
-                                  color: gold,
-                                ),
-                                title: Text(
-                                  'المقعد $number',
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    emoji,
+                                    style: const TextStyle(fontSize: 30),
                                   ),
-                                ),
-                                subtitle: Text(
-                                  'ID: $userId',
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 10,
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
-                                trailing: Radio<int>(
-                                  value: number,
-                                  groupValue: selectedSeatNumber,
-                                  activeColor: gold,
-                                  onChanged: (value) =>
-                                      setModalState(
-                                    () => selectedSeatNumber = value,
+                                  Text(
+                                    '$price عملة',
+                                    style: const TextStyle(
+                                      color: gold,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
-                            );
-                          }),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed:
-                                busy || selectedSeat == null
-                                    ? null
-                                    : () {
-                                        final gift =
-                                            Map<String, dynamic>.from(
-                                          _gifts[selectedGiftIndex],
-                                        );
-                                        final recipient =
-                                            Map<String, dynamic>.from(
-                                          selectedSeat,
-                                        );
-
-                                        Navigator.pop(ctx);
-                                        _sendGiftToSeat(
-                                          gift,
-                                          recipient,
-                                        );
-                                      },
-                            child: Text(
-                              selectedSeat == null
-                                  ? 'اختار مستلم الأول'
-                                  : 'إرسال الهدية · ${_gifts[selectedGiftIndex]['price']} عملة',
                             ),
-                          ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      ElevatedButton(
+                        onPressed: selectedSeatNumber == null || busy
+                            ? null
+                            : () {
+                                final selectedSeat = occupiedSeats
+                                    .where(
+                                      (seat) =>
+                                          (seat['seatNumber'] as num?)
+                                              ?.toInt() ==
+                                          selectedSeatNumber,
+                                    )
+                                    .toList();
+
+                                if (selectedSeat.isEmpty) {
+                                  showMessage('المقعد غير متاح');
+                                  return;
+                                }
+
+                                final hostUserId = selectedSeat
+                                    .first['userId']
+                                    .toString();
+
+                                Navigator.pop(sheetContext);
+
+                                _sendGiftToSeat(
+                                  Map<String, dynamic>.from(
+                                      selectedGift),
+                                  selectedSeatNumber!,
+                                  hostUserId,
+                                );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: gold,
+                          foregroundColor: Colors.black,
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'مش هيتخصم أي رصيد إلا لو السيرفر أكد نجاح الإرسال.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
+                        child: const Text('إرسال الهدية 🎁'),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -738,181 +722,196 @@ class _RoomScreenState extends State<RoomScreen> {
       },
     );
   }
-  
-
-  void sendMessage() {
+    void sendMessage() {
     final message = _chatController.text.trim();
+
     if (message.isEmpty) return;
+
+    if (!mounted) return;
 
     setState(() {
       _messages.add({
-        'user': 'أنا',
+        'user': AuthSession.user?['name']?.toString() ?? 'مستخدم',
         'text': message,
       });
+
       _chatController.clear();
     });
   }
 
-  Widget buildSeat(Map<String, dynamic> seat) {
-    final number = (seat['seatNumber'] as num?)?.toInt() ?? 0;
-    final userId = seat['userId']?.toString();
-    final occupied = userId != null && userId.isNotEmpty;
-    final isMine = userId == currentUserId;
+  Widget buildSeat(int seatNumber) {
+    final matchingSeats = seats.where(
+      (seat) =>
+          (seat['seatNumber'] as num?)?.toInt() == seatNumber,
+    ).toList();
 
-    return GestureDetector(
+    final seat = matchingSeats.isEmpty ? null : matchingSeats.first;
+
+    final userId = seat?['userId']?.toString();
+    final isOccupied = userId != null && userId.isNotEmpty;
+    final isMySeat = isOccupied && userId == currentUserId;
+    final isMuted = seat?['isMuted'] == true;
+
+    final userName =
+        seat?['userName']?.toString() ?? 'مستخدم';
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
       onTap: () {
-        if (occupied) {
-          if (isMine) {
-            leaveSeat();
-          } else {
-            showMessage('المقعد مشغول بالفعل');
-          }
+        if (busy) return;
+
+        if (!isOccupied) {
+          takeSeat(seatNumber);
+        } else if (isMySeat) {
+          leaveSeat();
         } else {
-          takeSeat(number);
+          showMessage('المقعد محجوز بواسطة $userName');
         }
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: occupied
-                  ? const Color(0xFF53317D)
-                  : Colors.white.withValues(alpha: 0.08),
-              border: Border.all(
-                color: isMine ? gold : gold.withValues(alpha: 0.45),
-                width: isMine ? 2.5 : 1,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isOccupied
+              ? const Color(0xFF35204F)
+              : Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isMySeat ? gold : Colors.white24,
+            width: isMySeat ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 23,
+                  backgroundColor: isOccupied
+                      ? Colors.deepPurple
+                      : Colors.white12,
+                  child: Icon(
+                    isOccupied
+                        ? Icons.person
+                        : Icons.mic_none,
+                    color: isOccupied ? gold : Colors.white54,
+                    size: 25,
+                  ),
+                ),
+                if (isOccupied && isMuted)
+                  const CircleAvatar(
+                    radius: 10,
+                    backgroundColor: Colors.red,
+                    child: Icon(
+                      Icons.mic_off,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            Text(
+              isOccupied ? userName : 'مقعد $seatNumber',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            child: Icon(
-              occupied
-                  ? Icons.person_rounded
-                  : Icons.chair_rounded,
-              color: gold,
-              size: 25,
+            const SizedBox(height: 3),
+            Text(
+              isOccupied
+                  ? (isMySeat ? 'مقعدك' : 'متحدث')
+                  : 'متاح',
+              style: TextStyle(
+                color: isOccupied ? gold : Colors.white54,
+                fontSize: 10,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            occupied
-                ? (isMine ? 'أنت' : 'مشغول')
-                : 'No.$number',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 10,
-            ),
-          ),
-          if (occupied && seat['isMuted'] == true)
-            const Icon(
-              Icons.mic_off,
-              color: Colors.white54,
-              size: 12,
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget buildRoomHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 8,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black38,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: gold.withValues(alpha: 0.4),
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.roomTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: gold,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 17,
-                    backgroundColor: gold,
-                    child: Icon(
-                      Icons.workspace_premium,
-                      color: purple,
-                      size: 19,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          room?['name']?.toString() ??
-                              widget.roomTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          'ID: ${widget.roomId}',
-                          style: const TextStyle(
-                            color: Colors.white60,
-                            fontSize: 9,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Text(
+                'الغرفة رقم ${widget.roomId}',
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 11,
+                ),
               ),
-            ),
+            ],
           ),
-          if (isRoomOwner)
-            IconButton(
-              tooltip: 'إعدادات المقاعد',
-              onPressed: openSeatSettings,
-              icon: const Icon(
-                Icons.settings,
-                color: gold,
-              ),
-            ),
+        ),
+        if (isRoomOwner)
           IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: openSeatSettings,
+            tooltip: 'إعدادات المقاعد',
             icon: const Icon(
-              Icons.power_settings_new_rounded,
-              color: Colors.white70,
+              Icons.settings,
+              color: gold,
             ),
           ),
-        ],
-      ),
+        IconButton(
+          onPressed: loadRoomData,
+          tooltip: 'تحديث الغرفة',
+          icon: const Icon(
+            Icons.refresh,
+            color: Colors.white,
+          ),
+        ),
+      ],
     );
   }
     @override
   Widget build(BuildContext context) {
+    final mySeat = seats.where(
+      (seat) =>
+          seat['userId']?.toString() == currentUserId,
+    ).toList();
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        backgroundColor: purple,
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF281052),
-                Color(0xFF130729),
-                Color(0xFF090414),
+                Color(0xFF24103D),
+                Color(0xFF10091D),
+                Color(0xFF080510),
               ],
             ),
           ),
@@ -932,27 +931,18 @@ class _RoomScreenState extends State<RoomScreen> {
                             children: [
                               const Icon(
                                 Icons.error_outline,
-                                color: gold,
-                                size: 42,
+                                color: Colors.redAccent,
+                                size: 45,
                               ),
                               const SizedBox(height: 12),
-                              const Text(
-                                'مش قادرين نحمل بيانات الغرفة',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
                               Text(
                                 errorMessage!,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 11,
+                                  color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 15),
                               ElevatedButton(
                                 onPressed: loadRoomData,
                                 child: const Text('إعادة المحاولة'),
@@ -963,274 +953,266 @@ class _RoomScreenState extends State<RoomScreen> {
                       )
                     : Column(
                         children: [
-                          buildRoomHeader(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 5,
+                            ),
+                            child: buildRoomHeader(),
+                          ),
 
                           if (activeGiftBanner != null)
                             Container(
+                              width: double.infinity,
                               margin: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 4,
+                                horizontal: 12,
+                                vertical: 6,
                               ),
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFF6F00),
-                                    Color(0xFFD500F9),
-                                  ],
-                                ),
+                                color: Colors.black38,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: gold),
                               ),
                               child: Text(
-                                activeGiftBanner!,
+                                '🎉 تم إرسال $activeGiftBanner',
+                                textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: gold,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
 
-                          const SizedBox(height: 10),
-
-                          Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      gold,
-                                      Color(0xFFFF6F00),
-                                      gold,
+                          Container(
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.06),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: Colors.white12,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const CircleAvatar(
+                                  radius: 25,
+                                  backgroundColor: Colors.deepPurple,
+                                  child: Icon(
+                                    Icons.workspace_premium,
+                                    color: gold,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.hostName,
+                                        style: const TextStyle(
+                                          color: gold,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'مرحباً بكم في الغرفة الملكية 👑',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                child: const CircleAvatar(
-                                  radius: 32,
-                                  backgroundColor: Color(0xFF1D0D3B),
-                                  child: Icon(
-                                    Icons.person,
-                                    color: gold,
-                                    size: 35,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
+                                const Icon(
+                                  Icons.graphic_eq,
                                   color: gold,
-                                  borderRadius: BorderRadius.circular(12),
+                                  size: 27,
                                 ),
-                                child: Text(
-                                  '👑 ${widget.hostName}',
-                                  style: const TextStyle(
-                                    color: purple,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-
-                          const SizedBox(height: 14),
 
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
+                              vertical: 5,
                             ),
                             child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'مقاعد الغرفة ($maxSeats)',
-                                  style: const TextStyle(
+                                const Text(
+                                  '🎙️ مقاعد المتحدثين',
+                                  style: TextStyle(
                                     color: gold,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                const Spacer(),
                                 Text(
-                                  '${seats.where((s) => s['userId'] != null).length} مشغول',
+                                  '${seats.where((s) => s['userId'] != null).length}/$maxSeats',
                                   style: const TextStyle(
-                                    color: Colors.white60,
-                                    fontSize: 11,
+                                    color: Colors.white70,
                                   ),
                                 ),
                               ],
                             ),
                           ),
 
-                          const SizedBox(height: 12),
-
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                            ),
-                            child: GridView.builder(
-                              shrinkWrap: true,
-                              physics:
-                                  const NeverScrollableScrollPhysics(),
-                              itemCount: seats.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4,
-                                mainAxisSpacing: 12,
-                                crossAxisSpacing: 10,
-                                childAspectRatio: 0.85,
-                              ),
-                              itemBuilder: (_, index) {
-                                final seat =
-                                    Map<String, dynamic>.from(
-                                  seats[index],
-                                );
-                                return buildSeat(seat);
-                              },
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
                           Expanded(
-                            child: ListView.builder(
+                            flex: 5,
+                            child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
+                                horizontal: 12,
+                                vertical: 8,
                               ),
-                              itemCount: _messages.length,
-                              itemBuilder: (_, i) {
-                                final msg = _messages[i];
+                              child: GridView.builder(
+                                itemCount: maxSeats,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 4,
+                                  childAspectRatio: 0.82,
+                                  crossAxisSpacing: 9,
+                                  mainAxisSpacing: 9,
+                                ),
+                                itemBuilder: (context, index) {
+                                  return buildSeat(index + 1);
+                                },
+                              ),
+                            ),
+                          ),
 
-                                return Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(
-                                      bottom: 6,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black38,
-                                      borderRadius:
-                                          BorderRadius.circular(14),
-                                    ),
-                                    child: RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: '${msg['user']}: ',
-                                            style: const TextStyle(
-                                              color: gold,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: msg['text'],
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                          Container(
+                            height: 145,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
+                            ),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.black26,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Colors.white12,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '💬 دردشة الغرفة',
+                                  style: TextStyle(
+                                    color: gold,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                );
-                              },
+                                ),
+                                const SizedBox(height: 7),
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: _messages.length,
+                                    itemBuilder: (context, index) {
+                                      final message = _messages[index];
+
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text:
+                                                    '${message['user']}: ',
+                                                style: const TextStyle(
+                                                  color: gold,
+                                                  fontWeight:
+                                                      FontWeight.bold,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: message['text'] ?? '',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
 
                           Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.fromLTRB(
+                              12,
+                              8,
+                              12,
+                              12,
+                            ),
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: Container(
-                                    height: 44,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.circular(22),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextField(
-                                            controller: _chatController,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                            ),
-                                            decoration:
-                                                const InputDecoration(
-                                              hintText: 'اكتب رسالة...',
-                                              hintStyle: TextStyle(
-                                                color: Colors.white54,
-                                              ),
-                                              border: InputBorder.none,
-                                            ),
-                                            onSubmitted: (_) =>
-                                                sendMessage(),
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: sendMessage,
-                                          child: const Icon(
-                                            Icons.send_rounded,
-                                            color: gold,
-                                            size: 20,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                CircleAvatar(
-                                  backgroundColor:
-                                      Colors.white.withValues(alpha: 0.12),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      isMicMuted
-                                          ? Icons.mic_off_rounded
-                                          : Icons.mic_rounded,
-                                      color: isMicMuted
-                                          ? Colors.redAccent
-                                          : Colors.white,
-                                    ),
-                                    onPressed: toggleMic,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: openGiftBox,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Color(0xFFFF6F00),
-                                          Color(0xFFE040FB),
-                                        ],
-                                      ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.card_giftcard_rounded,
+                                  child: TextField(
+                                    controller: _chatController,
+                                    style: const TextStyle(
                                       color: Colors.white,
                                     ),
+                                    decoration: InputDecoration(
+                                      hintText: 'اكتب رسالة...',
+                                      hintStyle: const TextStyle(
+                                        color: Colors.white54,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white10,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 10,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(25),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => sendMessage(),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: sendMessage,
+                                  icon: const Icon(
+                                    Icons.send,
+                                    color: gold,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: toggleMic,
+                                  icon: Icon(
+                                    isMicMuted
+                                        ? Icons.mic_off
+                                        : Icons.mic,
+                                    color: isMicMuted
+                                        ? Colors.redAccent
+                                        : gold,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: openGiftBox,
+                                  icon: const Icon(
+                                    Icons.card_giftcard,
+                                    color: gold,
                                   ),
                                 ),
                               ],
