@@ -147,16 +147,16 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
     }
   }
 
-  List> get _filteredRooms {
-  return _rooms.where((roomItem) {
-    if (_topFeedTab == 0) {
-      final ownerId = roomItem['ownerUserId']?.toString() ??
-          roomItem['hostUserId']?.toString();
-      if (currentUserId == null || ownerId != currentUserId) {
-        return false;
-      }
-    }
+  List<Map<String, dynamic>> get _filteredRooms {
+  if (_searchQuery.isEmpty) {
+    return _rooms;
+  }
 
+  return _rooms.where((room) {
+    final name = (room['name'] ?? '').toString().toLowerCase();
+    return name.contains(_searchQuery.toLowerCase());
+  }).toList();
+  }
     if (_selectedRegion != 'ALL') {
       final country = (roomItem['country'] ??
               roomItem['region'] ??
