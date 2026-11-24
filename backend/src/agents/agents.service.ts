@@ -15,12 +15,14 @@ import {
 } from './agent.entity';
 
 import { AgentCommission } from './agent-commission.entity';
+
 import {
   AgentPayout,
   AgentPayoutStatus,
 } from './agent-payout.entity';
 
 import { AuditService } from '../audit/audit.service';
+import { AuditLog } from '../audit/audit.entity';
 
 @Injectable()
 export class AgentsService {
@@ -123,6 +125,7 @@ export class AgentsService {
 
     const agent = await this.findById(id);
     const previousStatus = agent.status;
+
     agent.status = status;
 
     const saved = await this.agentsRepository.save(agent);
@@ -153,6 +156,7 @@ export class AgentsService {
 
     const agent = await this.findById(id);
     const previousRate = agent.commissionRate;
+
     agent.commissionRate = commissionRate;
 
     const saved = await this.agentsRepository.save(agent);
@@ -173,18 +177,23 @@ export class AgentsService {
 
     return {
       total: agents.length,
+
       active: agents.filter(
         a => a.status === AgentStatus.ACTIVE,
       ).length,
+
       pending: agents.filter(
         a => a.status === AgentStatus.PENDING,
       ).length,
+
       suspended: agents.filter(
         a => a.status === AgentStatus.SUSPENDED,
       ).length,
+
       hosts: agents.filter(
         a => a.type === AgentType.HOST,
       ).length,
+
       rechargeAgents: agents.filter(
         a => a.type === AgentType.RECHARGE,
       ).length,
@@ -199,6 +208,7 @@ export class AgentsService {
 
     for (const commission of commissions) {
       totalBaseAmount += BigInt(commission.baseAmount);
+
       totalCommissionAmount += BigInt(
         commission.commissionAmount,
       );
@@ -227,6 +237,7 @@ export class AgentsService {
 
     for (const commission of commissions) {
       totalBaseAmount += BigInt(commission.baseAmount);
+
       totalCommissionAmount += BigInt(
         commission.commissionAmount,
       );
@@ -281,7 +292,9 @@ export class AgentsService {
       if (payout.status === AgentPayoutStatus.PENDING) {
         pending += amount;
         reserved += amount;
-      } else if (payout.status === AgentPayoutStatus.APPROVED) {
+      } else if (
+        payout.status === AgentPayoutStatus.APPROVED
+      ) {
         approved += amount;
         reserved += amount;
       } else if (payout.status === AgentPayoutStatus.PAID) {
@@ -297,12 +310,14 @@ export class AgentsService {
       pendingPayouts: pending.toString(),
       approvedPayouts: approved.toString(),
       paidPayouts: paid.toString(),
+
       availableBalance: (
         totalCommission - reserved - paid
       ).toString(),
     };
   }
 
+  // طلب الوكيل سحب أرباحه
   async requestAgentPayout(
     agentId: string,
     amount: string,
@@ -318,10 +333,15 @@ export class AgentsService {
 
     return this.dataSource.transaction(async manager => {
       const agentsRepo = manager.getRepository(Agent);
+
       const commissionsRepo =
         manager.getRepository(AgentCommission);
+
       const payoutsRepo =
         manager.getRepository(AgentPayout);
+
+      const auditsRepo =
+        manager.getRepository(AuditLog);
 
       const agent = await agentsRepo.findOne({
         where: { id: agentId },
@@ -382,10 +402,27 @@ export class AgentsService {
         status: AgentPayoutStatus.PENDING,
       });
 
-      return payoutsRepo.save(payout);
+      const saved = await payoutsRepo.save(payout);
+
+      await auditsRepo.save(
+        auditsRepo.create({
+          actorUserId: agent.userId,
+          action: 'AGENT_PAYOUT_REQUESTED',
+          entityType: 'agent_payout',
+          entityId: saved.id,
+          metadata: {
+            agentId,
+            amount,
+            currency: 'USD',
+          },
+        }),
+      );
+
+      return saved;
     });
   }
 
+  // مراجعة طلب السحب بالموافقة أو الرفض
   async reviewAgentPayout(
     payoutId: string,
     status:
@@ -403,41 +440,53 @@ export class AgentsService {
       );
     }
 
-    const payout = await this.payoutsRepository.findOne({
-      where: { id: payoutId },
-    });
+    return this.dataSource.transaction(async manager => {
+      const payoutsRepo =
+        manager.getRepository(AgentPayout);
 
-    if (!payout) {
-      throw new NotFoundException('Payout not found');
-    }
+      const auditsRepo =
+        manager.getRepository(AuditLog);
 
-    if (payout.status !== AgentPayoutStatus.PENDING) {
-      throw new ConflictException(
-        'Payout is not pending',
+      const payout = await payoutsRepo.findOne({
+        where: { id: payoutId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!payout) {
+        throw new NotFoundException('Payout not found');
+      }
+
+      if (payout.status !== AgentPayoutStatus.PENDING) {
+        throw new ConflictException(
+          'Payout is not pending',
+        );
+      }
+
+      payout.status = status;
+      payout.reviewedBy = adminId;
+      payout.reviewNote = note?.trim() || null;
+
+      const saved = await payoutsRepo.save(payout);
+
+      await auditsRepo.save(
+        auditsRepo.create({
+          actorUserId: adminId,
+          action: `AGENT_PAYOUT_${status}`,
+          entityType: 'agent_payout',
+          entityId: payoutId,
+          metadata: {
+            agentId: payout.agentId,
+            amount: payout.amount,
+            note: note?.trim() || null,
+          },
+        }),
       );
-    }
 
-    payout.status = status;
-    payout.reviewedBy = adminId;
-    payout.reviewNote = note?.trim() || null;
-
-    const saved = await this.payoutsRepository.save(payout);
-
-    await this.auditService.record(
-      adminId,
-      `AGENT_PAYOUT_${status}`,
-      'agent_payout',
-      payoutId,
-      {
-        agentId: payout.agentId,
-        amount: payout.amount,
-        note,
-      },
-    );
-
-    return saved;
+      return saved;
+    });
   }
 
+  // تأكيد دفع أرباح الوكيل
   async markAgentPayoutPaid(
     payoutId: string,
     paymentReference: string,
@@ -446,46 +495,57 @@ export class AgentsService {
     if (
       typeof paymentReference !== 'string' ||
       !paymentReference.trim() ||
-      paymentReference.length > 255
+      paymentReference.trim().length > 255
     ) {
       throw new BadRequestException(
         'Valid payment reference is required',
       );
     }
 
-    const payout = await this.payoutsRepository.findOne({
-      where: { id: payoutId },
-    });
+    return this.dataSource.transaction(async manager => {
+      const payoutsRepo =
+        manager.getRepository(AgentPayout);
 
-    if (!payout) {
-      throw new NotFoundException('Payout not found');
-    }
+      const auditsRepo =
+        manager.getRepository(AuditLog);
 
-    if (payout.status !== AgentPayoutStatus.APPROVED) {
-      throw new ConflictException(
-        'Only approved payouts can be marked paid',
+      const payout = await payoutsRepo.findOne({
+        where: { id: payoutId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!payout) {
+        throw new NotFoundException('Payout not found');
+      }
+
+      if (payout.status !== AgentPayoutStatus.APPROVED) {
+        throw new ConflictException(
+          'Only approved payouts can be marked paid',
+        );
+      }
+
+      payout.status = AgentPayoutStatus.PAID;
+      payout.paymentReference = paymentReference.trim();
+      payout.reviewedBy = adminId;
+      payout.paidAt = new Date();
+
+      const saved = await payoutsRepo.save(payout);
+
+      await auditsRepo.save(
+        auditsRepo.create({
+          actorUserId: adminId,
+          action: 'AGENT_PAYOUT_PAID',
+          entityType: 'agent_payout',
+          entityId: payoutId,
+          metadata: {
+            agentId: payout.agentId,
+            amount: payout.amount,
+            paymentReference: payout.paymentReference,
+          },
+        }),
       );
-    }
 
-    payout.status = AgentPayoutStatus.PAID;
-    payout.paymentReference = paymentReference.trim();
-    payout.reviewedBy = adminId;
-    payout.paidAt = new Date();
-
-    const saved = await this.payoutsRepository.save(payout);
-
-    await this.auditService.record(
-      adminId,
-      'AGENT_PAYOUT_PAID',
-      'agent_payout',
-      payoutId,
-      {
-        agentId: payout.agentId,
-        amount: payout.amount,
-        paymentReference: payout.paymentReference,
-      },
-    );
-
-    return saved;
+      return saved;
+    });
   }
-}
+    }
