@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../services/auth_session.dart';
 import 'room_screen.dart';
+import 'profile_screen.dart';
 
 class LuxuryHomeScreen extends StatefulWidget {
   const LuxuryHomeScreen({super.key});
