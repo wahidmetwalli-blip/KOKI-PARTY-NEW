@@ -147,11 +147,22 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
     }
   }
 
-    List<Map<String, dynamic>> get _filteredRooms {
+      List<Map<String, dynamic>> get _filteredRooms {
     return _rooms.where((roomItem) {
-      final name = (roomItem['name'] ?? '').toString().toLowerCase();
+      final q = _searchQuery.trim().toLowerCase();
+      final title = (roomItem['title'] ?? roomItem['name'] ?? '')
+          .toString()
+          .toLowerCase();
+      final roomIdStr = (roomItem['id'] ?? '').toString().toLowerCase();
+      final shortCode =
+          formatShortId(roomItem['id']?.toString()).toLowerCase();
+      final hostLabel = _formatHostLabel(roomItem).toLowerCase();
 
-      if (!name.contains(_searchQuery.toLowerCase())) {
+      if (q.isNotEmpty &&
+          !title.contains(q) &&
+          !roomIdStr.contains(q) &&
+          !shortCode.contains(q) &&
+          !hostLabel.contains(q)) {
         return false;
       }
 
@@ -168,14 +179,13 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
         }
       }
 
-      if (_selectedCategory == 'VIP') {
-        final isVip = roomItem['isVip'] == true;
-        if (!isVip) return false;
+      if (_selectedCategory == 'VIP' && roomItem['isVip'] != true) {
+        return false;
       }
 
       return true;
     }).toList();
-  }
+      }
   
       if (_searchQuery.trim().isNotEmpty) {
         final q = _searchQuery.trim().toLowerCase();
