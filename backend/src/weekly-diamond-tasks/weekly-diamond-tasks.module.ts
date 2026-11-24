@@ -13,6 +13,7 @@ import { WalletModule } from '../wallet/wallet.module';
 import { PoliciesModule } from '../policies/policies.module';
 
 import { WeeklyDiamondTasksService } from './weekly-diamond-tasks.service';
+import { WeeklyDiamondTasksController } from './weekly-diamond-tasks.controller';
 
 @Module({
   imports: [
@@ -25,12 +26,15 @@ import { WeeklyDiamondTasksService } from './weekly-diamond-tasks.service';
     WalletModule,
     PoliciesModule,
   ],
+  controllers: [
+    WeeklyDiamondTasksController,
+  ],
   providers: [
     WeeklyDiamondTasksService,
   ],
-  controllers: [],
   exports: [
     WeeklyDiamondTasksService,
   ],
 })
 export class WeeklyDiamondTasksModule {}
+      
