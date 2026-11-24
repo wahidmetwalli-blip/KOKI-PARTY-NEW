@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { DataSource, QueryFailedError } from 'typeorm';
-
+import { Gift } from '../gifts/gift.entity';
 import { HostDiamondLedger } from './host-diamond-ledger.entity';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/user.entity';
