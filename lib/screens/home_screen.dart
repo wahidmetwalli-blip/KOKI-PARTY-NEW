@@ -49,15 +49,17 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
   }
 
   String formatShortId(String? rawId) {
-    if (rawId == null || rawId.trim().isEmpty) return '1000';
-    final cleaned = rawId.replaceAll('-', '').trim();
-    if (cleaned.length <= 6) return cleaned.toUpperCase();
-    final hash = cleaned.codeUnits.fold<int>(
-      0,
-      (acc, c) => (acc * 31 + c) % 9000,
-    );
-    return '${1000 + hash}';
+  String formatShortId(String? rawId) {
+  if (rawId == null || rawId.trim().isEmpty) return '1000';
+  final cleaned = rawId.replaceAll('-', '').trim();
+  if (cleaned.length <= 6) return cleaned.toUpperCase();
+  final hash = cleaned.codeUnits.fold<int>(
+    0,
+    (acc, c) => (acc * 31 + c) % 9000,
+  );
+  return '${1000 + hash}';
   }
+    
 
   bool _looksLikeUuid(String value) => value.length >= 24 && value.contains('-');
 
