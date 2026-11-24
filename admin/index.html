@@ -805,7 +805,8 @@ agencies: 'الوكالات',
   if (sectionId === 'users' || sectionId === 'hosts') loadUsers();
   if (sectionId === 'agents') loadAgents();
   if (sectionId === 'agentPayouts') loadAgentPayouts();
-
+if (sectionId === 'hostLevels') loadHostLevels();
+  
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('show');
   }
