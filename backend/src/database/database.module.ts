@@ -12,6 +12,7 @@ import { ExpandRoomSeatLimit1763930000000 } from './migrations/1763930000000-Exp
 import { SeedHostLevels1764000000000 } from './migrations/1764000000000-SeedHostLevels';
 import { CreateHostDiamondLedger1764100000000 } from './migrations/1764100000000-CreateHostDiamondLedger';
 import { CreateWeeklyDiamondTasks1764200000000 } from './migrations/1764200000000-CreateWeeklyDiamondTasks';
+import { CreateGifts1764300000000 } from './migrations/1764300000000-CreateGifts';
 
 @Module({
   imports: [
@@ -43,9 +44,9 @@ import { CreateWeeklyDiamondTasks1764200000000 } from './migrations/176420000000
         SeedHostLevels1764000000000,
         CreateHostDiamondLedger1764100000000,
         CreateWeeklyDiamondTasks1764200000000,
+        CreateGifts1764300000000,
       ],
     }),
   ],
 })
 export class DatabaseModule {}
-      
