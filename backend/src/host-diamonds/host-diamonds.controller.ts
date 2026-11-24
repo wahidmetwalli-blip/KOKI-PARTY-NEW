@@ -9,12 +9,17 @@ import {
 } from '@nestjs/common';
 
 import { Request } from 'express';
+
 import {
   IsString,
   IsNotEmpty,
   Matches,
   MaxLength,
   IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsUUID,
 } from 'class-validator';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -29,9 +34,16 @@ interface AuthenticatedRequest extends Request {
 }
 
 class SendGiftDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsUUID()
   hostUserId: string;
+
+  @IsUUID()
+  roomId: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(20)
+  seatNumber: number;
 
   @IsString()
   @Matches(/^[1-9]\d*$/)
@@ -61,7 +73,9 @@ export class HostDiamondsController {
     @Body() dto: SendGiftDto,
   ) {
     if (!req.user?.id) {
-      throw new BadRequestException('Unauthenticated sender');
+      throw new BadRequestException(
+        'Unauthenticated sender',
+      );
     }
 
     return this.hostDiamondsService.sendGift(
@@ -69,6 +83,8 @@ export class HostDiamondsController {
       dto.hostUserId,
       dto.giftCoinAmount,
       dto.reference,
+      dto.roomId,
+      dto.seatNumber,
       dto.description,
     );
   }
