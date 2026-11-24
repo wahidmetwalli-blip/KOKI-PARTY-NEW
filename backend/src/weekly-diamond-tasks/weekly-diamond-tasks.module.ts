@@ -10,6 +10,9 @@ import {
 import { HostDiamondLedger } from '../host-diamonds/host-diamond-ledger.entity';
 import { HostDiamondsModule } from '../host-diamonds/host-diamonds.module';
 import { WalletModule } from '../wallet/wallet.module';
+import { PoliciesModule } from '../policies/policies.module';
+
+import { WeeklyDiamondTasksService } from './weekly-diamond-tasks.service';
 
 @Module({
   imports: [
@@ -20,9 +23,14 @@ import { WalletModule } from '../wallet/wallet.module';
     ]),
     HostDiamondsModule,
     WalletModule,
+    PoliciesModule,
   ],
-  providers: [],
+  providers: [
+    WeeklyDiamondTasksService,
+  ],
   controllers: [],
-  exports: [TypeOrmModule],
+  exports: [
+    WeeklyDiamondTasksService,
+  ],
 })
 export class WeeklyDiamondTasksModule {}
