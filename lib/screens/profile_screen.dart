@@ -129,14 +129,15 @@ class _LuxuryProfileScreenState extends State<LuxuryProfileScreen> {
       } catch (_) {}
 
       try {
-        final walletRes = await apiRequest('GET', '/api/wallet/me');
-        if (walletRes is Map) {
-          final walletObj = walletRes['wallet'] is Map
-              ? Map<String, dynamic>.from(walletRes['wallet'] as Map)
-              : Map<String, dynamic>.from(walletRes);
-          merged = {...merged, ...walletObj};
-        }
-      } catch (_) {}
+  final walletRes = await apiRequest('GET', '/api/wallet');
+  if (walletRes is Map) {
+    final walletObj = walletRes['wallet'] is Map
+        ? Map<String, dynamic>.from(walletRes['wallet'] as Map)
+        : Map<String, dynamic>.from(walletRes);
+    merged = {...merged, ...walletObj};
+  }
+} catch (_) {}
+      
 
       if (!mounted) return;
       setState(() {
