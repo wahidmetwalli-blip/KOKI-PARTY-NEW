@@ -61,7 +61,7 @@ class _RoomScreenState extends State<RoomScreen>
     },
   ];
 
-  List> _gifts = [];
+  final List<Map<String, dynamic>> _gifts = [];
   
   String? get currentUserId => AuthSession.user?['id']?.toString();
   String? get ownerUserId => room?['ownerUserId']?.toString();
