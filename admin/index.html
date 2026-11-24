@@ -1986,14 +1986,23 @@ async function createAndActivateGiftConversionPolicy() {
   );
 
   try {
-    const currentPolicy = await apiRequest(
-      '/policies/active/COMMISSIONS'
-    );
+    let rules = {};
 
-    const rules = JSON.parse(
-      JSON.stringify(currentPolicy.rules || {})
-    );
+    // نحافظ على إعدادات العمولة السابقة لو فيه سياسة نشطة
+    try {
+      const currentPolicy = await apiRequest(
+        '/policies/active/COMMISSIONS'
+      );
+      rules = JSON.parse(
+        JSON.stringify(currentPolicy.rules || {})
+      );
+    } catch (error) {
+      if (!String(error.message).includes('No active policy found')) {
+        throw error;
+      }
+    }
 
+    // قاعدة التحويل: 1 كوين = 1 ألماسة
     rules.giftDiamondConversion = {
       ...(rules.giftDiamondConversion || {}),
       diamondsPerCoin: '1'
@@ -2004,7 +2013,7 @@ async function createAndActivateGiftConversionPolicy() {
       body: JSON.stringify({
         category: 'COMMISSIONS',
         rules,
-        description: 'تحديث معامل تحويل كوينات الهدايا إلى ألماس المضيف'
+        description: 'سياسة تحويل كوينات الهدايا إلى ألماس المضيف بنسبة 1 إلى 1'
       })
     });
 
@@ -2020,7 +2029,7 @@ async function createAndActivateGiftConversionPolicy() {
 
     showMessage(
       'weeklyPolicyStatus',
-      `تم تفعيل معامل التحويل بنجاح. الإصدار: ${active.version}`
+      `تم تفعيل تحويل الكوين إلى ألماسة بنجاح. الإصدار: ${active.version}`
     );
 
   } catch (error) {
@@ -2030,8 +2039,7 @@ async function createAndActivateGiftConversionPolicy() {
       true
     );
   }
-  }
-  
+}
 // تحميل البيانات عند فتح لوحة المالك
 async function initializeDashboard() {
   if (!accessToken) return;
