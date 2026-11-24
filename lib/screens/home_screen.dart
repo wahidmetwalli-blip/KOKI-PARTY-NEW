@@ -147,8 +147,7 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
     }
   }
 
-  List<Map<String, dynamic>> get _filteredRooms {
-  if (_searchQuery.isEmpty) {
+  List> get _filteredRooms {
     return _rooms;
   }
 
