@@ -201,33 +201,17 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-    Widget _buildProfileTab() {
+      Widget _buildProfileTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(18),
       child: Column(
         children: [
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFFD54F),
-                  Color(0xFFE040FB),
-                  Color(0xFFFF6F00),
-                ],
-              ),
-            ),
-            child: const CircleAvatar(
-              radius: 44,
-              backgroundColor: Color(0xFF1D0D3B),
-              child: Icon(
-                Icons.person,
-                color: Color(0xFFFFD54F),
-                size: 46,
-              ),
-            ),
+          const CircleAvatar(
+            radius: 44,
+            backgroundColor: Color(0xFF1D0D3B),
+            child: Icon(Icons.person,
+                color: Color(0xFFFFD54F), size: 46),
           ),
           const SizedBox(height: 12),
           const Text(
@@ -238,67 +222,21 @@ class _HomeScreenState extends State<HomeScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 3,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white10,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Text(
-              'KOKI PARTY MEMBER 👑',
-              style: TextStyle(
-                color: Color(0xFFFFD54F),
-                fontSize: 12,
-              ),
-            ),
-          ),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
+              color: const Color(0xFF311B92),
               borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF6A1B9A),
-                  Color(0xFF311B92),
-                ],
-              ),
-              border: Border.all(
-                color: const Color(0xFFFFD54F)
-                    .withValues(alpha: 0.4),
-              ),
             ),
             child: const Row(
               children: [
-                Icon(
-                  Icons.account_balance_wallet_rounded,
-                  color: Color(0xFFFFD54F),
-                  size: 30,
-                ),
+                Icon(Icons.account_balance_wallet,
+                    color: Color(0xFFFFD54F), size: 30),
                 SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'المحفظة',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      'تفاصيل الرصيد قريباً',
-                      style: TextStyle(
-                        color: Color(0xFFFFD54F),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                Text(
+                  'المحفظة - تفاصيل الرصيد قريباً',
+                  style: TextStyle(color: Colors.white),
                 ),
               ],
             ),
@@ -325,10 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }          const SizedBox(height: 18),
+          const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
             height: 55,
@@ -349,6 +284,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+      }
 
   Widget _buildHomeBody() {
     return RefreshIndicator(
