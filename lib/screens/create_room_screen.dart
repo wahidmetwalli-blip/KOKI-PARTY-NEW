@@ -14,7 +14,6 @@ class LuxuryCreateRoomScreen extends StatefulWidget {
 class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
   static const String apiUrl = 'https://koki-party-new.onrender.com';
 
-  // لوحة ألوان KOKI PARTY الفاخرة
   static const Color luxuryVoid = Color(0xFF070312);
   static const Color luxuryObsidian = Color(0xFF130829);
   static const Color luxuryPanel = Color(0xFF1E0D40);
@@ -22,12 +21,13 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
   static const Color champagneGold = Color(0xFFFFF0B3);
   static const Color pureGold = Color(0xFFFFC93C);
   static const Color antiqueGold = Color(0xFFB87914);
-  static const Color royalAmethyst = Color(0xFF9C5CFF);
 
-  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _announcementController = TextEditingController();
 
-  int _seatsCount = 8;
+  // المقاعد المتوافقة مع تعديل الـ Backend
+  static const List<int> _allowedSeats = [10, 12, 15, 20];
+  int _seatsCount = 10;
   bool _isVip = false;
   String _selectedCountry = 'EG';
   bool _submitting = false;
@@ -44,15 +44,15 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
 
   @override
   void dispose() {
-    _titleController.dispose();
+    _nameController.dispose();
     _announcementController.dispose();
     super.dispose();
   }
 
   Future<void> _submitRoom() async {
-    final title = _titleController.text.trim();
-    if (title.isEmpty) {
-      setState(() => _errorText = 'يرجى إدخال عنوان الغرفة أولًا.');
+    final roomName = _nameController.text.trim();
+    if (roomName.isEmpty) {
+      setState(() => _errorText = 'يرجى إدخال اسم الغرفة أولًا.');
       return;
     }
 
@@ -67,12 +67,11 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
       final request = await client.openUrl('POST', uri);
       headers.forEach((key, value) => request.headers.set(key, value));
 
+      // حقل name هو الأساسي المتوافق مع الـ Backend
       final payload = <String, dynamic>{
-        'title': title,
+        'name': roomName,
         'seatsCount': _seatsCount,
-        'maxSeats': _seatsCount,
         'isVip': _isVip,
-        'vipLevel': _isVip ? 1 : 0,
         'country': _selectedCountry,
         if (_announcementController.text.trim().isNotEmpty)
           'announcement': _announcementController.text.trim(),
@@ -116,20 +115,19 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
       client.close();
     }
   }
-    Widget _buildCountryChip(String label, String code) {
-    final selected = _selectedCountry == code;
+
+  Widget _buildSeatChip(int seats) {
+    final selected = _seatsCount == seats;
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => setState(() => _selectedCountry = code),
+        onTap: () => setState(() => _seatsCount = seats),
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             gradient: selected
-                ? const LinearGradient(
-                    colors: [champagneGold, pureGold, antiqueGold],
-                  )
+                ? const LinearGradient(colors: [champagneGold, pureGold, antiqueGold])
                 : null,
             color: selected ? null : luxuryPanel,
             borderRadius: BorderRadius.circular(14),
@@ -139,7 +137,7 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
           ),
           alignment: Alignment.center,
           child: Text(
-            label,
+            '$seats',
             style: TextStyle(
               color: selected ? luxuryVoid : Colors.white70,
               fontSize: 13,
@@ -151,17 +149,17 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
     );
   }
 
-  Widget _buildSeatChip(int seats) {
-    final selected = _seatsCount == seats;
+  Widget _buildCountryChip(String label, String code) {
+    final selected = _selectedCountry == code;
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => setState(() => _seatsCount = seats),
+        onTap: () => setState(() => _selectedCountry = code),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 4),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: selected ? royalAmethyst.withOpacity(0.35) : luxuryPanel,
+            color: selected ? pureGold.withOpacity(0.22) : luxuryPanel,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: selected ? champagneGold : pureGold.withOpacity(0.4),
@@ -169,10 +167,10 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
           ),
           alignment: Alignment.center,
           child: Text(
-            '$seats مقاعد',
+            label,
             style: TextStyle(
               color: selected ? champagneGold : Colors.white70,
-              fontSize: 12.5,
+              fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -200,11 +198,7 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF06020F),
-                Color(0xFF1A0B3B),
-                Color(0xFF0C051F),
-              ],
+              colors: [Color(0xFF06020F), Color(0xFF1A0B3B), Color(0xFF0C051F)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -215,11 +209,7 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [luxurySurface, luxuryPanel],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: const LinearGradient(colors: [luxurySurface, luxuryPanel]),
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: pureGold.withOpacity(0.55)),
                 ),
@@ -227,7 +217,7 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'عنوان الغرفة',
+                      'اسم الغرفة',
                       style: TextStyle(
                         color: champagneGold,
                         fontSize: 14,
@@ -236,7 +226,7 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
                     ),
                     const SizedBox(height: 8),
                     TextField(
-                      controller: _titleController,
+                      controller: _nameController,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'مثال: سهرات الملوك - KOKI PARTY',
@@ -310,11 +300,7 @@ class _LuxuryCreateRoomScreenState extends State<LuxuryCreateRoomScreen> {
                     ),
                     const SizedBox(height: 8),
                     Row(
-                      children: [
-                        _buildSeatChip(6),
-                        _buildSeatChip(8),
-                        _buildSeatChip(12),
-                      ],
+                      children: _allowedSeats.map(_buildSeatChip).toList(),
                     ),
                     const SizedBox(height: 18),
                     Container(
