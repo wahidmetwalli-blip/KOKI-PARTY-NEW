@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateHostDiamondLedger1764100000000
+name = 'CreateHostDiamondLedger1764100000000';
   implements MigrationInterface
 {
   name = 'CreateHostDiamondLedger1764100000';
