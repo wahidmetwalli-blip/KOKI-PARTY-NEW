@@ -1972,6 +1972,64 @@ async function prepareWeeklyRewards() {
     );
   }
        }
+  
+async function createAndActivateGiftConversionPolicy() {
+  if (!confirm('تأكيد تفعيل تحويل كل 1 كوين إلى 1 ألماسة؟')) {
+    return;
+  }
+
+  showMessage(
+    'weeklyPolicyStatus',
+    'جاري إعداد سياسة تحويل الهدايا...'
+  );
+
+  try {
+    const currentPolicy = await apiRequest(
+      '/policies/active/COMMISSIONS'
+    );
+
+    const rules = JSON.parse(
+      JSON.stringify(currentPolicy.rules || {})
+    );
+
+    rules.giftDiamondConversion = {
+      ...(rules.giftDiamondConversion || {}),
+      diamondsPerCoin: '1'
+    };
+
+    const draft = await apiRequest('/policies', {
+      method: 'POST',
+      body: JSON.stringify({
+        category: 'COMMISSIONS',
+        rules,
+        description: 'تحديث معامل تحويل كوينات الهدايا إلى ألماس المضيف'
+      })
+    });
+
+    const active = await apiRequest(
+      `/policies/${encodeURIComponent(draft.id)}/approve`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          effectiveFrom: new Date().toISOString()
+        })
+      }
+    );
+
+    showMessage(
+      'weeklyPolicyStatus',
+      `تم تفعيل معامل التحويل بنجاح. الإصدار: ${active.version}`
+    );
+
+  } catch (error) {
+    showMessage(
+      'weeklyPolicyStatus',
+      'لم يتم التفعيل: ' + error.message,
+      true
+    );
+  }
+  }
+  
 // تحميل البيانات عند فتح لوحة المالك
 async function initializeDashboard() {
   if (!accessToken) return;
