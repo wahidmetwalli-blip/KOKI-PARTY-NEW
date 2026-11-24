@@ -63,7 +63,8 @@ export class HostLevel {
   })
   systemDisplay: boolean;
 
-  @Column({
+    @Column({
+    name: 'is_active',
     type: 'boolean',
     default: true,
   })
