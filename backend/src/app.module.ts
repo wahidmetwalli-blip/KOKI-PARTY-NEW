@@ -13,6 +13,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { PoliciesModule } from './policies/policies.module';
 import { AuditModule } from './audit/audit.module';
 import { HostDiamondsModule } from './host-diamonds/host-diamonds.module';
+import { WeeklyDiamondTasksModule } from './weekly-diamond-tasks/weekly-diamond-tasks.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { HostDiamondsModule } from './host-diamonds/host-diamonds.module';
     WithdrawalsModule,
     PoliciesModule,
     AuditModule,
+    WeeklyDiamondTasksModule,
   ],
 })
 export class AppModule {}
