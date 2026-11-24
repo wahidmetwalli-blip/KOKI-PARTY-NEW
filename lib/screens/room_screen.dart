@@ -53,7 +53,7 @@ class _RoomScreenState extends State<RoomScreen>
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
 
-  final List> _messages = [
+    final List> _messages = [
     {
       'user': 'النظام الفاخر',
       'text': 'أهلًا بك في صالون KOKI PARTY الفاخر ✨ استمتع بأجواء راقية.',
@@ -62,7 +62,7 @@ class _RoomScreenState extends State<RoomScreen>
   ];
 
   List> _gifts = [];
-
+  
   String? get currentUserId => AuthSession.user?['id']?.toString();
   String? get ownerUserId => room?['ownerUserId']?.toString();
 
@@ -160,7 +160,7 @@ class _RoomScreenState extends State<RoomScreen>
     _chatScrollController.dispose();
     super.dispose();
   }
-    Future<void> loadGifts() async {
+      Future<void> loadGifts() async {
     if (giftsLoading) return;
     if (mounted) setState(() => giftsLoading = true);
 
@@ -173,7 +173,7 @@ class _RoomScreenState extends State<RoomScreen>
       if (!mounted) return;
       setState(() {
         _gifts = data
-            .map>((gift) => Map<String, dynamic>.from(gift))
+            .map((gift) => Map<String, dynamic>.from(gift as Map))
             .toList();
       });
     } catch (e) {
@@ -181,7 +181,8 @@ class _RoomScreenState extends State<RoomScreen>
     } finally {
       if (mounted) setState(() => giftsLoading = false);
     }
-  }
+      }
+  
 
   Future<void> loadRoomData() async {
     if (mounted) {
