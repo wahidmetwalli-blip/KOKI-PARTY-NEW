@@ -1,3 +1,4 @@
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
@@ -11,6 +12,7 @@ import { EarningsModule } from './earnings/earnings.module';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { PoliciesModule } from './policies/policies.module';
 import { AuditModule } from './audit/audit.module';
+import { HostDiamondsModule } from './host-diamonds/host-diamonds.module';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { AuditModule } from './audit/audit.module';
     AgentsModule,
     WalletModule,
     EarningsModule,
+    HostDiamondsModule,
     WithdrawalsModule,
     PoliciesModule,
     AuditModule,
