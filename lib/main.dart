@@ -29,7 +29,7 @@ class KokiPartyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const AuthScreen(),
+      home: const LuxuryAuthScreen(),
     );
   }
 }
