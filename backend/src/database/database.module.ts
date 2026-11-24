@@ -1,3 +1,4 @@
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -8,6 +9,7 @@ import { CreateAuditLogs1763857100000 } from './migrations/1763857100000-CreateA
 import { CreateRooms1763857200000 } from './migrations/1763857200000-CreateRooms';
 import { CreateRoomSeats1763857300000 } from './migrations/1763857300000-CreateRoomSeats';
 import { ExpandRoomSeatLimit1763930000000 } from './migrations/1763930000000-ExpandRoomSeatLimit';
+import { SeedHostLevels1764000000000 } from './migrations/1764000000000-SeedHostLevels';
 
 @Module({
   imports: [
@@ -18,12 +20,16 @@ import { ExpandRoomSeatLimit1763930000000 } from './migrations/1763930000000-Exp
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
+
       ssl: {
         rejectUnauthorized: false,
       },
+
       autoLoadEntities: true,
       synchronize: false,
+
       migrationsRun: process.env.RUN_MIGRATIONS === 'true',
+
       migrations: [
         CreateCorePlatformTables1763855900000,
         AddUsdCurrencyFields1763856000000,
@@ -32,6 +38,7 @@ import { ExpandRoomSeatLimit1763930000000 } from './migrations/1763930000000-Exp
         CreateRooms1763857200000,
         CreateRoomSeats1763857300000,
         ExpandRoomSeatLimit1763930000000,
+        SeedHostLevels1764000000000,
       ],
     }),
   ],
