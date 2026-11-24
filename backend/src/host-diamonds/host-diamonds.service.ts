@@ -124,7 +124,7 @@ export class HostDiamondsService {
         const roomRepository = manager.getRepository(Room);
         const seatRepository = manager.getRepository(RoomSeat);
         const userRepository = manager.getRepository(User);
-
+      const giftRepository = manager.getRepository(Gift);
         /*
          * منع إعادة تنفيذ نفس الهدية:
          * لو المرجع اتعالج قبل كده بنفس البيانات، نرجع النتيجة
