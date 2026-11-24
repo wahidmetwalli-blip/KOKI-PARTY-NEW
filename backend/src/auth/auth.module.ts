@@ -7,6 +7,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { PermissionsGuard } from './permissions.guard';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { AuthProfileController } from './auth-profile.controller';
 import { UsersModule } from '../users/users.module';
 
 @Module({
@@ -28,7 +29,7 @@ import { UsersModule } from '../users/users.module';
     }),
   ],
 
-  controllers: [AuthController],
+  controllers: [AuthController, AuthProfileController],
 
   providers: [
     JwtStrategy,
