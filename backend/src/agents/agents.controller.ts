@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Req,
+  NotFoundException,
 } from '@nestjs/common';
 
 import {
@@ -25,7 +26,11 @@ import {
 } from 'class-validator';
 
 import { AgentsService } from './agents.service';
-import { AgentType, AgentStatus } from './agent.entity';
+import {
+  Agent,
+  AgentType,
+  AgentStatus,
+} from './agent.entity';
 import { AgentPayoutStatus } from './agent-payout.entity';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -79,32 +84,110 @@ class MarkAgentPayoutPaidDto {
   paymentReference: string;
 }
 
+interface AuthenticatedRequest {
+  user: {
+    id: string;
+    role: string;
+    permissions: string[];
+  };
+}
+
 @Controller('agents')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard)
 export class AgentsController {
   constructor(
     private readonly agentsService: AgentsService,
   ) {}
 
+  private async getMyRechargeAgent(
+    req: AuthenticatedRequest,
+  ): Promise<Agent> {
+    const agents = await this.agentsService.findByUser(
+      req.user.id,
+      AgentType.RECHARGE,
+    );
+
+    const agent = agents.find(
+      item => item.status === AgentStatus.ACTIVE,
+    );
+
+    if (!agent) {
+      throw new NotFoundException(
+        'Active recharge agent account not found',
+      );
+    }
+
+    return agent;
+  }
+
+  // Recharge agent: own financial summary
+  @Get('me/financial-summary')
+  getMyFinancialSummary(
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.getMyRechargeAgent(req).then(agent =>
+      this.agentsService.getAgentFinancialSummary(agent.id),
+    );
+  }
+
+  // Recharge agent: own commissions
+  @Get('me/commissions')
+  getMyCommissions(
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.getMyRechargeAgent(req).then(agent =>
+      this.agentsService.getAgentCommissions(agent.id),
+    );
+  }
+
+  // Recharge agent: own payout history
+  @Get('me/payouts')
+  getMyPayouts(
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.getMyRechargeAgent(req).then(agent =>
+      this.agentsService.getAgentPayouts(agent.id),
+    );
+  }
+
+  // Recharge agent: request payout from own balance only
+  @Post('me/payouts')
+  requestMyPayout(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: RequestAgentPayoutDto,
+  ) {
+    return this.getMyRechargeAgent(req).then(agent =>
+      this.agentsService.requestAgentPayout(
+        agent.id,
+        dto.amount,
+      ),
+    );
+  }
+
+  // Admin: list agents
   @Get()
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.DASHBOARD_VIEW)
   findAll() {
     return this.agentsService.findAll();
   }
 
   @Get('statistics')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.DASHBOARD_VIEW)
   getStatistics() {
     return this.agentsService.getStatistics();
   }
 
   @Get('commissions/statistics')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.DASHBOARD_VIEW)
   getCommissionStatistics() {
     return this.agentsService.getCommissionStatistics();
   }
 
   @Get(':id/commissions')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.DASHBOARD_VIEW)
   getAgentCommissions(
     @Param('id', ParseUUIDPipe) id: string,
@@ -113,6 +196,7 @@ export class AgentsController {
   }
 
   @Get(':id/financial-summary')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.DASHBOARD_VIEW)
   getAgentFinancialSummary(
     @Param('id', ParseUUIDPipe) id: string,
@@ -121,6 +205,7 @@ export class AgentsController {
   }
 
   @Get(':id/payouts')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.DASHBOARD_VIEW)
   getAgentPayouts(
     @Param('id', ParseUUIDPipe) id: string,
@@ -128,22 +213,12 @@ export class AgentsController {
     return this.agentsService.getAgentPayouts(id);
   }
 
-  @Post(':id/payouts')
-  @RequirePermissions(Permission.RECHARGE_MANAGE)
-  requestAgentPayout(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: RequestAgentPayoutDto,
-  ) {
-    return this.agentsService.requestAgentPayout(
-      id,
-      dto.amount,
-    );
-  }
-
+  // Admin: review agent payout
   @Patch('payouts/:payoutId/review')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.RECHARGE_MANAGE)
   reviewAgentPayout(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Param('payoutId', ParseUUIDPipe) payoutId: string,
     @Body() dto: ReviewAgentPayoutDto,
   ) {
@@ -157,10 +232,12 @@ export class AgentsController {
     );
   }
 
+  // Admin: record agent payout payment
   @Patch('payouts/:payoutId/paid')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.RECHARGE_MANAGE)
   markAgentPayoutPaid(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Param('payoutId', ParseUUIDPipe) payoutId: string,
     @Body() dto: MarkAgentPayoutPaidDto,
   ) {
@@ -171,10 +248,12 @@ export class AgentsController {
     );
   }
 
+  // Admin: create host agent
   @Post('hosts')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.HOSTS_MANAGE)
   createHost(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() dto: CreateAgentDto,
   ) {
     return this.agentsService.create(
@@ -185,10 +264,12 @@ export class AgentsController {
     );
   }
 
+  // Admin: create recharge agent
   @Post('recharge')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.RECHARGE_MANAGE)
   createRechargeAgent(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() dto: CreateAgentDto,
   ) {
     return this.agentsService.create(
@@ -200,9 +281,10 @@ export class AgentsController {
   }
 
   @Patch(':id/status')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.STAFF_MANAGE)
   updateStatus(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateStatusDto,
   ) {
@@ -214,9 +296,10 @@ export class AgentsController {
   }
 
   @Patch(':id/commission')
+  @UseGuards(PermissionsGuard)
   @RequirePermissions(Permission.STAFF_MANAGE)
   updateCommission(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCommissionDto,
   ) {
@@ -227,4 +310,3 @@ export class AgentsController {
     );
   }
   }
-    
