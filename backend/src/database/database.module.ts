@@ -10,7 +10,7 @@ import { CreateRooms1763857200000 } from './migrations/1763857200000-CreateRooms
 import { CreateRoomSeats1763857300000 } from './migrations/1763857300000-CreateRoomSeats';
 import { ExpandRoomSeatLimit1763930000000 } from './migrations/1763930000000-ExpandRoomSeatLimit';
 import { SeedHostLevels1764000000000 } from './migrations/1764000000000-SeedHostLevels';
-
+import { CreateHostDiamondLedger1764100000000 } from './migrations/1764100000000-CreateHostDiamondLedger';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
