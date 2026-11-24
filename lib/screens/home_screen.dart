@@ -132,7 +132,7 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
       if (!mounted) return;
       setState(() {
         _rooms = rawList
-            .map>(
+            .map<Map<String, dynamic>>(
               (item) => Map<String, dynamic>.from(item as Map),
             )
             .toList();
