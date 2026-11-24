@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   BadRequestException,
@@ -56,7 +57,7 @@ export class HostDiamondsService {
   async sendGift(
     senderUserId: string,
     hostUserId: string,
-    giftCoinAmount: string,
+    giftId: string,
     reference: string,
     roomId: string,
     seatNumber: number,
@@ -69,6 +70,17 @@ export class HostDiamondsService {
     ) {
       throw new BadRequestException(
         'Invalid sender or host account',
+      );
+    }
+
+    if (
+      typeof giftId !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        giftId,
+      )
+    ) {
+      throw new BadRequestException(
+        'A valid gift ID is required',
       );
     }
 
@@ -88,15 +100,6 @@ export class HostDiamondsService {
     ) {
       throw new BadRequestException(
         'A valid occupied seat number is required',
-      );
-    }
-
-    if (
-      typeof giftCoinAmount !== 'string' ||
-      !/^[1-9]\d*$/.test(giftCoinAmount)
-    ) {
-      throw new BadRequestException(
-        'Gift coin amount must be a positive integer',
       );
     }
 
@@ -124,38 +127,68 @@ export class HostDiamondsService {
         const roomRepository = manager.getRepository(Room);
         const seatRepository = manager.getRepository(RoomSeat);
         const userRepository = manager.getRepository(User);
-      const giftRepository = manager.getRepository(Gift);
-     const gift = await giftRepository.findOne({
-  where: {
-    id: giftCoinAmount,
-    isActive: true,
-  },
-});
+        const giftRepository = manager.getRepository(Gift);
 
-if (!gift) {
-  throw new NotFoundException('Gift not found or inactive');
-} 
         /*
-         * منع إعادة تنفيذ نفس الهدية:
-         * لو المرجع اتعالج قبل كده بنفس البيانات، نرجع النتيجة
-         * القديمة من غير خصم جديد أو تسجيل ألماس جديد.
+         * سعر الهدية يأتي من قاعدة البيانات فقط.
+         * لا نستخدم أي سعر مرسل من تطبيق المستخدم.
+         */
+        const gift = await giftRepository.findOne({
+          where: {
+            id: giftId,
+            isActive: true,
+          },
+        });
+
+        if (!gift) {
+          throw new NotFoundException(
+            'Gift not found or inactive',
+          );
+        }
+
+        const coinAmount = BigInt(gift.coinPrice);
+
+        if (coinAmount <= 0n) {
+          throw new BadRequestException(
+            'Gift price is invalid',
+          );
+        }
+
+        /*
+         * منع إعادة تنفيذ نفس الهدية بنفس المرجع.
          */
         const existingLedger = await ledgerRepository.findOne({
-          where: { reference: normalizedReference },
+          where: {
+            reference: normalizedReference,
+          },
         });
 
         const existingTransaction =
           await transactionRepository.findOne({
-            where: { idempotencyKey: debitKey },
+            where: {
+              idempotencyKey: debitKey,
+            },
           });
+
+        const expectedTransactionDescription =
+          `giftId:${gift.id};`;
+
+        const expectedLedgerDescription =
+          `giftId:${gift.id};`;
 
         if (existingLedger && existingTransaction) {
           if (
             existingLedger.hostUserId !== hostUserId ||
-            existingTransaction.amount !== giftCoinAmount ||
+            existingTransaction.amount !== coinAmount.toString() ||
             existingTransaction.type !== WalletTransactionType.DEBIT ||
             existingTransaction.reference !==
-              `gift:${normalizedReference}`
+              `gift:${normalizedReference}` ||
+            !existingTransaction.description?.startsWith(
+              expectedTransactionDescription,
+            ) ||
+            !existingLedger.description?.startsWith(
+              expectedLedgerDescription,
+            )
           ) {
             throw new ConflictException(
               'Gift reference was already used with different data',
@@ -178,9 +211,7 @@ if (!gift) {
         }
 
         /*
-         * التحقق من الغرفة والمقعد داخل نفس معاملة قاعدة البيانات.
-         * بنقفل سجل المقعد أثناء العملية لمنع تغييره بالتزامن
-         * مع تنفيذ إرسال الهدية.
+         * التحقق من الغرفة النشطة وقفلها أثناء العملية.
          */
         const room = await roomRepository.findOne({
           where: {
@@ -204,6 +235,9 @@ if (!gift) {
           );
         }
 
+        /*
+         * التحقق من أن المضيف ما زال جالساً في المقعد.
+         */
         const selectedSeat = await seatRepository
           .createQueryBuilder('seat')
           .setLock('pessimistic_write')
@@ -230,6 +264,9 @@ if (!gift) {
           );
         }
 
+        /*
+         * التحقق من حساب المرسل والمضيف.
+         */
         const sender = await userRepository.findOne({
           where: {
             id: senderUserId,
@@ -257,13 +294,11 @@ if (!gift) {
         }
 
         /*
-         * قراءة سياسة التحويل للعملية الجديدة فقط.
-         * القيمة الافتراضية ليست مفترضة هنا؛ لازم تكون السياسة
-         * النشطة مضبوطة من لوحة المالك.
+         * قراءة سياسة تحويل العملات إلى ألماس.
          */
-        const conversion = await this.getGiftDiamondConversion();
+        const conversion =
+          await this.getGiftDiamondConversion();
 
-        const coinAmount = BigInt(giftCoinAmount);
         const diamondsPerCoin = BigInt(
           conversion.diamondsPerCoin,
         );
@@ -273,7 +308,7 @@ if (!gift) {
         ).toString();
 
         /*
-         * قفل محفظة المرسل قبل قراءة الرصيد وخصم العملات.
+         * قفل محفظة المرسل قبل فحص الرصيد.
          */
         const wallet = await walletRepository
           .createQueryBuilder('wallet')
@@ -300,42 +335,52 @@ if (!gift) {
         const balanceAfter = balanceBefore - coinAmount;
 
         wallet.coinBalance = balanceAfter.toString();
+
         await walletRepository.save(wallet);
 
         /*
-         * تسجيل خصم العملات في سجل معاملات المحفظة.
+         * تسجيل خصم العملات.
          */
+        const transactionDescription =
+          `giftId:${gift.id}; ` +
+          `Gift ${gift.name}; ` +
+          (description?.trim() || 'Gift sent');
+
         const walletTransaction =
           transactionRepository.create({
             walletId: wallet.id,
             type: WalletTransactionType.DEBIT,
-            amount: giftCoinAmount,
+            amount: coinAmount.toString(),
             balanceBefore: balanceBefore.toString(),
             balanceAfter: balanceAfter.toString(),
             reference: `gift:${normalizedReference}`,
             idempotencyKey: debitKey,
-            description:
-              description?.trim() ||
-              `Gift sent to seated host ${hostUserId}`,
+            description: transactionDescription,
           });
 
         const savedTransaction =
-          await transactionRepository.save(walletTransaction);
+          await transactionRepository.save(
+            walletTransaction,
+          );
 
         /*
-         * تسجيل الألماس للمضيف المختار من المقعد نفسه،
-         * وليس لصاحب الغرفة تلقائياً.
+         * تسجيل الألماس للمضيف الموجود على المقعد.
          */
+        const ledgerDescription =
+          `giftId:${gift.id}; ` +
+          `Gift ${gift.name}; ` +
+          `${coinAmount.toString()} coins; ` +
+          `${conversion.diamondsPerCoin} diamonds per coin; ` +
+          `room ${normalizedRoomId}; ` +
+          `seat ${seatNumber}; ` +
+          `policy version ${conversion.policyVersion}`;
+
         const diamondRecord = ledgerRepository.create({
           hostUserId,
           amount: diamondAmount,
           source: 'GIFT',
           reference: normalizedReference,
-          description:
-            `Gift ${giftCoinAmount} coins; ` +
-            `${conversion.diamondsPerCoin} diamonds per coin; ` +
-            `room ${normalizedRoomId}; seat ${seatNumber}; ` +
-            `policy version ${conversion.policyVersion}`,
+          description: ledgerDescription,
         });
 
         const savedDiamondRecord =
@@ -345,7 +390,12 @@ if (!gift) {
           alreadyProcessed: false,
           walletTransaction: savedTransaction,
           diamondRecord: savedDiamondRecord,
-          coinsDebited: giftCoinAmount,
+          gift: {
+            id: gift.id,
+            name: gift.name,
+            coinPrice: coinAmount.toString(),
+          },
+          coinsDebited: coinAmount.toString(),
           diamondsEarned: diamondAmount,
           recipient: {
             hostUserId,
@@ -491,4 +541,5 @@ if (!gift) {
       totalDiamonds: String(result?.total ?? '0'),
     };
   }
-            }
+    }
+    
