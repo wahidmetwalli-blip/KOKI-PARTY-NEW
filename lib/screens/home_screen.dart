@@ -36,7 +36,7 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
   String _selectedCategory = 'رائج';
   String _searchQuery = '';
 
-  List<Map<String, dynamic>> _rooms = [];
+  List<Map<String, dynamic>> get _filteredRooms =>
 
   String? get currentUserId => AuthSession.user?['id']?.toString();
 
@@ -49,7 +49,6 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
     };
   }
 
-  String formatShortId(String? rawId) {
   String formatShortId(String? rawId) {
   if (rawId == null || rawId.trim().isEmpty) return '1000';
   if (rawId == null || rawId.trim().isEmpty) return '1000';
