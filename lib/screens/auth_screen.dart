@@ -65,7 +65,6 @@ class _LuxuryAuthScreenState extends State<LuxuryAuthScreen> {
 
       final body = <String, dynamic>{
         'identifier': identifier,
-        'emailOrPhone': identifier,
         'password': password,
       };
       request.write(jsonEncode(body));
@@ -80,15 +79,19 @@ class _LuxuryAuthScreenState extends State<LuxuryAuthScreen> {
       if (responseText.isNotEmpty) {
         final decoded = jsonDecode(responseText);
         if (decoded is Map) {
-          final token = decoded['accessToken'] ??
+          final data = decoded['data'];
+          final token = decoded['access_token'] ??
+              decoded['accessToken'] ??
               decoded['token'] ??
-              (decoded['data'] is Map ? decoded['data']['accessToken'] : null);
+              (data is Map
+                  ? data['access_token'] ?? data['accessToken'] ?? data['token']
+                  : null);
           if (token != null && token.toString().isNotEmpty) {
             AuthSession.accessToken = token.toString();
           }
 
           final userObj = decoded['user'] ??
-              (decoded['data'] is Map ? decoded['data']['user'] : null);
+              (data is Map ? data['user'] : null);
           if (userObj is Map) {
             AuthSession.user = Map<String, dynamic>.from(userObj);
           }
