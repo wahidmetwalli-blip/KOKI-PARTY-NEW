@@ -361,8 +361,137 @@ class _RoomScreenState extends State<RoomScreen> {
     );
   }
 
+  
+  Future<void> _sendGiftToSeat(
+    Map<String, dynamic> gift,
+    Map<String, dynamic> selectedSeat,
+  ) async {
+    if (busy) return;
+
+    final senderId = currentUserId;
+    final hostUserId = selectedSeat['userId']?.toString();
+    final seatNumber =
+        (selectedSeat['seatNumber'] as num?)?.toInt();
+
+    if (senderId == null || senderId.isEmpty) {
+      showMessage('سجّل الدخول الأول لإرسال هدية');
+      return;
+    }
+
+    if (hostUserId == null ||
+        hostUserId.isEmpty ||
+        seatNumber == null ||
+        hostUserId == senderId) {
+      showMessage('اختار مقعد شخص تاني مشغول');
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            backgroundColor: purple,
+            title: const Text(
+              'تأكيد إرسال الهدية',
+              style: TextStyle(color: gold),
+            ),
+            content: Text(
+              'الهدية: ${gift['name']} ${gift['icon']}\n'
+              'المستلم: $hostUserId\n'
+              'المقعد: $seatNumber\n'
+              'التكلفة: ${gift['price']} عملة\n\n'
+              'هيتم خصم العملات من محفظتك عند نجاح العملية.',
+              style: const TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () =>
+                    Navigator.pop(dialogContext, false),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () =>
+                    Navigator.pop(dialogContext, true),
+                child: const Text('تأكيد الإرسال'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => busy = true);
+
+    try {
+      final latestResponse = await apiRequest(
+        'GET',
+        '/api/rooms/${widget.roomId}/seats',
+      );
+
+      final latestSeats = List<dynamic>.from(latestResponse);
+      final currentSeat = latestSeats.firstWhere(
+        (seat) =>
+            (seat['seatNumber'] as num?)?.toInt() ==
+            seatNumber,
+        orElse: () => null,
+      );
+
+      if (currentSeat == null ||
+          currentSeat['userId']?.toString() != hostUserId) {
+        throw Exception(
+          'المقعد اتغير أو الشخص خرج من الغرفة. لم يتم إرسال الهدية.',
+        );
+      }
+
+      final reference =
+          'gift_${senderId}_${DateTime.now().microsecondsSinceEpoch}';
+
+      await apiRequest(
+        'POST',
+        '/api/host-diamonds/send-gift',
+        body: {
+          'hostUserId': hostUserId,
+          'giftCoinAmount': gift['price'].toString(),
+          'reference': reference,
+          'roomId': widget.roomId,
+          'seatNumber': seatNumber,
+          'description':
+              'Gift ${gift['name']} in room ${widget.roomId}, seat $seatNumber',
+        },
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        activeGiftBanner =
+            '${gift['icon']} تم إرسال ${gift['name']} بنجاح!';
+      });
+
+      showMessage('تم إرسال الهدية وخصم قيمتها بنجاح');
+      await loadRoomData();
+    } catch (e) {
+      showMessage(
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   void openGiftBox() {
     int selectedGiftIndex = 0;
+    int? selectedSeatNumber;
+
+    final occupiedRecipients = seats.where((seat) {
+      final id = seat['userId']?.toString();
+      return id != null &&
+          id.isNotEmpty &&
+          id != currentUserId;
+    }).toList();
 
     showModalBottomSheet(
       context: context,
@@ -376,102 +505,231 @@ class _RoomScreenState extends State<RoomScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
+            final selectedSeat = occupiedRecipients.firstWhere(
+              (seat) =>
+                  (seat['seatNumber'] as num?)?.toInt() ==
+                  selectedSeatNumber,
+              orElse: () => null,
+            );
+
             return Directionality(
               textDirection: TextDirection.rtl,
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'صندوق الهدايا الملكية 🎁',
-                      style: TextStyle(
-                        color: gold,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics:
-                          const NeverScrollableScrollPhysics(),
-                      itemCount: _gifts.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 1.05,
-                      ),
-                      itemBuilder: (_, i) {
-                        final gift = _gifts[i];
-                        final selected =
-                            selectedGiftIndex == i;
-
-                        return GestureDetector(
-                          onTap: () => setModalState(
-                            () => selectedGiftIndex = i,
+              child: SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 18,
+                    right: 18,
+                    top: 18,
+                    bottom:
+                        MediaQuery.of(ctx).viewInsets.bottom + 18,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'صندوق الهدايا الملكية 🎁',
+                          style: TextStyle(
+                            color: gold,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF221347),
-                              borderRadius:
-                                  BorderRadius.circular(16),
-                              border: Border.all(
-                                color: selected
-                                    ? gold
-                                    : Colors.white12,
-                                width: selected ? 2 : 1,
-                              ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '1) اختار الهدية',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold,
                             ),
-                            child: Column(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  gift['icon'],
-                                  style: const TextStyle(
-                                    fontSize: 30,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics:
+                              const NeverScrollableScrollPhysics(),
+                          itemCount: _gifts.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 1.05,
+                          ),
+                          itemBuilder: (_, i) {
+                            final gift = _gifts[i];
+                            final selected =
+                                selectedGiftIndex == i;
+
+                            return GestureDetector(
+                              onTap: () => setModalState(
+                                () => selectedGiftIndex = i,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF221347),
+                                  borderRadius:
+                                      BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: selected
+                                        ? gold
+                                        : Colors.white12,
+                                    width: selected ? 2 : 1,
                                   ),
                                 ),
-                                Text(
-                                  gift['name'],
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      gift['icon'].toString(),
+                                      style: const TextStyle(
+                                        fontSize: 30,
+                                      ),
+                                    ),
+                                    Text(
+                                      gift['name'].toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${gift['price']} عملة',
+                                      style: const TextStyle(
+                                        color: gold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '2) اختار المستلم من المقاعد المشغولة',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        if (occupiedRecipients.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: Text(
+                              'مفيش أعضاء تانيين قاعدين على المقاعد دلوقتي.',
+                              style: TextStyle(
+                                color: Colors.white54,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        else
+                          ...occupiedRecipients.map((seat) {
+                            final number =
+                                (seat['seatNumber'] as num).toInt();
+                            final userId =
+                                seat['userId'].toString();
+                            final selected =
+                                selectedSeatNumber == number;
+
+                            return Container(
+                              margin:
+                                  const EdgeInsets.only(bottom: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF221347),
+                                borderRadius:
+                                    BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: selected
+                                      ? gold
+                                      : Colors.white12,
+                                ),
+                              ),
+                              child: ListTile(
+                                onTap: () => setModalState(
+                                  () => selectedSeatNumber = number,
+                                ),
+                                leading: const Icon(
+                                  Icons.person,
+                                  color: gold,
+                                ),
+                                title: Text(
+                                  'المقعد $number',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 12,
                                   ),
                                 ),
-                                Text(
-                                  '${gift['price']} عملة',
+                                subtitle: Text(
+                                  'ID: $userId',
                                   style: const TextStyle(
-                                    color: gold,
-                                    fontSize: 11,
+                                    color: Colors.white54,
+                                    fontSize: 10,
                                   ),
                                 ),
-                              ],
+                                trailing: Radio<int>(
+                                  value: number,
+                                  groupValue: selectedSeatNumber,
+                                  activeColor: gold,
+                                  onChanged: (value) =>
+                                      setModalState(
+                                    () => selectedSeatNumber = value,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed:
+                                busy || selectedSeat == null
+                                    ? null
+                                    : () {
+                                        final gift =
+                                            Map<String, dynamic>.from(
+                                          _gifts[selectedGiftIndex],
+                                        );
+                                        final recipient =
+                                            Map<String, dynamic>.from(
+                                          selectedSeat,
+                                        );
+
+                                        Navigator.pop(ctx);
+                                        _sendGiftToSeat(
+                                          gift,
+                                          recipient,
+                                        );
+                                      },
+                            child: Text(
+                              selectedSeat == null
+                                  ? 'اختار مستلم الأول'
+                                  : 'إرسال الهدية · ${_gifts[selectedGiftIndex]['price']} عملة',
                             ),
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'مش هيتخصم أي رصيد إلا لو السيرفر أكد نجاح الإرسال.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'واجهة الهدايا دي تجريبية ولسه مش بتخصم عملات حقيقية.',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('إغلاق'),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             );
@@ -480,6 +738,7 @@ class _RoomScreenState extends State<RoomScreen> {
       },
     );
   }
+  
 
   void sendMessage() {
     final message = _chatController.text.trim();
