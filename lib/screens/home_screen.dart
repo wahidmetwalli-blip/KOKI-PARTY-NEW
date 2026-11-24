@@ -52,6 +52,7 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
   String formatShortId(String? rawId) {
   String formatShortId(String? rawId) {
   if (rawId == null || rawId.trim().isEmpty) return '1000';
+  if (rawId == null || rawId.trim().isEmpty) return '1000';
   final cleaned = rawId.replaceAll('-', '').trim();
   if (cleaned.length <= 6) return cleaned.toUpperCase();
   final hash = cleaned.codeUnits.fold<int>(
