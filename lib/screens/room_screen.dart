@@ -1074,30 +1074,31 @@ class _RoomScreenState extends State<RoomScreen>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
-              ],
+                ],
             ),
-          )
-                      )
-            Widget _buildTabsAndFeed() {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 4, 12, 6),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              luxuryObsidian.withOpacity(0.85),
-              luxuryVoid.withOpacity(0.92),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
           ),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: pureGold.withOpacity(0.32)),
         ),
-        child: Column(
-          children: [
+      );
+    }
+
+    Widget _buildTabsAndFeed() {
+      return Expanded(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                luxuryObsidian.withOpacity(0.85),
+                luxuryVoid.withOpacity(0.92),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: pureGold.withOpacity(0.32)),
+          ),
+          child: Column(
+            children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
               child: Row(
