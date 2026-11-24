@@ -481,6 +481,41 @@ td { color:var(--text); }
       </div>
     </section>
 
+<section class="page" id="hostLevels">
+  <div class="page-heading">
+    <h2>🏆 مستويات المضيفين</h2>
+    <p>إدارة مستويات الألماس والرواتب بالدولار</p>
+  </div>
+
+  <div class="panel">
+    <button class="btn" type="button" onclick="loadHostLevels()">
+      تحديث المستويات
+    </button>
+    <p id="hostLevelsMessage" class="message"></p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المستوى</th>
+            <th>الألماس المطلوب</th>
+            <th>نسبة الحساب %</th>
+            <th>الراتب USD</th>
+            <th>ظاهر بالنظام</th>
+            <th>نشط</th>
+            <th>حفظ</th>
+          </tr>
+        </thead>
+        <tbody id="hostLevelsTable">
+          <tr>
+            <td colspan="7">اضغط تحديث المستويات</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+    
     <section class="page" id="agencies">
       <div class="page-heading">
         <h2>الوكالات</h2>
