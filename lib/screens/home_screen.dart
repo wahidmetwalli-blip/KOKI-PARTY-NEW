@@ -147,9 +147,7 @@ class _LuxuryHomeScreenState extends State<LuxuryHomeScreen> {
     }
   }
 
-  List> get _filteredRooms {
-    return _rooms;
-  }
+  List<Map<String, dynamic>> get _filteredRooms {
 
   return _rooms.where((room) {
     final name = (room['name'] ?? '').toString().toLowerCase();
