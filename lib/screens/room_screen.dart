@@ -53,7 +53,7 @@ class _RoomScreenState extends State<RoomScreen>
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
 
-    final List<Map<String, dynamic>> _messages = [];
+    final List<Map<String, dynamic>> _messages = [
     {
       'user': 'النظام الفاخر',
       'text': 'أهلًا بك في صالون KOKI PARTY الفاخر ✨ استمتع بأجواء راقية.',
@@ -61,7 +61,7 @@ class _RoomScreenState extends State<RoomScreen>
     },
   ];
 
-  final List<Map<String, dynamic>> _gifts = [];
+   List<Map<String, dynamic>> _gifts = [];
   
   String? get currentUserId => AuthSession.user?['id']?.toString();
   String? get ownerUserId => room?['ownerUserId']?.toString();
@@ -1079,6 +1079,7 @@ class _RoomScreenState extends State<RoomScreen>
               ],
             ),
           )
+                      )
             Widget _buildTabsAndFeed() {
     return Expanded(
       child: Container(
