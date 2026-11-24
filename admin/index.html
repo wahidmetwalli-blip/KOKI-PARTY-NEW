@@ -1494,7 +1494,196 @@ if (createAgentForm) {
     }
   });
 }
+// تحميل طلبات سحب أرباح الوكلاء
+async function loadAgentPayouts() {
+  const container = document.getElementById('agentPayoutsList');
+  const filter = document.getElementById('agentPayoutStatusFilter');
 
+  if (!container) return;
+
+  container.innerHTML = '<p>جاري تحميل طلبات الوكلاء...</p>';
+
+  try {
+    const result = await apiRequest('/agents/payouts');
+    const payouts = Array.isArray(result)
+      ? result
+      : (result.data || []);
+
+    let agents = [];
+
+    try {
+      const agentResult = await apiRequest('/agents');
+      agents = Array.isArray(agentResult)
+        ? agentResult
+        : (agentResult.data || []);
+    } catch (error) {
+      console.warn('تعذر تحميل بيانات الوكلاء:', error.message);
+    }
+
+    const agentMap = new Map(
+      agents.map(agent => [agent.id, agent])
+    );
+
+    const selectedStatus = filter ? filter.value : '';
+
+    const filtered = payouts.filter(payout =>
+      !selectedStatus || payout.status === selectedStatus
+    );
+
+    if (!filtered.length) {
+      container.innerHTML = '<p>لا توجد طلبات سحب بهذه الحالة.</p>';
+      return;
+    }
+
+    const statusNames = {
+      PENDING: 'قيد المراجعة',
+      APPROVED: 'تمت الموافقة',
+      REJECTED: 'مرفوض',
+      PAID: 'تم الدفع',
+      CANCELLED: 'ملغي'
+    };
+
+    container.innerHTML = filtered.map(payout => {
+      const id = String(payout.id || '');
+      const safeId = escapeHTML(id);
+      const agent = agentMap.get(payout.agentId);
+
+      const agentUser = agent
+        ? escapeHTML(agent.userId || agent.id)
+        : escapeHTML(payout.agentId);
+
+      const amount = (
+        Number(payout.amount || 0) / 100
+      ).toFixed(2);
+
+      const status = escapeHTML(
+        statusNames[payout.status] || payout.status
+      );
+
+      const reference = escapeHTML(
+        payout.paymentReference || 'لا يوجد'
+      );
+
+      const createdAt = payout.createdAt
+        ? escapeHTML(new Date(payout.createdAt).toLocaleString('ar-EG'))
+        : 'غير معروف';
+
+      let actions = '';
+
+      const validId =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+      if (validId && payout.status === 'PENDING') {
+        actions = `
+          <button type="button"
+            onclick="reviewAgentPayout('${safeId}','APPROVED')">
+            موافقة
+          </button>
+
+          <button type="button"
+            onclick="reviewAgentPayout('${safeId}','REJECTED')">
+            رفض الطلب
+          </button>
+        `;
+      }
+
+      if (validId && payout.status === 'APPROVED') {
+        actions = `
+          <button type="button"
+            onclick="payAgentPayout('${safeId}')">
+            تسجيل الدفع
+          </button>
+        `;
+      }
+
+      return `
+        <div style="
+          border:1px solid #8d7540;
+          border-radius:12px;
+          padding:15px;
+          margin-bottom:12px;
+          background:rgba(255,255,255,0.03);
+        ">
+          <h3>طلب سحب: ${amount} USD</h3>
+          <p>معرّف الوكيل: ${agentUser}</p>
+          <p>معرّف الطلب: ${safeId}</p>
+          <p>الحالة: ${status}</p>
+          <p>مرجع الدفع: ${reference}</p>
+          <p>تاريخ الطلب: ${createdAt}</p>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            ${actions || '<span>لا توجد إجراءات متاحة.</span>'}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    container.innerHTML =
+      '<p style="color:#ff7777;">' +
+      escapeHTML(error.message) +
+      '</p>';
+  }
+}
+
+// الموافقة على طلب أو رفضه
+async function reviewAgentPayout(payoutId, status) {
+  if (!['APPROVED', 'REJECTED'].includes(status)) return;
+
+  const action = status === 'APPROVED' ? 'الموافقة' : 'الرفض';
+
+  if (!confirm(`هل تريد تأكيد ${action} على طلب السحب؟`)) return;
+
+  const note = prompt('اكتب ملاحظة (اختياري):') || '';
+
+  try {
+    await apiRequest(
+      `/agents/payouts/${encodeURIComponent(payoutId)}/review`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status, note })
+      }
+    );
+
+    alert('تم تحديث حالة طلب الوكيل بنجاح.');
+    await loadAgentPayouts();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// تسجيل دفع مستحقات الوكيل
+async function payAgentPayout(payoutId) {
+  const paymentReference = prompt(
+    'اكتب رقم مرجع التحويل أو إثبات الدفع:'
+  );
+
+  if (!paymentReference || !paymentReference.trim()) {
+    alert('لازم تدخل رقم مرجع الدفع.');
+    return;
+  }
+
+  if (!confirm('هل تؤكد أنك دفعت مستحقات الوكيل؟')) return;
+
+  try {
+    await apiRequest(
+      `/agents/payouts/${encodeURIComponent(payoutId)}/paid`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          paymentReference: paymentReference.trim()
+        })
+      }
+    );
+
+    alert('تم تسجيل الدفع بنجاح.');
+    await loadAgentPayouts();
+
+  } catch (error) {
+    alert(error.message);
+  }
+  }
 // تحميل البيانات عند فتح لوحة المالك
 async function initializeDashboard() {
   if (!accessToken) return;
