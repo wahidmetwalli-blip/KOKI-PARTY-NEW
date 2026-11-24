@@ -1,3 +1,4 @@
+
 import {
   Controller,
   Get,
@@ -13,7 +14,6 @@ import { Request } from 'express';
 import {
   IsString,
   IsNotEmpty,
-  Matches,
   MaxLength,
   IsOptional,
   IsInt,
@@ -45,9 +45,8 @@ class SendGiftDto {
   @Max(20)
   seatNumber: number;
 
-  @IsString()
-  @Matches(/^[1-9]\d*$/)
-  giftCoinAmount: string;
+  @IsUUID()
+  giftId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -81,7 +80,7 @@ export class HostDiamondsController {
     return this.hostDiamondsService.sendGift(
       req.user.id,
       dto.hostUserId,
-      dto.giftCoinAmount,
+      dto.giftId,
       dto.reference,
       dto.roomId,
       dto.seatNumber,
@@ -106,4 +105,4 @@ export class HostDiamondsController {
       req.user.id,
     );
   }
-}
+  }
