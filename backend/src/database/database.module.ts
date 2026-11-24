@@ -39,6 +39,7 @@ import { CreateHostDiamondLedger1764100000000 } from './migrations/1764100000000
         CreateRoomSeats1763857300000,
         ExpandRoomSeatLimit1763930000000,
         SeedHostLevels1764000000000,
+        CreateHostDiamondLedger1764100000000,
       ],
     }),
   ],
