@@ -1861,6 +1861,61 @@ async function payAgentPayout(payoutId) {
     alert(error.message);
   }
   }
+  // قراءة سياسة مهام الألماس النشطة
+async function loadWeeklyPolicy() {
+  try {
+    const policy = await apiRequest(
+      '/policies/active/DIAMOND_TASKS'
+    );
+
+    const status = document.getElementById('weeklyPolicyStatus');
+
+    status.textContent =
+      `السياسة نشطة ✅ | الإصدار: ${policy.version ?? 'غير محدد'} | المعرّف: ${policy.id}`;
+
+    status.style.color = '#e7c66e';
+
+  } catch (error) {
+    showMessage(
+      'weeklyPolicyStatus',
+      'تعذّر تحميل السياسة: ' + error.message,
+      true
+    );
+  }
+}
+
+// تجهيز مكافآت الأسبوع السابق بدون صرف
+async function prepareWeeklyRewards() {
+  if (!confirm('هل تريد تجهيز مكافآت الأسبوع السابق للمراجعة؟')) {
+    return;
+  }
+
+  showMessage(
+    'weeklyPrepareStatus',
+    'جاري تجهيز المكافآت...'
+  );
+
+  try {
+    const result = await apiRequest(
+      '/weekly-diamond-tasks/prepare',
+      { method: 'POST' }
+    );
+
+    const period = result.period || {};
+
+    showMessage(
+      'weeklyPrepareStatus',
+      `${result.message || 'تم التجهيز'} | عدد المضيفين: ${period.totalHosts ?? 0} | عدد المكافآت: ${period.totalRewards ?? 0} | العملات: ${period.totalCoins ?? 0}`
+    );
+
+  } catch (error) {
+    showMessage(
+      'weeklyPrepareStatus',
+      'فشل التجهيز: ' + error.message,
+      true
+    );
+  }
+}
 // تحميل البيانات عند فتح لوحة المالك
 async function initializeDashboard() {
   if (!accessToken) return;
