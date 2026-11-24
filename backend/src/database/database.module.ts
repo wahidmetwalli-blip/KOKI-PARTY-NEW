@@ -11,6 +11,8 @@ import { CreateRoomSeats1763857300000 } from './migrations/1763857300000-CreateR
 import { ExpandRoomSeatLimit1763930000000 } from './migrations/1763930000000-ExpandRoomSeatLimit';
 import { SeedHostLevels1764000000000 } from './migrations/1764000000000-SeedHostLevels';
 import { CreateHostDiamondLedger1764100000000 } from './migrations/1764100000000-CreateHostDiamondLedger';
+import { CreateWeeklyDiamondTasks1764200000000 } from './migrations/1764200000000-CreateWeeklyDiamondTasks';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -40,8 +42,10 @@ import { CreateHostDiamondLedger1764100000000 } from './migrations/1764100000000
         ExpandRoomSeatLimit1763930000000,
         SeedHostLevels1764000000000,
         CreateHostDiamondLedger1764100000000,
+        CreateWeeklyDiamondTasks1764200000000,
       ],
     }),
   ],
 })
 export class DatabaseModule {}
+      
